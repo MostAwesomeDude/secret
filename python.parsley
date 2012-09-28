@@ -1,0 +1,103 @@
+# http://docs.python.org/reference/lexical_analysis.html
+
+# 2.3
+identifier = (letter | '_'):first letterOrDigit*:second
+           -> "".join([first] + second)
+letter = lowercase | uppercase
+lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz")
+uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+digit = anything:c ?(c in "0123456789")
+
+# 2.4.1
+stringliteral = spaces? stringprefix?:p (longstring | shortstring):s
+              -> t.Str(p, s)
+stringprefix = 'r' | 'u' | "ur" | 'R' | 'U' | "UR" | "Ur" | "uR" | 'b' | 'B'
+             | "br" | "Br" | "bR" | "BR"
+shortstring = shortstringsingle | shortstringdouble
+shortstringsingle = '\'' <(escapeseq | ~'\'' ~'\n' anything)*>:s '\'' -> s
+shortstringdouble = '"' <(escapeseq | ~'"' ~'\n' anything)*>:s '"' -> s
+longstring = '\'' '\'' '\'' <longstringitem*>:s '\'' '\'' '\'' -> s
+           | '"' '"' '"' <longstringitem*>:s '"' '"' '"' -> s
+longstringitem = longstringchar | escapeseq
+longstringchar = ~'\\'
+escapeseq = '\\' anything
+
+# 2.4.4
+longinteger = integer:i ('l' | 'L') -> i
+integer = spaces? (decimalinteger | octinteger | hexinteger | bininteger):i
+        -> t.Num(i)
+decimalinteger = nonzerodigit:first <digit*>:second -> int(first + second)
+               | '0' -> 0
+octinteger = '0' ('o' | 'O') octdigit+:d -> int(d, 8)
+           | '0' octdigit+:d -> int(d, 8)
+hexinteger = '0' ('x' | 'X') hexdigit+:d -> int(d, 16)
+bininteger = '0' ('b' | 'B') bindigit+:d -> int(d, 2)
+nonzerodigit = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+octdigit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
+bindigit = '0' | '1'
+hexdigit = digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D'
+         | 'E' | 'F'
+
+# 2.4.5
+floatnumber = pointfloat | exponentfloat
+pointfloat = intpart? fraction | intpart '.'
+exponentfloat = (intpart | pointfloat) exponent
+intpart = digit+
+fraction = '.' digit+
+exponent = ('e' | 'E') ('+' | '-')? digit+
+
+# 2.4.6
+imagnumber = (floatnumber | intpart) ('j' | 'J')
+
+# expr XXX
+expr = expr:left boolop:b expr:right -> t.BoolOp(b, left, right)
+     | expr:left operator:b expr:right -> t.BinOp(b, left, right)
+     | longinteger
+     | integer
+     | stringliteral
+
+# slice XXX
+slice = ellipsis
+ellipsis = token("...") -> t.Ellipsis()
+
+# boolop
+boolop = and | or
+and = token("and") ~letterOrDigit -> t.And()
+or = token("or") ~letterOrDigit -> t.Or()
+
+# operator
+# Precedence: floordiv must be matched before div, pow must be matched before
+# mult.
+operator = add | sub | pow | mult | floordiv | div | mod | lshift | rshift
+         | bitor | bitxor | bitand
+add = token("+") -> t.Add()
+sub = token("-") -> t.Sub()
+mult = token("*") -> t.Mult()
+div = token("/") -> t.Div()
+mod = token("%") -> t.Mod()
+pow = token("**") -> t.Pow()
+lshift = token("<<") -> t.LShift()
+rshift = token(">>") -> t.RShift()
+bitor = token("|") -> t.BitOr()
+bitxor = token("^") -> t.BitXor()
+bitand = token("&") -> t.BitAnd()
+floordiv = token("//") -> t.FloorDiv()
+
+# unaryop XXX
+unaryop = invert | not
+invert = token("~") -> t.Invert()
+not = token("not") ~letterOrDigit -> t.Not()
+
+# cmpop
+# Precedence: isnot must be matched before is.
+cmpop = eq | noteq | lt | lte | gt | gte | isnot | is | in | notin
+eq = token("==") -> t.Eq()
+noteq = token("!=") -> t.NotEq()
+lt = token("<") -> t.Lt()
+lte = token("<=") -> t.LtE()
+gt = token(">") -> t.Gt()
+gte = token(">=") -> t.GtE()
+is = token("is") ~letterOrDigit -> t.Is()
+isnot = token("is") ~letterOrDigit token("not") ~letterOrDigit -> t.IsNot()
+in = token("in") ~letterOrDigit -> t.In()
+notin = token("not") ~letterOrDigit token("in") ~letterOrDigit -> t.NotIn()
