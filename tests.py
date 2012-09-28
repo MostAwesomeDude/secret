@@ -19,3 +19,28 @@ class TestStringLiteral(TC):
         i = "''"
         o = t.Str(None, "")
         self.succeed(i, o)
+
+    def test_single_single_quotes(self):
+        i = "'a'"
+        o = t.Str(None, "a")
+        self.succeed(i, o)
+
+    def test_plural_single_quotes(self):
+        i = "'abc'"
+        o = t.Str(None, "abc")
+        self.succeed(i, o)
+
+    def test_empty_double_quotes(self):
+        i = '""'
+        o = t.Str(None, "")
+        self.succeed(i, o)
+
+    def test_single_double_quotes(self):
+        i = '"a"'
+        o = t.Str(None, "a")
+        self.succeed(i, o)
+
+    def test_plural_double_quotes(self):
+        i = '"abc"'
+        o = t.Str(None, "abc")
+        self.succeed(i, o)
