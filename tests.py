@@ -11,6 +11,42 @@ class TC(TestCase):
         result, errors = getattr(p, "rule_%s" % self.rule)()
         self.assertEqual(result, o)
 
+
+class TestInteger(TC):
+
+    rule = "integer"
+
+    def test_zero(self):
+        i = "0"
+        o = t.Num(0)
+        self.succeed(i, o)
+
+    def test_one(self):
+        i = "1"
+        o = t.Num(1)
+        self.succeed(i, o)
+
+    def test_lue(self):
+        i = "42"
+        o = t.Num(42)
+        self.succeed(i, o)
+
+    def test_bin(self):
+        i = "0b101"
+        o = t.Num(5)
+        self.succeed(i, o)
+
+    def test_oct(self):
+        i = "0o101"
+        o = t.Num(65)
+        self.succeed(i, o)
+
+    def test_hex(self):
+        i = "0x101"
+        o = t.Num(257)
+        self.succeed(i, o)
+
+
 class TestStringLiteral(TC):
 
     rule = "stringliteral"
