@@ -50,8 +50,10 @@ exponent = ('e' | 'E') ('+' | '-')? digit+
 imagnumber = (floatnumber | intpart) ('j' | 'J')
 
 # expr XXX
-expr = expr:left boolop:b expr:right -> t.BoolOp(b, left, right)
+expr = token("(") expr:e token(")") -> e
+     | expr:left boolop:b expr:right -> t.BoolOp(b, left, right)
      | expr:left operator:b expr:right -> t.BinOp(b, left, right)
+     | unaryop:u expr:e -> t.UnaryOp(u, e)
      | longinteger
      | integer
      | stringliteral

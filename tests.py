@@ -106,7 +106,27 @@ class TestExpr(TC):
 
     rule = "expr"
 
-    def test_binop_num(self):
+    def test_boolop_num(self):
         i = "1 and 2"
         o = t.BoolOp(t.And(), t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
+    def test_unaryop_invert_num(self):
+        i = "~0"
+        o = t.UnaryOp(t.Invert(), t.Num(0))
+        self.succeed(i, o)
+
+    def test_unaryop_not_num(self):
+        i = "not 0"
+        o = t.UnaryOp(t.Not(), t.Num(0))
+        self.succeed(i, o)
+
+    def test_nested_arith_left(self):
+        i = "(1 + 2) + 3"
+        o = t.BinOp(t.Add(), t.BinOp(t.Add(), t.Num(1), t.Num(2)), t.Num(3))
+        self.succeed(i, o)
+
+    def test_nested_arith_right(self):
+        i = "1 + (2 + 3)"
+        o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
         self.succeed(i, o)
