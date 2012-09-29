@@ -80,3 +80,33 @@ class TestStringLiteral(TC):
         i = '"abc"'
         o = t.Str(None, "abc")
         self.succeed(i, o)
+
+
+class TestBoolOp(TC):
+
+    rule = "boolop"
+
+    def test_and(self):
+        i = "and"
+        o = t.And()
+        self.succeed(i, o)
+
+
+class TestOperator(TC):
+
+    rule = "operator"
+
+    def test_add(self):
+        i = "+"
+        o = t.Add()
+        self.succeed(i, o)
+
+
+class TestExpr(TC):
+
+    rule = "expr"
+
+    def test_binop_num(self):
+        i = "1 and 2"
+        o = t.BoolOp(t.And(), t.Num(1), t.Num(2))
+        self.succeed(i, o)
