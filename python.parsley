@@ -50,13 +50,13 @@ exponent = ('e' | 'E') ('+' | '-')? digit+
 imagnumber = (floatnumber | intpart) ('j' | 'J')
 
 # expr XXX
-expr = token("(") expr:e token(")") -> e
-     | expr:left boolop:b expr:right -> t.BoolOp(b, left, right)
-     | expr:left operator:b expr:right -> t.BinOp(b, left, right)
+exprlit = (longinteger | integer | stringliteral):e exprrest(e)
+exprrest :left = boolop:b expr:right -> t.BoolOp(b, left, right)
+              | operator:b expr:right -> t.BinOp(b, left, right)
+              | -> left
+expr = exprlit
+     | token("(") expr:e token(")") -> e
      | unaryop:u expr:e -> t.UnaryOp(u, e)
-     | longinteger
-     | integer
-     | stringliteral
 
 # slice XXX
 slice = ellipsis
