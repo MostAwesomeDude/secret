@@ -24,14 +24,14 @@ escapeseq = '\\' anything
 
 # 2.4.4
 longinteger = integer:i ('l' | 'L') -> i
-integer = spaces? (decimalinteger | octinteger | hexinteger | bininteger):i
+integer = spaces? (octinteger | hexinteger | bininteger | decimalinteger):i
         -> t.Num(i)
 decimalinteger = nonzerodigit:first <digit*>:second -> int(first + second)
                | '0' -> 0
-octinteger = '0' ('o' | 'O') octdigit+:d -> int(d, 8)
-           | '0' octdigit+:d -> int(d, 8)
-hexinteger = '0' ('x' | 'X') hexdigit+:d -> int(d, 16)
-bininteger = '0' ('b' | 'B') bindigit+:d -> int(d, 2)
+octinteger = '0' ('o' | 'O') <octdigit+>:d -> int(d, 8)
+           | '0' <octdigit+>:d -> int(d, 8)
+hexinteger = '0' ('x' | 'X') <hexdigit+>:d -> int(d, 16)
+bininteger = '0' ('b' | 'B') <bindigit+>:d -> int(d, 2)
 nonzerodigit = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 octdigit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
 bindigit = '0' | '1'
