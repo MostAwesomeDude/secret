@@ -157,6 +157,36 @@ class TestSet(TC):
         self.succeed(i, o)
 
 
+class TestDict(TC):
+
+    rule = "dict"
+
+    def test_dict_literal_empty(self):
+        i = "{}"
+        o = t.Dict()
+        self.succeed(i, o)
+
+    def test_dict_literal_single(self):
+        i = "{1:2}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
+        self.succeed(i, o)
+
+    def test_dict_literal_single_trailing(self):
+        i = "{1:2,}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
+        self.succeed(i, o)
+
+    def test_dict_literal_plural(self):
+        i = "{1:2,3:4}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
+        self.succeed(i, o)
+
+    def test_dict_literal_plural_trailing(self):
+        i = "{1:2,3:4,}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
+        self.succeed(i, o)
+
+
 class TestSlice(TC):
 
     rule = "slice"

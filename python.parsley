@@ -66,6 +66,13 @@ expr = exprlit
 set = token("{") expr:e (token(",") expr)*:es token(",")? token("}")
     -> t.Set(e, *es)
 
+# dict
+# Dict literals look very much like set literals, but the entire body is
+# optional. This actually complicates the last-comma logic somewhat.
+dict = token("{") (expr:k token(":") expr:v token(",") -> t.Pair(k, v))*:kvs
+       (expr:k token(":") expr:v token(",")? -> t.Pair(k, v))?:last
+     -> t.Dict(*(kvs + [last])) if last else t.Dict(*kvs)
+
 # slice XXX
 slice = ellipsis
 ellipsis = token("...") -> t.Ellipsis()
