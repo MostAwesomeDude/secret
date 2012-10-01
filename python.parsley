@@ -55,6 +55,7 @@ exprrest :left = (boolop:b expr:right -> t.BoolOp(b, left, right))
               | (operator:b expr:right -> t.BinOp(b, left, right))
               | (-> left)
 expr = exprlit
+     | dict
      | set
      | (token("(") expr:e token(")") -> e)
      | (unaryop:u expr:e -> t.UnaryOp(u, e))
@@ -70,7 +71,7 @@ set = token("{") expr:e (token(",") expr)*:es token(",")? token("}")
 # Dict literals look very much like set literals, but the entire body is
 # optional. This actually complicates the last-comma logic somewhat.
 dict = token("{") (expr:k token(":") expr:v token(",") -> t.Pair(k, v))*:kvs
-       (expr:k token(":") expr:v token(",")? -> t.Pair(k, v))?:last
+       (expr:k token(":") expr:v token(",")? -> t.Pair(k, v))?:last token("}")
      -> t.Dict(*(kvs + [last])) if last else t.Dict(*kvs)
 
 # slice XXX

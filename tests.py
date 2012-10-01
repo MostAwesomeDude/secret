@@ -111,6 +111,21 @@ class TestExpr(TC):
         o = t.BoolOp(t.And(), t.Num(1), t.Num(2))
         self.succeed(i, o)
 
+    def test_dict_literal_expr_empty(self):
+        i = "{}"
+        o = t.Dict()
+        self.succeed(i, o)
+
+    def test_dict_literal_expr_single(self):
+        i = "{1:2}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
+        self.succeed(i, o)
+
+    def test_set_literal_expr_single(self):
+        i = "{1}"
+        o = t.Set(t.Num(1))
+        self.succeed(i, o)
+
     def test_unaryop_invert_num(self):
         i = "~0"
         o = t.UnaryOp(t.Invert(), t.Num(0))
