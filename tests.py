@@ -130,3 +130,38 @@ class TestExpr(TC):
         i = "1 + (2 + 3)"
         o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
         self.succeed(i, o)
+
+
+class TestSet(TC):
+
+    rule = "set"
+
+    def test_set_literal_single(self):
+        i = "{1}"
+        o = t.Set(t.Num(1))
+        self.succeed(i, o)
+
+    def test_set_literal_single_trailing(self):
+        i = "{1,}"
+        o = t.Set(t.Num(1))
+        self.succeed(i, o)
+
+    def test_set_literal_plural(self):
+        i = "{1,2}"
+        o = t.Set(t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
+    def test_set_literal_plural_trailing(self):
+        i = "{1,2,}"
+        o = t.Set(t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
+
+class TestSlice(TC):
+
+    rule = "slice"
+
+    def test_ellipsis(self):
+        i = "..."
+        o = t.Ellipsis()
+        self.succeed(i, o)

@@ -51,12 +51,20 @@ imagnumber = (floatnumber | intpart) ('j' | 'J')
 
 # expr XXX
 exprlit = (longinteger | integer | stringliteral):e exprrest(e)
-exprrest :left = boolop:b expr:right -> t.BoolOp(b, left, right)
-              | operator:b expr:right -> t.BinOp(b, left, right)
-              | -> left
+exprrest :left = (boolop:b expr:right -> t.BoolOp(b, left, right))
+              | (operator:b expr:right -> t.BinOp(b, left, right))
+              | (-> left)
 expr = exprlit
-     | token("(") expr:e token(")") -> e
-     | unaryop:u expr:e -> t.UnaryOp(u, e)
+     | set
+     | (token("(") expr:e token(")") -> e)
+     | (unaryop:u expr:e -> t.UnaryOp(u, e))
+
+# set
+# Set literals cannot be empty; an empty pair of curly braces is a dict
+# literal. Also the last comma is optional but not harmful. The first comma is
+# also not necessary in a singleton set literal.
+set = token("{") expr:e (token(",") expr)*:es token(",")? token("}")
+    -> t.Set(e, *es)
 
 # slice XXX
 slice = ellipsis
