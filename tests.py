@@ -182,9 +182,32 @@ class TestExpr(TC):
         o = t.BinOp(t.Add(), t.Num(1), t.Identifier("a"))
         self.succeed(i, o)
 
+    def test_attr_literal(self):
+        i = "an.attr"
+        o = t.Attribute(t.Identifier("an"), t.Identifier("attr"))
+        self.succeed(i, o)
+
+    def test_if_else_literals(self):
+        i = "1 if 2 else 3"
+        o = t.IfExp(t.Num(2), t.Num(1), t.Num(3))
+        self.succeed(i, o)
+
+    def test_if_else_complex(self):
+        i = "('this' if it.succeeds() else 'that')"
+        o = t.IfExp(t.Call(t.Attribute(t.Identifier("it"),
+            t.Identifier("succeeds")), t.Arguments()), t.Str("this"),
+            t.Str("that"))
+        self.succeed(i, o)
+
     def test_lambda_id(self):
         i = "lambda id: id"
         o = t.Lambda(t.Arguments(t.Identifier("id")), t.Identifier("id"))
+        self.succeed(i, o)
+
+    def test_method(self):
+        i = "(test.method())"
+        o = t.Call(t.Attribute(t.Identifier("test"), t.Identifier("method")),
+                t.Arguments())
         self.succeed(i, o)
 
 

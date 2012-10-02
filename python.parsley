@@ -54,19 +54,26 @@ exponent = ('e' | 'E') ('+' | '-')? digit+
 imagnumber = (floatnumber | intpart) ('j' | 'J')
 
 # expr XXX
-exprlit = (longinteger | integer | stringliteral | identifier):e exprrest(e)
+# Expressions suffer from the traditional left recursion problem. To combat
+# this, expressions are divided up into a trio of rules. If an expression
+# could start with another expression, that leftmost expression primitive is
+# pulled out into exprlits. exprlit calls exprrest, which finishes the
+# left-recursive rule.
+# Do not put a rule into expr itself unless it is not left-recursive.
+exprlits = longinteger | integer | stringliteral | identifier | dict | set
+exprlit = exprlits:e exprrest(e)
 exprrest :left = (boolop:b expr:right -> t.BoolOp(b, left, right))
               | (operator:b expr:right -> t.BinOp(b, left, right))
               | (token("(") arguments:args token(")") -> t.Call(left, args))
+              | (keyword("if") expr:cond keyword("else") expr:right
+                -> t.IfExp(cond, left, right))
+              | (token(".") identifier:attr -> t.Attribute(left, attr))
               | (-> left)
 expr = exprlit
-     | dict
-     | set
      | (token("(") expr:e token(")") -> e)
      | (unaryop:u expr:e -> t.UnaryOp(u, e))
      | (keyword("lambda") arguments:args token(":") expr:e
         -> t.Lambda(args, e))
-     | identifier
 
 # set
 # Set literals cannot be empty; an empty pair of curly braces is a dict

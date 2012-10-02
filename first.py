@@ -41,3 +41,7 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
     def keyword_pred(self, first, second):
         return first + second in self.keywords
+
+if __name__ == "__main__":
+    import sys
+    print Parser(open(sys.argv[1]).read()).rule_expr()
