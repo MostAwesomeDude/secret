@@ -103,34 +103,65 @@ class TestStringLiteral(TC):
         self.succeed(i, o)
 
 
-class TestBoolOp(TC):
+class TestPower(TC):
 
-    rule = "boolop"
+    rule = "power"
 
-    def test_and(self):
-        i = "and"
-        o = t.And()
+    def test_power_num(self):
+        i = "2**3"
+        o = t.Pow(t.Num(2), t.Num(3))
         self.succeed(i, o)
 
 
-class TestOperator(TC):
+class TestUExpr(TC):
 
-    rule = "operator"
+    rule = "u_expr"
 
-    def test_add(self):
-        i = "+"
-        o = t.Add()
+    def test_u_expr_invert_num(self):
+        i = "~0"
+        o = t.Invert(t.Num(0))
         self.succeed(i, o)
 
 
+class TestMExpr(TC):
+
+    rule = "m_expr"
+
+    def test_m_expr_mult_num(self):
+        i = "3 * 4"
+        o = t.Mult(t.Num(3), t.Num(4))
+        self.succeed(i, o)
+
+
+class TestAExpr(TC):
+
+    rule = "a_expr"
+
+    def test_u_expr_add_identifier_left(self):
+        i = "a + 1"
+        o = t.Add(t.Identifier("a"), t.Num(1))
+        self.succeed(i, o)
+
+    def test_u_expr_add_identifier_right(self):
+        i = "1 + a"
+        o = t.Add(t.Num(1), t.Identifier("a"))
+        self.succeed(i, o)
+
+
+class TestAndTest(TC):
+
+    rule = "and_test"
+
+    def test_and_test_num(self):
+        i = "1 and 2"
+        o = t.BoolOp(t.Num(1), t.And(), t.Num(2))
+        self.succeed(i, o)
+
+
+"""
 class TestExpr(TC):
 
     rule = "expr"
-
-    def test_boolop_num(self):
-        i = "1 and 2"
-        o = t.BoolOp(t.And(), t.Num(1), t.Num(2))
-        self.succeed(i, o)
 
     def test_dict_literal_expr_empty(self):
         i = "{}"
@@ -157,11 +188,6 @@ class TestExpr(TC):
         o = t.Call(t.Identifier("call"), t.Arguments(t.Identifier("arg")))
         self.succeed(i, o)
 
-    def test_unaryop_invert_num(self):
-        i = "~0"
-        o = t.UnaryOp(t.Invert(), t.Num(0))
-        self.succeed(i, o)
-
     def test_unaryop_not_num(self):
         i = "not 0"
         o = t.UnaryOp(t.Not(), t.Num(0))
@@ -170,16 +196,6 @@ class TestExpr(TC):
     def test_nested_arith_right(self):
         i = "1 + (2 + 3)"
         o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
-        self.succeed(i, o)
-
-    def test_simple_arith_identifier_left(self):
-        i = "a + 1"
-        o = t.BinOp(t.Add(), t.Identifier("a"), t.Num(1))
-        self.succeed(i, o)
-
-    def test_simple_arith_identifier_right(self):
-        i = "1 + a"
-        o = t.BinOp(t.Add(), t.Num(1), t.Identifier("a"))
         self.succeed(i, o)
 
     def test_attr_literal(self):
@@ -319,3 +335,4 @@ class TestArguments(TC):
         i = "foo,bar,"
         o = t.Arguments(t.Identifier("foo"), t.Identifier("bar"))
         self.succeed(i, o)
+        """

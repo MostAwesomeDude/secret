@@ -157,41 +157,35 @@ keyword_item = identifier token("=") expression
 
 # 5.4
 power = primary:left (token("**") u_expr)?:right
-      -> t.BinOp(left, t.Pow(), right) if right else left
+      -> t.Pow(left, right) if right else left
 
 # 5.5
-u_expr = power
-       | token("-") u_expr:e -> t.Negate(e)
+u_expr = token("-") u_expr:e -> t.Negate(e)
        | token("+") u_expr
        | token("~") u_expr:e -> t.Invert(e)
+       | power
 
 # 5.6
-m_expr = m_expr:left token("*") u_expr:right -> t.BinOp(left, t.Mult(), right)
-       | m_expr:left token("//") u_expr:right
-         -> t.BinOp(left, t.FloorDiv(), right)
-       | m_expr:left token("/") u_expr:right -> t.BinOp(left, t.Div(), right)
-       | m_expr:left token("%") u_expr:right -> t.BinOp(left, t.Mod(), right)
+m_expr = m_expr:left token("*") u_expr:right -> t.Mult(left, right)
+       | m_expr:left token("//") u_expr:right -> t.FloorDiv(left, right)
+       | m_expr:left token("/") u_expr:right -> t.Div(left, right)
+       | m_expr:left token("%") u_expr:right -> t.Mod(left, right)
        | u_expr
-a_expr = a_expr:left token("+") m_expr:right -> t.BinOp(left, t.Add(), right)
-       | a_expr:left token("-") m_expr:right -> t.BinOp(left, t.Sub(), right)
+a_expr = a_expr:left token("+") m_expr:right -> t.Add(left, right)
+       | a_expr:left token("-") m_expr:right -> t.Sub(left, right)
        | m_expr
 
 # 5.7
-shift_expr = shift_expr:left token("<<") a_expr:right
-             -> t.BinOp(left, t.LShift(), right)
-           | shift_expr:left token(">>") a_expr:right
-             -> t.BinOp(left, t.RShift(), right)
+shift_expr = shift_expr:left token("<<") a_expr:right -> t.LShift(left, right)
+           | shift_expr:left token(">>") a_expr:right -> t.RShift(left, right)
            | a_expr
 
 # 5.8
-and_expr = and_expr:left token("&") shift_expr:right
-           -> t.BinOp(left, t.BitAnd(), right)
+and_expr = and_expr:left token("&") shift_expr:right -> t.BitAnd(left, right)
          | shift_expr
-xor_expr = xor_expr:left token("^") and_expr:right
-           -> t.BinOp(left, t.BitXor(), right)
+xor_expr = xor_expr:left token("^") and_expr:right -> t.BitXor(left, right)
          | and_expr
-or_expr = or_expr:left token("|") xor_expr:right
-          -> t.BinOp(left, t.BitOr(), right)
+or_expr = or_expr:left token("|") xor_expr:right -> t.BitOr(left, right)
         | xor_expr
 
 # 5.9
@@ -223,7 +217,7 @@ conditional_expression = or_test:left keyword("if") or_test:cond
                          keyword("else") expression:right
                          -> t.IfExp(cond, left, right)
                        | or_test
-expression = conditiona_expression | lambda_form
+expression = conditional_expression | lambda_form
 
 # 5.12
 lambda_form = keyword("lambda") parameter_list?:p token(":") expression:e
