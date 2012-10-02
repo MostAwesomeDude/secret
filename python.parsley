@@ -1,12 +1,12 @@
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
-identifier = (letter | '_'):first letterOrDigit*:second
-           -> "".join([first] + second)
+identifier = (letter | '_'):first <letterOrDigit*>:second
+           -> t.Identifier(first + second)
 letter = lowercase | uppercase
-lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz")
-uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-digit = anything:c ?(c in "0123456789")
+lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz") -> c
+uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ") -> c
+digit = anything:c ?(c in "0123456789") -> c
 
 # 2.4.1
 stringliteral = spaces? stringprefix?:p (longstring | shortstring):s
@@ -119,3 +119,8 @@ is = token("is") ~letterOrDigit -> t.Is()
 isnot = token("is") ~letterOrDigit token("not") ~letterOrDigit -> t.IsNot()
 in = token("in") ~letterOrDigit -> t.In()
 notin = token("not") ~letterOrDigit token("in") ~letterOrDigit -> t.NotIn()
+
+# arguments XXX
+# We don't exactly follow the original AST system.
+arguments = identifier?:first (token(",") identifier)*:others token(",")?
+          -> t.Arguments(first, *others) if first else t.Arguments(*others)

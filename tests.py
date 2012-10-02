@@ -12,6 +12,16 @@ class TC(TestCase):
         self.assertEqual(result, o)
 
 
+class TestIdentifier(TC):
+
+    rule = "identifier"
+
+    def test_foo(self):
+        i = "foo"
+        o = t.Identifier("foo")
+        self.succeed(i, o)
+
+
 class TestInteger(TC):
 
     rule = "integer"
@@ -209,4 +219,34 @@ class TestSlice(TC):
     def test_ellipsis(self):
         i = "..."
         o = t.Ellipsis()
+        self.succeed(i, o)
+
+
+class TestArguments(TC):
+
+    rule = "arguments"
+
+    def test_arguments_empty(self):
+        i = ""
+        o = t.Arguments()
+        self.succeed(i, o)
+
+    def test_arguments_single(self):
+        i = "foo"
+        o = t.Arguments(t.Identifier("foo"))
+        self.succeed(i, o)
+
+    def test_arguments_single_trailing(self):
+        i = "foo,"
+        o = t.Arguments(t.Identifier("foo"))
+        self.succeed(i, o)
+
+    def test_arguments_plural(self):
+        i = "foo,bar"
+        o = t.Arguments(t.Identifier("foo"), t.Identifier("bar"))
+        self.succeed(i, o)
+
+    def test_arguments_plural_trailing(self):
+        i = "foo,bar,"
+        o = t.Arguments(t.Identifier("foo"), t.Identifier("bar"))
         self.succeed(i, o)
