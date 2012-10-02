@@ -1,10 +1,17 @@
 from unittest import TestCase
 
+from ometa.runtime import ParseError
 from terml.nodes import termMaker as t
 
 from first import Parser
 
+
 class TC(TestCase):
+
+    def fail(self, i):
+        p = Parser(i)
+        m = getattr(p, "rule_%s" % self.rule)
+        self.assertRaises(ParseError, m)
 
     def succeed(self, i, o):
         p = Parser(i)
@@ -20,6 +27,10 @@ class TestIdentifier(TC):
         i = "foo"
         o = t.Identifier("foo")
         self.succeed(i, o)
+
+    def test_lambda(self):
+        i = "lambda"
+        self.fail(i)
 
 
 class TestInteger(TC):

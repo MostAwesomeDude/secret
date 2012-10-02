@@ -1,7 +1,8 @@
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
-identifier = (letter | '_'):first <letterOrDigit*>:second
+identifier = spaces? (letter | '_'):first <letterOrDigit*>:second
+             ?(not self.keyword_pred(first, second))
            -> t.Identifier(first + second)
 letter = lowercase | uppercase
 lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz") -> c
