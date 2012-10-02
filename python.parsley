@@ -8,6 +8,9 @@ lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz") -> c
 uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ") -> c
 digit = anything:c ?(c in "0123456789") -> c
 
+# 2.3.1
+keyword :k = token(k) ~letterOrDigit -> k
+
 # 2.4.1
 stringliteral = spaces? stringprefix?:p (longstring | shortstring):s
               -> t.Str(p, s)
@@ -59,6 +62,9 @@ expr = exprlit
      | set
      | (token("(") expr:e token(")") -> e)
      | (unaryop:u expr:e -> t.UnaryOp(u, e))
+     | (keyword("lambda") arguments:args token(":") expr:e
+        -> t.Lambda(args, e))
+     | identifier
 
 # set
 # Set literals cannot be empty; an empty pair of curly braces is a dict

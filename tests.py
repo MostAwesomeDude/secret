@@ -156,6 +156,11 @@ class TestExpr(TC):
         o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
         self.succeed(i, o)
 
+    def test_lambda_id(self):
+        i = "lambda id: id"
+        o = t.Lambda(t.Arguments(t.Identifier("id")), t.Identifier("id"))
+        self.succeed(i, o)
+
 
 class TestSet(TC):
 
