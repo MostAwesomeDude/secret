@@ -1,3 +1,7 @@
+# Omissions:
+# * ``
+# * <>
+
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
@@ -53,76 +57,146 @@ exponent = ('e' | 'E') ('+' | '-')? digit+
 # 2.4.6
 imagnumber = (floatnumber | intpart) ('j' | 'J')
 
-# expr XXX
-# Expressions suffer from the traditional left recursion problem. To combat
-# this, expressions are divided up into a trio of rules. If an expression
-# could start with another expression, that leftmost expression primitive is
-# pulled out into exprlits. exprlit calls exprrest, which finishes the
-# left-recursive rule.
-# Do not put a rule into expr itself unless it is not left-recursive.
-exprlits = longinteger | integer | stringliteral | identifier | dict | set
-exprlit = exprlits:e exprrest(e)
-exprrest :left = (boolop:b expr:right -> t.BoolOp(b, left, right))
-              | (operator:b expr:right -> t.BinOp(b, left, right))
-              | (token("(") arguments:args token(")") -> t.Call(left, args))
-              | (keyword("if") expr:cond keyword("else") expr:right
-                -> t.IfExp(cond, left, right))
-              | (token(".") identifier:attr -> t.Attribute(left, attr))
-              | (-> left)
-expr = exprlit
-     | (token("(") expr:e token(")") -> e)
-     | (unaryop:u expr:e -> t.UnaryOp(u, e))
-     | (keyword("lambda") arguments:args token(":") expr:e
-        -> t.Lambda(args, e))
+# http://docs.python.org/reference/expressions.html
 
-# set
-# Set literals cannot be empty; an empty pair of curly braces is a dict
-# literal. Also the last comma is optional but not harmful. The first comma is
-# also not necessary in a singleton set literal.
-set = token("{") expr:e (token(",") expr)*:es token(",")? token("}")
-    -> t.Set(e, *es)
+# 5.2
+atom = identifier | literal | enclosure
+enclosure = parenth_form | list_display | generator_expression | dict_display
+          | set_display | string_conversion | yield_atom
 
-# dict
-# Dict literals look very much like set literals, but the entire body is
-# optional. This actually complicates the last-comma logic somewhat.
-dict = token("{") (expr:k token(":") expr:v token(",") -> t.Pair(k, v))*:kvs
-       (expr:k token(":") expr:v token(",")? -> t.Pair(k, v))?:last token("}")
-     -> t.Dict(*(kvs + [last])) if last else t.Dict(*kvs)
+# 5.2.2
+literal = stringliteral | longinteger | integer | imagnumber | floatnumber
 
-# slice XXX
-slice = ellipsis
+# 5.2.3
+parenth_form = token("(") expression_list?:e token(")") -> e
+
+# 5.2.4
+# XXX need to pull out all the data and AST it
+list_display = token("[") (expression_list | list_comprehension)?:l token("]")
+             -> l
+list_comprehension = expression list_for
+list_for = keyword("for") target_list keyword ("in") old_expression_list list_iter?
+old_expression_list = old_expression ((token(",") old_expression)+ token(",")?)?
+old_expression = or_test | old_lambda_form
+list_iter = list_for | list_if
+list_if = keyword("if") old_expression list_iter?
+
+# 5.2.5
+# XXX AST
+comprehension = expression comp_for
+comp_for = keyword("for") target_list keyword("in") or_test comp_iter?
+comp_iter = comp_for | comp_if
+comp_if = keyword("if") expression_nocond comp_iter?
+
+# 5.2.6
+# XXX AST
+generator_expression = token("(") expression comp_for token(")")
+
+# 5.2.7
+# XXX AST
+dict_display = token("{") (key_datum_list | dict_comprehension)? token("}")
+key_datum_list = key_datum (token(",") key_datum)* token(",")?
+key_datum = expression token(":") expression
+dict_comprehension = expression token(":") expression comp_for
+
+# 5.2.8
+# XXX AST
+set_display = token("{") (expression_list | comprehension) token("}")
+
+# 5.2.9
+# XXX this should get nuked someday.
+string_conversion = token("`") expression_list:e token("`") -> e
+
+# 5.2.10
+# XXX AST
+yield_atom = token("(") yield_expression:e token(")") -> e
+yield_expression = keyword("yield") expression_list?
+
+# 5.3
+# XXX AST
+primary = atom | attributeref | subscription | slicing | call
+
+# 5.3.1
+attributeref = primary token(".") identifier -> t.Attribute(primary, identifier)
+
+# 5.3.2
+# XXX AST
+subscription = primary token("[") expression_list token("]")
+
+# 5.3.3
+# XXX AST
+slicing = simple_slicing | extended_slicing
+simple_slicing = primary token("[") short_slice token("]")
+extended_slicing = primary token("[") short_list token("]")
+slice_list = slice_item (token(",") slice_item)* token(",")?
+slice_item = expression | proper_slice | ellipsis
+proper_slice = short_slice | long_slice
+short_slice = lower_bound? token(":") upper_bound?
+long_slice = short_slice token(":") stride?
+lower_bound = expression
+upper_bound = expression
+stride = expression
 ellipsis = token("...") -> t.Ellipsis()
 
-# boolop
-boolop = and | or
-and = keyword("and") -> t.And()
-or = keyword("or") -> t.Or()
+# 5.3.4
+# XXX AST
+call = primary token("(")
+       (argument_list token(",")? | expression genexpr_for)? token(")")
+argument_list = positional_arguments (token(",") keyword_arguments)?
+                (token(",") token("*") expression)?
+                (token(",") keyword_arguments)?
+                (token(",") token("**") expression)?
+              | keyword_arguments (token(",") token("*") expression)?
+                (token(",") token("**") expression)?
+              | token("*") expression (token(",") token("*") expression)?
+                (token(",") token("**") expression)?
+              | token("**") expression
+positional_arguments = expression (token(",") expression)*
+keyword_arguments = keyword_item (token(",") keyword_item)*
+keyword_item = identifier token("=") expression
 
-# operator
-# Precedence: floordiv must be matched before div, pow must be matched before
-# mult.
-operator = add | sub | pow | mult | floordiv | div | mod | lshift | rshift
-         | bitor | bitxor | bitand
-add = token("+") -> t.Add()
-sub = token("-") -> t.Sub()
-mult = token("*") -> t.Mult()
-div = token("/") -> t.Div()
-mod = token("%") -> t.Mod()
-pow = token("**") -> t.Pow()
-lshift = token("<<") -> t.LShift()
-rshift = token(">>") -> t.RShift()
-bitor = token("|") -> t.BitOr()
-bitxor = token("^") -> t.BitXor()
-bitand = token("&") -> t.BitAnd()
-floordiv = token("//") -> t.FloorDiv()
+# 5.4
+power = primary:left (token("**") u_expr)?:right
+      -> t.BinOp(left, t.Pow(), right) if right else left
 
-# unaryop XXX
-unaryop = invert | not
-invert = token("~") -> t.Invert()
-not = keyword("not") -> t.Not()
+# 5.5
+u_expr = power
+       | token("-") u_expr:e -> t.Negate(e)
+       | token("+") u_expr
+       | token("~") u_expr:e -> t.Invert(e)
 
-# cmpop
+# 5.6
+m_expr = m_expr:left token("*") u_expr:right -> t.BinOp(left, t.Mult(), right)
+       | m_expr:left token("//") u_expr:right
+         -> t.BinOp(left, t.FloorDiv(), right)
+       | m_expr:left token("/") u_expr:right -> t.BinOp(left, t.Div(), right)
+       | m_expr:left token("%") u_expr:right -> t.BinOp(left, t.Mod(), right)
+       | u_expr
+a_expr = a_expr:left token("+") m_expr:right -> t.BinOp(left, t.Add(), right)
+       | a_expr:left token("-") m_expr:right -> t.BinOp(left, t.Sub(), right)
+       | m_expr
+
+# 5.7
+shift_expr = shift_expr:left token("<<") a_expr:right
+             -> t.BinOp(left, t.LShift(), right)
+           | shift_expr:left token(">>") a_expr:right
+             -> t.BinOp(left, t.RShift(), right)
+           | a_expr
+
+# 5.8
+and_expr = and_expr:left token("&") shift_expr:right
+           -> t.BinOp(left, t.BitAnd(), right)
+         | shift_expr
+xor_expr = xor_expr:left token("^") and_expr:right
+           -> t.BinOp(left, t.BitXor(), right)
+         | and_expr
+or_expr = or_expr:left token("|") xor_expr:right
+          -> t.BinOp(left, t.BitOr(), right)
+        | xor_expr
+
+# 5.9
 # Precedence: isnot must be matched before is.
+comparison = or_expr:left (cmpop or_expr)*:right -> t.Compare(left, right)
 cmpop = eq | noteq | lt | lte | gt | gte | isnot | is | in | notin
 eq = token("==") -> t.Eq()
 noteq = token("!=") -> t.NotEq()
@@ -135,7 +209,26 @@ isnot = keyword("is") keyword("not") -> t.IsNot()
 in = keyword("in") -> t.In()
 notin = keyword("not") keyword("in") -> t.NotIn()
 
-# arguments XXX
-# We don't exactly follow the original AST system.
-arguments = identifier?:first (token(",") identifier)*:others token(",")?
-          -> t.Arguments(first, *others) if first else t.Arguments(*others)
+# 5.10
+or_test = or_test:left keyword("or") and_test:right
+          -> t.BoolOp(left, t.Or(), right)
+        | and_test
+and_test = and_test:left keyword("and") not_test:right
+           -> t.BoolOp(left, t.And(), right)
+         | not_test
+not_test = keyword("not") not_test:e -> t.Not(e) | comparison
+
+# 5.11
+conditional_expression = or_test:left keyword("if") or_test:cond
+                         keyword("else") expression:right
+                         -> t.IfExp(cond, left, right)
+                       | or_test
+expression = conditiona_expression | lambda_form
+
+# 5.12
+lambda_form = keyword("lambda") parameter_list?:p token(":") expression:e
+            -> t.Lambda(p, e)
+
+# 5.13
+# XXX AST
+expression_list = expression (token(",") expression)* token(",")?
