@@ -54,9 +54,10 @@ exponent = ('e' | 'E') ('+' | '-')? digit+
 imagnumber = (floatnumber | intpart) ('j' | 'J')
 
 # expr XXX
-exprlit = (longinteger | integer | stringliteral):e exprrest(e)
+exprlit = (longinteger | integer | stringliteral | identifier):e exprrest(e)
 exprrest :left = (boolop:b expr:right -> t.BoolOp(b, left, right))
               | (operator:b expr:right -> t.BinOp(b, left, right))
+              | (token("(") arguments:args token(")") -> t.Call(left, args))
               | (-> left)
 expr = exprlit
      | dict

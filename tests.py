@@ -147,6 +147,16 @@ class TestExpr(TC):
         o = t.Set(t.Num(1))
         self.succeed(i, o)
 
+    def test_call_identifier_empty(self):
+        i = "call()"
+        o = t.Call(t.Identifier("call"), t.Arguments())
+        self.succeed(i, o)
+
+    def test_call_identifier_args(self):
+        i = "call(arg)"
+        o = t.Call(t.Identifier("call"), t.Arguments(t.Identifier("arg")))
+        self.succeed(i, o)
+
     def test_unaryop_invert_num(self):
         i = "~0"
         o = t.UnaryOp(t.Invert(), t.Num(0))
@@ -157,14 +167,19 @@ class TestExpr(TC):
         o = t.UnaryOp(t.Not(), t.Num(0))
         self.succeed(i, o)
 
-    def test_nested_arith_left(self):
-        i = "(1 + 2) + 3"
-        o = t.BinOp(t.Add(), t.BinOp(t.Add(), t.Num(1), t.Num(2)), t.Num(3))
-        self.succeed(i, o)
-
     def test_nested_arith_right(self):
         i = "1 + (2 + 3)"
         o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
+        self.succeed(i, o)
+
+    def test_simple_arith_identifier_left(self):
+        i = "a + 1"
+        o = t.BinOp(t.Add(), t.Identifier("a"), t.Num(1))
+        self.succeed(i, o)
+
+    def test_simple_arith_identifier_right(self):
+        i = "1 + a"
+        o = t.BinOp(t.Add(), t.Num(1), t.Identifier("a"))
         self.succeed(i, o)
 
     def test_lambda_id(self):
