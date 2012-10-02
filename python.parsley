@@ -100,8 +100,8 @@ key_datum = expression token(":") expression
 dict_comprehension = expression token(":") expression comp_for
 
 # 5.2.8
-# XXX AST
-set_display = token("{") (expression_list | comprehension) token("}")
+set_display = token("{") (expression_list | comprehension):e token("}")
+            -> t.Set(e)
 
 # 5.2.9
 # XXX this should get nuked someday.
@@ -189,8 +189,8 @@ or_expr = or_expr:left token("|") xor_expr:right -> t.BitOr(left, right)
         | xor_expr
 
 # 5.9
-# Precedence: isnot must be matched before is.
 comparison = or_expr:left (cmpop or_expr)*:right -> t.Compare(left, right)
+# Precedence: isnot must be matched before is.
 cmpop = eq | noteq | lt | lte | gt | gte | isnot | is | in | notin
 eq = token("==") -> t.Eq()
 noteq = token("!=") -> t.NotEq()
@@ -224,5 +224,5 @@ lambda_form = keyword("lambda") parameter_list?:p token(":") expression:e
             -> t.Lambda(p, e)
 
 # 5.13
-# XXX AST
-expression_list = expression (token(",") expression)* token(",")?
+expression_list = expression:head (token(",") expression)*:tail token(",")?
+                -> [head] + tail

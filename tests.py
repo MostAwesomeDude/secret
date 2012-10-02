@@ -103,6 +103,71 @@ class TestStringLiteral(TC):
         self.succeed(i, o)
 
 
+class TestSlicing(TC):
+
+    rule = "slicing"
+
+    def test_ellipsis(self):
+        i = "..."
+        o = t.Ellipsis()
+        self.succeed(i, o)
+
+
+class TestDictDisplay(TC):
+
+    rule = "dict_display"
+
+    def test_dict_display_empty(self):
+        i = "{}"
+        o = t.Dict()
+        self.succeed(i, o)
+
+    def test_dict_display_single(self):
+        i = "{1:2}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
+        self.succeed(i, o)
+
+    def test_dict_display_single_trailing(self):
+        i = "{1:2,}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
+        self.succeed(i, o)
+
+    def test_dict_display_plural(self):
+        i = "{1:2,3:4}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
+        self.succeed(i, o)
+
+    def test_dict_display_plural_trailing(self):
+        i = "{1:2,3:4,}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
+        self.succeed(i, o)
+
+
+class TestSetDisplay(TC):
+
+    rule = "set_display"
+
+    def test_set_display_single(self):
+        i = "{1}"
+        o = t.Set(t.Num(1))
+        self.succeed(i, o)
+
+    def test_set_display_single_trailing(self):
+        i = "{1,}"
+        o = t.Set(t.Num(1))
+        self.succeed(i, o)
+
+    def test_set_display_plural(self):
+        i = "{1,2}"
+        o = t.Set(t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
+    def test_set_display_plural_trailing(self):
+        i = "{1,2,}"
+        o = t.Set(t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
+
 class TestPower(TC):
 
     rule = "power"
@@ -163,21 +228,6 @@ class TestExpr(TC):
 
     rule = "expr"
 
-    def test_dict_literal_expr_empty(self):
-        i = "{}"
-        o = t.Dict()
-        self.succeed(i, o)
-
-    def test_dict_literal_expr_single(self):
-        i = "{1:2}"
-        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
-        self.succeed(i, o)
-
-    def test_set_literal_expr_single(self):
-        i = "{1}"
-        o = t.Set(t.Num(1))
-        self.succeed(i, o)
-
     def test_call_identifier_empty(self):
         i = "call()"
         o = t.Call(t.Identifier("call"), t.Arguments())
@@ -224,71 +274,6 @@ class TestExpr(TC):
         i = "(test.method())"
         o = t.Call(t.Attribute(t.Identifier("test"), t.Identifier("method")),
                 t.Arguments())
-        self.succeed(i, o)
-
-
-class TestSet(TC):
-
-    rule = "set"
-
-    def test_set_literal_single(self):
-        i = "{1}"
-        o = t.Set(t.Num(1))
-        self.succeed(i, o)
-
-    def test_set_literal_single_trailing(self):
-        i = "{1,}"
-        o = t.Set(t.Num(1))
-        self.succeed(i, o)
-
-    def test_set_literal_plural(self):
-        i = "{1,2}"
-        o = t.Set(t.Num(1), t.Num(2))
-        self.succeed(i, o)
-
-    def test_set_literal_plural_trailing(self):
-        i = "{1,2,}"
-        o = t.Set(t.Num(1), t.Num(2))
-        self.succeed(i, o)
-
-
-class TestDict(TC):
-
-    rule = "dict"
-
-    def test_dict_literal_empty(self):
-        i = "{}"
-        o = t.Dict()
-        self.succeed(i, o)
-
-    def test_dict_literal_single(self):
-        i = "{1:2}"
-        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
-        self.succeed(i, o)
-
-    def test_dict_literal_single_trailing(self):
-        i = "{1:2,}"
-        o = t.Dict(t.Pair(t.Num(1), t.Num(2)))
-        self.succeed(i, o)
-
-    def test_dict_literal_plural(self):
-        i = "{1:2,3:4}"
-        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
-        self.succeed(i, o)
-
-    def test_dict_literal_plural_trailing(self):
-        i = "{1:2,3:4,}"
-        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
-        self.succeed(i, o)
-
-
-class TestSlice(TC):
-
-    rule = "slice"
-
-    def test_ellipsis(self):
-        i = "..."
-        o = t.Ellipsis()
         self.succeed(i, o)
 
 
