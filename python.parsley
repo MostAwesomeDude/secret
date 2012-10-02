@@ -86,8 +86,8 @@ ellipsis = token("...") -> t.Ellipsis()
 
 # boolop
 boolop = and | or
-and = token("and") ~letterOrDigit -> t.And()
-or = token("or") ~letterOrDigit -> t.Or()
+and = keyword("and") -> t.And()
+or = keyword("or") -> t.Or()
 
 # operator
 # Precedence: floordiv must be matched before div, pow must be matched before
@@ -110,7 +110,7 @@ floordiv = token("//") -> t.FloorDiv()
 # unaryop XXX
 unaryop = invert | not
 invert = token("~") -> t.Invert()
-not = token("not") ~letterOrDigit -> t.Not()
+not = keyword("not") -> t.Not()
 
 # cmpop
 # Precedence: isnot must be matched before is.
@@ -121,10 +121,10 @@ lt = token("<") -> t.Lt()
 lte = token("<=") -> t.LtE()
 gt = token(">") -> t.Gt()
 gte = token(">=") -> t.GtE()
-is = token("is") ~letterOrDigit -> t.Is()
-isnot = token("is") ~letterOrDigit token("not") ~letterOrDigit -> t.IsNot()
-in = token("in") ~letterOrDigit -> t.In()
-notin = token("not") ~letterOrDigit token("in") ~letterOrDigit -> t.NotIn()
+is = keyword("is") -> t.Is()
+isnot = keyword("is") keyword("not") -> t.IsNot()
+in = keyword("in") -> t.In()
+notin = keyword("not") keyword("in") -> t.NotIn()
 
 # arguments XXX
 # We don't exactly follow the original AST system.

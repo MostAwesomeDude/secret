@@ -227,6 +227,21 @@ class TestSlice(TC):
         self.succeed(i, o)
 
 
+class TestCmpOp(TC):
+
+    rule = "cmpop"
+
+    def test_not_in(self):
+        i = "not in"
+        o = t.NotIn()
+        self.succeed(i, o)
+
+    def test_is_not(self):
+        i = "is not"
+        o = t.IsNot()
+        self.succeed(i, o)
+
+
 class TestArguments(TC):
 
     rule = "arguments"
