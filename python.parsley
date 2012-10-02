@@ -62,7 +62,7 @@ imagnumber = (floatnumber | intpart) ('j' | 'J')
 # 5.2
 atom = identifier | literal | enclosure
 enclosure = parenth_form | list_display | generator_expression | dict_display
-          | set_display | string_conversion | yield_atom
+          | set_display | yield_atom
 
 # 5.2.2
 literal = stringliteral | longinteger | integer | imagnumber | floatnumber
@@ -71,15 +71,14 @@ literal = stringliteral | longinteger | integer | imagnumber | floatnumber
 parenth_form = token("(") expression_list?:e token(")") -> e
 
 # 5.2.4
-# XXX need to pull out all the data and AST it
-list_display = token("[") (expression_list | list_comprehension)?:l token("]")
-             -> l
-list_comprehension = expression list_for
-list_for = keyword("for") target_list keyword ("in") old_expression_list list_iter?
-old_expression_list = old_expression ((token(",") old_expression)+ token(",")?)?
-old_expression = or_test | old_lambda_form
+list_display = token("[") expression_list?:l token("]") -> t.List(*l)
+             | token("[") list_comprehension:l token("]") -> l
+list_comprehension = expression:e list_for:f -> l.ListComp(e, f)
+list_for = keyword("for") target_list:t keyword("in") expression_list:i
+           list_iter?:f
+         -> l.Comprehension(t, i, f)
 list_iter = list_for | list_if
-list_if = keyword("if") old_expression list_iter?
+list_if = keyword("if") expression:e list_iter?:f -> l.CompIf(e, f)
 
 # 5.2.5
 # XXX AST
@@ -103,57 +102,63 @@ dict_comprehension = expression token(":") expression comp_for
 set_display = token("{") (expression_list | comprehension):e token("}")
             -> t.Set(e)
 
-# 5.2.9
-# XXX this should get nuked someday.
-string_conversion = token("`") expression_list:e token("`") -> e
-
 # 5.2.10
-# XXX AST
 yield_atom = token("(") yield_expression:e token(")") -> e
-yield_expression = keyword("yield") expression_list?
+yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 
 # 5.3
-# XXX AST
 primary = atom | attributeref | subscription | slicing | call
 
 # 5.3.1
 attributeref = primary token(".") identifier -> t.Attribute(primary, identifier)
 
 # 5.3.2
-# XXX AST
-subscription = primary token("[") expression_list token("]")
+subscription = primary:obj token("[") expression_list:item token("]")
+             -> t.Subscript(obj, item)
 
 # 5.3.3
-# XXX AST
 slicing = simple_slicing | extended_slicing
-simple_slicing = primary token("[") short_slice token("]")
-extended_slicing = primary token("[") short_list token("]")
-slice_list = slice_item (token(",") slice_item)* token(",")?
-slice_item = expression | proper_slice | ellipsis
-proper_slice = short_slice | long_slice
-short_slice = lower_bound? token(":") upper_bound?
-long_slice = short_slice token(":") stride?
+simple_slicing = primary:obj token("[") short_slice:s token("]")
+               -> t.Subscript(obj, s)
+extended_slicing = primary:obj token("[") short_list:s token("]")
+                 -> t.Subscript(obj, s)
+slice_list = slice_item:head (token(",") slice_item)*:tail token(",")?
+           -> [head] + tail
+slice_item = ellipsis | proper_slice | expression
+proper_slice = long_slice | short_slice
+short_slice = lower_bound?:lower token(":") upper_bound?:upper
+            -> t.Slice(lower, upper, t.Num(1))
+long_slice = short_slice:s token(":") stride?:st -> t.Slice(s, st)
 lower_bound = expression
 upper_bound = expression
 stride = expression
 ellipsis = token("...") -> t.Ellipsis()
 
 # 5.3.4
-# XXX AST
-call = primary token("(")
-       (argument_list token(",")? | expression genexpr_for)? token(")")
-argument_list = positional_arguments (token(",") keyword_arguments)?
-                (token(",") token("*") expression)?
-                (token(",") keyword_arguments)?
-                (token(",") token("**") expression)?
-              | keyword_arguments (token(",") token("*") expression)?
-                (token(",") token("**") expression)?
-              | token("*") expression (token(",") token("*") expression)?
-                (token(",") token("**") expression)?
-              | token("**") expression
-positional_arguments = expression (token(",") expression)*
-keyword_arguments = keyword_item (token(",") keyword_item)*
-keyword_item = identifier token("=") expression
+call = primary:f token("(")
+       (argument_list token(",")? | expression genexpr_for)?:args token(")")
+     -> t.Call(f, args)
+argument_list = positional_arguments:args
+                (token(",") keyword_arguments)?:kwargs
+                (token(",") token("*") expression)?:starargs
+                (token(",") keyword_arguments)?:morekwargs
+                (token(",") token("**") expression)?:starkwargs
+                -> t.Arguments(args, kwargs + morekwargs, starargs, starkwargs)
+              | keyword_arguments:kwargs
+                (token(",") token("*") expression)?:starargs
+                (token(",") token("**") expression)?:starkwargs
+                -> t.Arguments(None, kwargs, starargs, starkwargs)
+              | token("*") expression:starargs
+                (token(",") token("*") expression)?:morestarargs
+                (token(",") token("**") expression)?:starkwargs
+                -> t.Arguments(starargs, None, morestarargs, starkwargs)
+              | token("**") expression:kwargs
+                -> t.Arguments(None, None, None, kwargs)
+positional_arguments = expression:head (token(",") expression)*:tail
+                     -> [head] + tail
+keyword_arguments = keyword_item:head (token(",") keyword_item)*:tail
+                  -> [head] + tail
+keyword_item = identifier:k token("=") expression:v -> t.Pair(k, v)
 
 # 5.4
 power = primary:left (token("**") u_expr)?:right
