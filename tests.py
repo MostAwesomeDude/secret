@@ -103,6 +103,16 @@ class TestStringLiteral(TC):
         self.succeed(i, o)
 
 
+class TestParenthForm(TC):
+
+    rule = "parenth_form"
+
+    def test_tuple_empty(self):
+        i = "()"
+        o = t.Tuple()
+        self.succeed(i, o)
+
+
 class TestSlicing(TC):
 
     rule = "slicing"
