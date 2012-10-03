@@ -70,36 +70,32 @@ literal = stringliteral | longinteger | integer | imagnumber | floatnumber
 # 5.2.3
 parenth_form = token("(") expression_list?:e token(")") -> e
 
-# 5.2.4
+# 5.2.4, 5.2.5
+# We generalize comprehensions entirely.
 list_display = token("[") expression_list?:l token("]") -> t.List(*l)
              | token("[") list_comprehension:l token("]") -> l
 list_comprehension = expression:e list_for:f -> l.ListComp(e, f)
-list_for = keyword("for") target_list:t keyword("in") expression_list:i
+comp_for = keyword("for") target_list:t keyword("in") expression_list:i
            list_iter?:f
          -> l.Comprehension(t, i, f)
-list_iter = list_for | list_if
-list_if = keyword("if") expression:e list_iter?:f -> l.CompIf(e, f)
-
-# 5.2.5
-# XXX AST
-comprehension = expression comp_for
-comp_for = keyword("for") target_list keyword("in") or_test comp_iter?
 comp_iter = comp_for | comp_if
-comp_if = keyword("if") expression_nocond comp_iter?
+comp_if = keyword("if") expression:e comp_iter?:f -> l.CompIf(e, f)
 
 # 5.2.6
-# XXX AST
-generator_expression = token("(") expression comp_for token(")")
+generator_expression = token("(") expression:e comp_for:c token(")")
+                     -> t.Generator(e, c)
 
 # 5.2.7
-# XXX AST
-dict_display = token("{") (key_datum_list | dict_comprehension)? token("}")
-key_datum_list = key_datum (token(",") key_datum)* token(",")?
-key_datum = expression token(":") expression
-dict_comprehension = expression token(":") expression comp_for
+dict_display = token("{") (key_datum_list | dict_comprehension)?:e token("}")
+             -> t.Dict(e)
+key_datum_list = key_datum:head (token(",") key_datum)*:tail token(",")?
+               -> [head] + tail
+key_datum = expression:k token(":") expression:v -> t.Pair(k, v)
+dict_comprehension = expression:k token(":") expression:v comp_for:c
+                   -> t.Comprehension(k, v, c)
 
 # 5.2.8
-set_display = token("{") (expression_list | comprehension):e token("}")
+set_display = token("{") (expression_list | list_comprehension):e token("}")
             -> t.Set(e)
 
 # 5.2.10
