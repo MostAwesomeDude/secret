@@ -210,10 +210,10 @@ notin = keyword("not") keyword("in") -> t.NotIn()
 
 # 5.10
 or_test = or_test:left keyword("or") and_test:right
-          -> t.BoolOp(left, t.Or(), right)
+          -> t.Or(left, right)
         | and_test
 and_test = and_test:left keyword("and") not_test:right
-           -> t.BoolOp(left, t.And(), right)
+           -> t.And(left, right)
          | not_test
 not_test = keyword("not") not_test:e -> t.Not(e) | comparison
 
