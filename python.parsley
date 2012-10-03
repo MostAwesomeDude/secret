@@ -68,7 +68,8 @@ enclosure = parenth_form | list_display | generator_expression | dict_display
 literal = stringliteral | longinteger | integer | imagnumber | floatnumber
 
 # 5.2.3
-parenth_form = token("(") expression_list?:e token(")") -> e
+parenth_form = token("(") expression_list?:e token(")")
+             -> t.Tuple(*e) if e and len(e) > 1 else e if e else t.Tuple()
 
 # 5.2.4, 5.2.5
 # We generalize comprehensions entirely.
