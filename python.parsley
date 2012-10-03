@@ -96,8 +96,8 @@ dict_comprehension = expression:k token(":") expression:v comp_for:c
                    -> t.Comprehension(k, v, c)
 
 # 5.2.8
-set_display = token("{") (expression_list | list_comprehension):e token("}")
-            -> t.Set(e)
+set_display = token("{") expression_list:e token("}") -> t.Set(*e)
+            | token("{") list_comprehension:e token("}") -> t.Set(e)
 
 # 5.2.10
 yield_atom = token("(") yield_expression:e token(")") -> e
