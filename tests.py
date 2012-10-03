@@ -133,6 +133,21 @@ class TestSlicing(TC):
         self.succeed(i, o)
 
 
+class TestCall(TC):
+
+    rule = "call"
+
+    def test_call_identifier_empty(self):
+        i = "call()"
+        o = t.Call(t.Identifier("call"), t.Arguments())
+        self.succeed(i, o)
+
+    def test_call_identifier_args(self):
+        i = "call(arg)"
+        o = t.Call(t.Identifier("call"), t.Arguments(t.Identifier("arg")))
+        self.succeed(i, o)
+
+
 class TestDictDisplay(TC):
 
     rule = "dict_display"
@@ -233,6 +248,16 @@ class TestAExpr(TC):
         self.succeed(i, o)
 
 
+class TestNotTest(TC):
+
+    rule = "not_test"
+
+    def test_unaryop_not_num(self):
+        i = "not 0"
+        o = t.Not(t.Num(0))
+        self.succeed(i, o)
+
+
 class TestAndTest(TC):
 
     rule = "and_test"
@@ -247,21 +272,6 @@ class TestAndTest(TC):
 class TestExpr(TC):
 
     rule = "expr"
-
-    def test_call_identifier_empty(self):
-        i = "call()"
-        o = t.Call(t.Identifier("call"), t.Arguments())
-        self.succeed(i, o)
-
-    def test_call_identifier_args(self):
-        i = "call(arg)"
-        o = t.Call(t.Identifier("call"), t.Arguments(t.Identifier("arg")))
-        self.succeed(i, o)
-
-    def test_unaryop_not_num(self):
-        i = "not 0"
-        o = t.UnaryOp(t.Not(), t.Num(0))
-        self.succeed(i, o)
 
     def test_nested_arith_right(self):
         i = "1 + (2 + 3)"
