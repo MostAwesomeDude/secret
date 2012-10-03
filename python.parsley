@@ -191,7 +191,9 @@ or_expr = or_expr:left token("|") xor_expr:right -> t.BitOr(left, right)
         | xor_expr
 
 # 5.9
-comparison = or_expr:left (cmpop or_expr)*:right -> t.Compare(left, right)
+comparison = or_expr:left (cmpop:c or_expr:e -> t.Pair(c, e))+:right
+           -> t.Compare(left, right)
+           | or_expr
 # Precedence: isnot must be matched before is.
 cmpop = eq | noteq | lt | lte | gt | gte | isnot | is | in | notin
 eq = token("==") -> t.Eq()
@@ -212,7 +214,7 @@ or_test = or_test:left keyword("or") and_test:right
 and_test = and_test:left keyword("and") not_test:right
            -> t.And(left, right)
          | not_test
-not_test = keyword("not") not_test:e -> t.Not(e) | comparison
+not_test = comparison | keyword("not") not_test:e -> t.Not(e)
 
 # 5.11
 conditional_expression = or_test:left keyword("if") or_test:cond
