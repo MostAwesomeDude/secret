@@ -87,8 +87,8 @@ generator_expression = token("(") expression:e comp_for:c token(")")
                      -> t.Generator(e, c)
 
 # 5.2.7
-dict_display = token("{") (key_datum_list | dict_comprehension)?:e token("}")
-             -> t.Dict(e)
+dict_display = token("{") key_datum_list?:e token("}") -> t.Dict(*e)
+             | token("{") dict_comprehension?:e token("}") -> t.Dict(e)
 key_datum_list = key_datum:head (token(",") key_datum)*:tail token(",")?
                -> [head] + tail
 key_datum = expression:k token(":") expression:v -> t.Pair(k, v)
