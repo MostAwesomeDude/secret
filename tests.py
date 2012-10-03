@@ -112,6 +112,16 @@ class TestParenthForm(TC):
         o = t.Tuple()
         self.succeed(i, o)
 
+    def test_tuple_single(self):
+        i = "(1,)"
+        o = t.Tuple(t.Num(1))
+        self.succeed(i, o)
+
+    def test_tuple_pair(self):
+        i = "(1,2)"
+        o = t.Tuple(t.Num(1), t.Num(2))
+        self.succeed(i, o)
+
 
 class TestSlicing(TC):
 
