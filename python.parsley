@@ -232,3 +232,114 @@ lambda_form = keyword("lambda") parameter_list?:p token(":") expression:e
 # 5.13
 expression_list = expression:head (token(",") expression)*:tail token(",")?
                 -> [head] + tail
+
+# http://docs.python.org/reference/simple_stmts.html
+
+# 6
+simple_stmt = expression_stmt
+            | assert_stmt
+            | assignment_stmt
+            | augmented_assignment_stmt
+            | pass_stmt
+            | del_stmt
+            | print_stmt
+            | return_stmt
+            | yield_stmt
+            | raise_stmt
+            | break_stmt
+            | continue_stmt
+            | import_stmt
+            | global_stmt
+            | exec_stmt
+
+# 6.1
+expression_stmt = expression_list
+
+# 6.2
+# XXX ast
+assignment_stmt = (target_list token("="))+ (expression_list | yield_expression)
+target_list = target (token(",") target)* token(",")?
+target = identifier
+       | token("(") target_list token(")")
+       | token("[") target_list token("]")
+       | attributeref
+       | subscription
+       | slicing
+
+# 6.2.1
+# XXX ast
+augmented_assignment_stmt = augtarget augop (expression_list | yield_expression)
+augtarget = identifier | attributeref | subscription | slicing
+augop = token("+=") | token("-=") | token("*=") | token("/=") | token("//=")
+      | token("%=") | token("**=") | token(">>=") | token("<<=") | token("&=")
+      | token("^=") | token("|=")
+
+# 6.3
+# XXX ast
+assert_stmt = keyword("assert") expression (token(",") expression)?
+
+# 6.4
+pass_stmt = keyword("pass") -> t.Pass()
+
+# 6.5
+del_stmt = keyword("del") target_list:t -> t.Del(t)
+
+# 6.6
+# XXX ast
+# XXX oh noes, do we even want this? :T
+print_stmt = keyword("print")
+             ((expression (token(",") expression)* token(",")?)
+             | token(">>") expression (token(",") expression)+ token(",")?)
+
+# 6.7
+return_stmt = keyword("return") expression_list?:rv -> t.Return(rv)
+
+# 6.8
+yield_stmt = yield_expression
+
+# 6.9
+raise_stmt = keyword("raise")
+             (expression:t
+              (token(",") expression:v (token(",") expression:tb)?)?)?
+           -> t.Raise(t, v, tb)
+
+# 6.10
+break_stmt = keyword("break") -> t.Break()
+
+# 6.11
+continue_stmt = keyword("continue") -> t.Continue()
+
+# 6.12
+# We don't have the "name" rule; it's only used immediately after the "as"
+# keyword, so we instead have a single "as_name" rule which inlines "name".
+# For posterity, this is "name":
+# name = identifier
+# ...Yeah, that's why.
+# XXX ast
+import_stmt = keyword("import") module as_name? (token(",") module as_name)*
+            | keyword("from") relative_module keyword("import") identifier
+              as_name (token(",") identifier as_name)*
+            | keyword("from") relative_module keyword("import") token("(")
+              identifier as_name (token(",") identifier as_name)* token(",")?
+              token(")")
+module = (identifier token("."))* identifier
+relative_module = token(".")* module | token(".")+
+as_name = keyword("as") identifier:n -> t.As(n)
+
+# 6.12.1
+# XXX ast
+future_statement = keyword("from") token("__future__") keyword("import")
+                   feature as_name? (token(",") feature as_name?)*
+                 | keyword("from") token("__future__") keyword("import")
+                   token("(") feature as_name? (token(",") feature as_name?)*
+                   token(",")? token(")")
+feature = identifier
+
+# 6.13
+# XXX ast
+global_stmt = keyword("global") identifier (token(",") identifier)*
+
+# 6.14
+# XXX ast
+exec_stmt = keyword("exec") or_expr
+            (keyword("in") expression (token(",") expression)?)?
