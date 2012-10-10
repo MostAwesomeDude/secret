@@ -2,6 +2,10 @@
 # * ``
 # * <>
 
+# Core primitives that will be needed later.
+NEWLINE = '\r' '\n' | '\r' | '\n' -> None
+spaces = (' ' | '\t')* -> None
+
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
