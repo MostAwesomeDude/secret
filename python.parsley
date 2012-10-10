@@ -214,7 +214,8 @@ or_test = or_test:left keyword("or") and_test:right
 and_test = and_test:left keyword("and") not_test:right
            -> t.And(left, right)
          | not_test
-not_test = comparison | keyword("not") not_test:e -> t.Not(e)
+not_test = keyword("not") not_test:e -> t.Not(e)
+         | comparison
 
 # 5.11
 conditional_expression = or_test:left keyword("if") or_test:cond
