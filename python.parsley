@@ -343,3 +343,75 @@ global_stmt = keyword("global") identifier (token(",") identifier)*
 # XXX ast
 exec_stmt = keyword("exec") or_expr
             (keyword("in") expression (token(",") expression)?)?
+
+# http://docs.python.org/reference/compound_stmts.html
+
+# 7
+# XXX ast
+compound_stmt = if_stmt
+              | while_stmt
+              | for_stmt
+              | try_stmt
+              | with_stmt
+              | funcdef
+              | classdef
+              | decorated
+suite = stmt_list NEWLINE | NEWLINE INDENT statement+ DEDENT
+statement = stmt_list NEWLINE | compound_stmt
+stmt_list = simple_stmt (token(";") simple_stmt)* token(";")?
+
+# 7.1
+# XXX ast
+if_stmt = keyword("if") expression token(":") suite
+          (keyword("elif") expression token(":") suite)*
+          (keyword("else") token(":") suite)?
+
+# 7.2
+# XXX ast
+while_stmt = keyword("while") expression token(":") suite
+
+# 7.3
+# XXX ast
+for_stmt = keyword("for") target_list keyword("in") expression_list token(":")
+           suite (keyword("else") token(":") suite)?
+
+# 7.4
+# XXX ast
+try_stmt = try1_stmt | try2_stmt
+try1_stmt = keyword("try") token(":") suite
+            (keyword("except")
+             (expression ((keyword("as") | token(",")) target)?)? token(":")
+              suite)+
+            (keyword("else") token(":") suite)?
+            (keyword("finally") token(":") suite)?
+try2_stmt = keyword("try") token(":") suite
+            keyword("finally") token(":") suite
+
+# 7.5
+# XXX ast
+with_stmt = keyword("with") with_item (token(",") with_item)* token(":") suite
+with_item = expression (keyword("as") target)?
+
+# 7.6
+# XXX ast
+decorated = decorators (classdef | funcdef)
+decorators = decorator+
+decorator = token("@") dotted_name
+            (token("(") (argument_list token(",")?)? token(")"))? NEWLINE
+funcdef = keyword("def") funcname token("(") parameter_list? token(")")
+          token(":") suite
+dotted_name = identifier (token(".") identifier)*
+parameter_list = (defparameter token(","))*
+                 (token("*") identifier (token(",") token("**") identifier)?
+                | token("**") identifier
+                | defparameter token(",")?)
+defparameter = parameter (token("=") expression)?
+sublist = parameter (token(",") parameter)* token(",")?
+parameter = identifier | token("(") sublist token(")")
+funcname = identifier
+
+# 7.7
+# XXX ast
+classdef = keyword("class") classname inheritance? token(":") suite
+inheritance = token("(") expression_list? token(")")
+classname = identifier
