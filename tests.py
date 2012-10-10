@@ -268,6 +268,26 @@ class TestAndTest(TC):
         self.succeed(i, o)
 
 
+class TestBreakStmt(TC):
+
+    rule = "break_stmt"
+
+    def test_break(self):
+        i = "break"
+        o = t.Break()
+        self.succeed(i, o)
+
+
+class TestContinueStmt(TC):
+
+    rule = "continue_stmt"
+
+    def test_continue(self):
+        i = "continue"
+        o = t.Continue()
+        self.succeed(i, o)
+
+
 """
 class TestExpr(TC):
 
@@ -304,21 +324,6 @@ class TestExpr(TC):
         i = "(test.method())"
         o = t.Call(t.Attribute(t.Identifier("test"), t.Identifier("method")),
                 t.Arguments())
-        self.succeed(i, o)
-
-
-class TestCmpOp(TC):
-
-    rule = "cmpop"
-
-    def test_not_in(self):
-        i = "not in"
-        o = t.NotIn()
-        self.succeed(i, o)
-
-    def test_is_not(self):
-        i = "is not"
-        o = t.IsNot()
         self.succeed(i, o)
 
 
