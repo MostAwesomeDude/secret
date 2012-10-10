@@ -415,3 +415,8 @@ funcname = identifier
 classdef = keyword("class") classname inheritance? token(":") suite
 inheritance = token("(") expression_list? token(")")
 classname = identifier
+
+# http://docs.python.org/reference/toplevel_components.html
+
+# 8.2
+file_input = (NEWLINE | statement)*
