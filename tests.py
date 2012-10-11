@@ -307,6 +307,19 @@ class TestIfStmt(TC):
         o = t.If(t.Identifier("True"), [t.Pass()], [], None)
         self.succeed(i, o)
 
+    def test_if_true_else_pass(self):
+        i = "if True:\n pass\nelse:\n pass\n"
+        o = t.If(t.Identifier("True"), [t.Pass()], [], [t.Pass()])
+        self.succeed(i, o)
+
+    def test_if_true_elif_else_pass(self):
+        i = "if True:\n pass\nelif False:\n pass\nelse:\n pass\n"
+        o = t.If(t.Identifier("True"),
+                 [t.Pass()],
+                 [(t.Identifier("False"), [t.Pass()])],
+                 [t.Pass()])
+        self.succeed(i, o)
+
 
 class TestWhileStmt(TC):
 
