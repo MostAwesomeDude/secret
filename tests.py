@@ -298,6 +298,16 @@ class TestContinueStmt(TC):
         self.succeed(i, o)
 
 
+class TestIfStmt(TC):
+
+    rule = "if_stmt"
+
+    def test_if_true_pass(self):
+        i = "if True:\n pass\n"
+        o = t.If(t.Identifier("True"), [t.Pass()], [], None)
+        self.succeed(i, o)
+
+
 class TestWhileStmt(TC):
 
     rule = "while_stmt"

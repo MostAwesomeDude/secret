@@ -370,10 +370,11 @@ stmt_list = simple_stmt:head (token(";") simple_stmt)*:tail token(";")?
           -> [head] + tail
 
 # 7.1
-# XXX ast
-if_stmt = keyword("if") expression token(":") suite
-          (keyword("elif") expression token(":") suite)*
-          (keyword("else") token(":") suite)?
+if_stmt = keyword("if") expression:e token(":") suite:then
+          (keyword("elif") expression:ele token(":") suite:elthen
+           -> (ele, elthen))*:elifs
+          (keyword("else") token(":") suite)?:elsethen
+        -> t.If(e, then, elifs, elsethen)
 
 # 7.2
 while_stmt = keyword("while") expression:e token(":") suite:s -> t.While(e, s)
