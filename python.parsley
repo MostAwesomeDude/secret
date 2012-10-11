@@ -3,8 +3,10 @@
 # * <>
 
 # Core primitives that will be needed later.
-NEWLINE = '\r' '\n' | '\r' | '\n' -> None
-spaces = (' ' | '\t')* -> None
+newline = '\r' '\n' | '\r' | '\n' -> None
+leading_space = ' '
+indent = leading_space+:ss !(self.indents.append(len(ss)))
+dedent = !(self.indents.pop())
 
 # http://docs.python.org/reference/lexical_analysis.html
 
@@ -360,8 +362,9 @@ compound_stmt = if_stmt
               | funcdef
               | classdef
               | decorated
-suite = stmt_list NEWLINE | NEWLINE INDENT statement+ DEDENT
-statement = stmt_list NEWLINE | compound_stmt
+suite = stmt_list newline | newline indent statement+ dedent
+statement = !(sum(self.indents)):n leading_space{n} ~leading_space
+            (stmt_list newline | compound_stmt)
 stmt_list = simple_stmt (token(";") simple_stmt)* token(";")?
 
 # 7.1
@@ -401,7 +404,7 @@ with_item = expression (keyword("as") target)?
 decorated = decorators (classdef | funcdef)
 decorators = decorator+
 decorator = token("@") dotted_name
-            (token("(") (argument_list token(",")?)? token(")"))? NEWLINE
+            (token("(") (argument_list token(",")?)? token(")"))? newline
 funcdef = keyword("def") funcname token("(") parameter_list? token(")")
           token(":") suite
 dotted_name = identifier (token(".") identifier)*
@@ -423,4 +426,4 @@ classname = identifier
 # http://docs.python.org/reference/toplevel_components.html
 
 # 8.2
-file_input = (NEWLINE | statement)*
+file_input = (newline | statement)*

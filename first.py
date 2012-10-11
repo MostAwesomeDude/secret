@@ -39,6 +39,10 @@ class Parser(OMeta.makeGrammar(g, globals())):
         "yield",
     ]
 
+    def __init__(self, *args, **kwargs):
+        super(Parser, self).__init__(*args, **kwargs)
+        self.indents = []
+
     def keyword_pred(self, first, second):
         return first + second in self.keywords
 
