@@ -353,7 +353,6 @@ exec_stmt = keyword("exec") or_expr
 # http://docs.python.org/reference/compound_stmts.html
 
 # 7
-# XXX ast
 compound_stmt = if_stmt
               | while_stmt
               | for_stmt
@@ -362,10 +361,13 @@ compound_stmt = if_stmt
               | funcdef
               | classdef
               | decorated
-suite = stmt_list newline | newline indent statement+ dedent
+suite = stmt_list:ss newline -> ss
+      | newline indent statement+:ss dedent -> ss
 statement = !(sum(self.indents)):n leading_space{n} ~leading_space
-            (stmt_list newline | compound_stmt)
-stmt_list = simple_stmt (token(";") simple_stmt)* token(";")?
+            (stmt_list:ss newline -> ss
+           | compound_stmt:s -> s)
+stmt_list = simple_stmt:head (token(";") simple_stmt)*:tail token(";")?
+          -> [head] + tail
 
 # 7.1
 # XXX ast
@@ -374,8 +376,7 @@ if_stmt = keyword("if") expression token(":") suite
           (keyword("else") token(":") suite)?
 
 # 7.2
-# XXX ast
-while_stmt = keyword("while") expression token(":") suite
+while_stmt = keyword("while") expression:e token(":") suite:s -> t.While(e, s)
 
 # 7.3
 # XXX ast

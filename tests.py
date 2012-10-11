@@ -268,6 +268,16 @@ class TestAndTest(TC):
         self.succeed(i, o)
 
 
+class TestPassStmt(TC):
+
+    rule = "pass_stmt"
+
+    def test_pass(self):
+        i = "pass"
+        o = t.Pass()
+        self.succeed(i, o)
+
+
 class TestBreakStmt(TC):
 
     rule = "break_stmt"
@@ -285,6 +295,16 @@ class TestContinueStmt(TC):
     def test_continue(self):
         i = "continue"
         o = t.Continue()
+        self.succeed(i, o)
+
+
+class TestWhileStmt(TC):
+
+    rule = "while_stmt"
+
+    def test_while_true_pass(self):
+        i = "while True:\n pass\n"
+        o = t.While(t.Identifier("True"), [t.Pass()])
         self.succeed(i, o)
 
 
