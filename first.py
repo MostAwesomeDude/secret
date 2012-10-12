@@ -58,6 +58,17 @@ class Parser(OMeta.makeGrammar(g, globals())):
         else:
             return head
 
+    def argdicts(self, first, second):
+        """
+        Combine two dictionaries of arguments.
+        """
+
+        if not first and not second:
+            return None
+
+        raise NotImplementedError()
+
+
 if __name__ == "__main__":
     import sys
     print Parser(open(sys.argv[1]).read()).rule_expr()

@@ -143,7 +143,8 @@ argument_list = positional_arguments:args
                 (token(",") token("*") expression)?:starargs
                 (token(",") keyword_arguments)?:morekwargs
                 (token(",") token("**") expression)?:starkwargs
-                -> t.Arguments(args, kwargs + morekwargs, starargs, starkwargs)
+                -> t.Arguments(args, self.argdicts(kwargs, morekwargs),
+                               starargs, starkwargs)
               | keyword_arguments:kwargs
                 (token(",") token("*") expression)?:starargs
                 (token(",") token("**") expression)?:starkwargs

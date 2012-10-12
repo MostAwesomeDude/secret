@@ -149,12 +149,37 @@ class TestCall(TC):
 
     def test_call_identifier_empty(self):
         i = "call()"
-        o = t.Call(t.Name("call"), t.Arguments())
+        o = t.Call(t.Name("call"), None)
         self.succeed(i, o)
 
     def test_call_identifier_args(self):
         i = "call(arg)"
-        o = t.Call(t.Name("call"), t.Arguments(t.Name("arg")))
+        o = t.Call(t.Name("call"), t.Arguments([t.Name("arg")], None, None, None))
+        self.succeed(i, o)
+
+
+class TestArgumentList(TC):
+
+    rule = "argument_list"
+
+    def test_arguments_positional_single(self):
+        i = "arg"
+        o = t.Arguments([t.Name("arg")], None, None, None)
+        self.succeed(i, o)
+
+    def test_arguments_positional_single_trailing(self):
+        i = "arg,"
+        o = t.Arguments([t.Name("arg")], None, None, None)
+        self.succeed(i, o)
+
+    def test_arguments_plural(self):
+        i = "foo,bar"
+        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
+        self.succeed(i, o)
+
+    def test_arguments_plural_trailing(self):
+        i = "foo,bar,"
+        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
         self.succeed(i, o)
 
 
@@ -495,35 +520,5 @@ class TestExpr(TC):
         i = "(test.method())"
         o = t.Call(t.Attribute(t.Name("test"), t.Name("method")),
                 t.Arguments())
-        self.succeed(i, o)
-
-
-class TestArguments(TC):
-
-    rule = "arguments"
-
-    def test_arguments_empty(self):
-        i = ""
-        o = t.Arguments()
-        self.succeed(i, o)
-
-    def test_arguments_single(self):
-        i = "foo"
-        o = t.Arguments(t.Name("foo"))
-        self.succeed(i, o)
-
-    def test_arguments_single_trailing(self):
-        i = "foo,"
-        o = t.Arguments(t.Name("foo"))
-        self.succeed(i, o)
-
-    def test_arguments_plural(self):
-        i = "foo,bar"
-        o = t.Arguments(t.Name("foo"), t.Name("bar"))
-        self.succeed(i, o)
-
-    def test_arguments_plural_trailing(self):
-        i = "foo,bar,"
-        o = t.Arguments(t.Name("foo"), t.Name("bar"))
         self.succeed(i, o)
         """
