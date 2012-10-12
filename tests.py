@@ -189,17 +189,17 @@ class TestSetDisplay(TC):
 
     def test_set_display_single_trailing(self):
         i = "{1,}"
-        o = t.Set(t.Num(1))
+        o = t.Set(t.Tuple(t.Num(1)))
         self.succeed(i, o)
 
     def test_set_display_plural(self):
         i = "{1,2}"
-        o = t.Set(t.Num(1), t.Num(2))
+        o = t.Set(t.Tuple(t.Num(1), t.Num(2)))
         self.succeed(i, o)
 
     def test_set_display_plural_trailing(self):
         i = "{1,2,}"
-        o = t.Set(t.Num(1), t.Num(2))
+        o = t.Set(t.Tuple(t.Num(1), t.Num(2)))
         self.succeed(i, o)
 
 
