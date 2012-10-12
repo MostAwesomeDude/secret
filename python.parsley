@@ -13,7 +13,7 @@ dedent = !(self.indents.pop())
 # 2.3
 identifier = spaces? (letter | '_'):first <letterOrDigit*>:second
              ?(not self.keyword_pred(first, second))
-           -> t.Identifier(first + second)
+           -> t.Name(first + second)
 letter = lowercase | uppercase
 lowercase = anything:c ?(c in "abcdefghijklmnopqrstuvwxyz") -> c
 uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ") -> c
@@ -410,7 +410,7 @@ decorator = token("@") dotted_name
 funcdef = keyword("def") funcname:name token("(") parameter_list:ps token(")")
           token(":") suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (token(".") identifier)*:tail
-            -> t.Identifier(".".join(head, *tail) if tail else head)
+            -> t.Name(".".join(head, *tail) if tail else head)
 parameter_list = (defparameter:p token(",") -> p)*:init
                  (token("*") identifier:args
                   (token(",") token("**") identifier)?:kwargs

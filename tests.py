@@ -25,7 +25,7 @@ class TestIdentifier(TC):
 
     def test_foo(self):
         i = "foo"
-        o = t.Identifier("foo")
+        o = t.Name("foo")
         self.succeed(i, o)
 
     def test_lambda(self):
@@ -139,12 +139,12 @@ class TestCall(TC):
 
     def test_call_identifier_empty(self):
         i = "call()"
-        o = t.Call(t.Identifier("call"), t.Arguments())
+        o = t.Call(t.Name("call"), t.Arguments())
         self.succeed(i, o)
 
     def test_call_identifier_args(self):
         i = "call(arg)"
-        o = t.Call(t.Identifier("call"), t.Arguments(t.Identifier("arg")))
+        o = t.Call(t.Name("call"), t.Arguments(t.Name("arg")))
         self.succeed(i, o)
 
 
@@ -239,12 +239,12 @@ class TestAExpr(TC):
 
     def test_u_expr_add_identifier_left(self):
         i = "a + 1"
-        o = t.Add(t.Identifier("a"), t.Num(1))
+        o = t.Add(t.Name("a"), t.Num(1))
         self.succeed(i, o)
 
     def test_u_expr_add_identifier_right(self):
         i = "1 + a"
-        o = t.Add(t.Num(1), t.Identifier("a"))
+        o = t.Add(t.Num(1), t.Name("a"))
         self.succeed(i, o)
 
 
@@ -274,8 +274,8 @@ class TestLambdaForm(TC):
 
     def test_lambda_id(self):
         i = "lambda id: id"
-        o = t.Lambda(t.Parameters([t.Identifier("id")], None, None),
-                t.Identifier("id"))
+        o = t.Lambda(t.Parameters([t.Name("id")], None, None),
+                t.Name("id"))
         self.succeed(i, o)
 
 
@@ -300,7 +300,7 @@ class TestReturnStmt(TC):
 
     def test_return_add(self):
         i = "return x + y"
-        o = t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))
+        o = t.Return(t.Add(t.Name("x"), t.Name("y")))
         self.succeed(i, o)
 
 
@@ -330,19 +330,19 @@ class TestIfStmt(TC):
 
     def test_if_true_pass(self):
         i = "if True:\n pass\n"
-        o = t.If(t.Identifier("True"), [t.Pass()], [], None)
+        o = t.If(t.Name("True"), [t.Pass()], [], None)
         self.succeed(i, o)
 
     def test_if_true_else_pass(self):
         i = "if True:\n pass\nelse:\n pass\n"
-        o = t.If(t.Identifier("True"), [t.Pass()], [], [t.Pass()])
+        o = t.If(t.Name("True"), [t.Pass()], [], [t.Pass()])
         self.succeed(i, o)
 
     def test_if_true_elif_else_pass(self):
         i = "if True:\n pass\nelif False:\n pass\nelse:\n pass\n"
-        o = t.If(t.Identifier("True"),
+        o = t.If(t.Name("True"),
                  [t.Pass()],
-                 [(t.Identifier("False"), [t.Pass()])],
+                 [(t.Name("False"), [t.Pass()])],
                  [t.Pass()])
         self.succeed(i, o)
 
@@ -353,7 +353,7 @@ class TestWhileStmt(TC):
 
     def test_while_true_pass(self):
         i = "while True:\n pass\n"
-        o = t.While(t.Identifier("True"), [t.Pass()])
+        o = t.While(t.Name("True"), [t.Pass()])
         self.succeed(i, o)
 
     def test_while_expr_pass(self):
@@ -368,24 +368,48 @@ class TestFuncdef(TC):
 
     def test_empty_pass(self):
         i = "def empty():\n pass\n"
-        o = t.Def(t.Identifier("empty"),
+        o = t.Def(t.Name("empty"),
                   t.Parameters(None, None, None),
                   [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_one_line(self):
         i = "def empty(): pass\n"
-        o = t.Def(t.Identifier("empty"),
+        o = t.Def(t.Name("empty"),
                   t.Parameters(None, None, None),
                   [t.Pass()])
         self.succeed(i, o)
 
+    def test_empty_pass_multiline(self):
+        i = """def empty():
+            pass
+            pass
+        """
+        o = t.Def(t.Name("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass(), t.Pass()])
+        self.succeed(i, o)
+
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
-        o = t.Def(t.Identifier("add"),
-                  t.Parameters([t.Identifier("x"), t.Identifier("y")], None,
+        o = t.Def(t.Name("add"),
+                  t.Parameters([t.Name("x"), t.Name("y")], None,
                                None),
-                  [t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))])
+                  [t.Return(t.Add(t.Name("x"), t.Name("y")))])
+        self.succeed(i, o)
+
+    def test_add_assign(self):
+        i = """def add(x, y):
+            z = x + y
+            return z
+        """
+        o = t.Def(t.Name("add"),
+                  t.Parameters([t.Name("x"), t.Name("y")], None,
+                               None),
+                  [
+                      t.Assign(t.Name("z"), t.Add(t.Name("x"), t.Name("y"))),
+                      t.Return(t.Name("z")),
+                  ])
         self.succeed(i, o)
 
     def test_quadratic(self):
@@ -394,11 +418,20 @@ class TestFuncdef(TC):
             a2 = 2 * a
             return (-b + dis) / a2, (-b - dis) / a2
         """
-        o = t.Def(t.Identifier("quadratic"),
-                  t.Parameters([t.Identifier("a"), t.Identifier("b"),
-                                t.Identifier("c")], None, None),
+        o = t.Def(t.Name("quadratic"),
+                  t.Parameters([t.Name("a"), t.Name("b"),
+                                t.Name("c")], None, None),
                   [
-                      t.Assign(t.Identifier("d"), t.Call())])
+                      t.Assign(t.Name("d"), t.Call(t.Name("sqrt"))),
+                      t.Assign(t.Name("a2"), t.Mul(t.Num(2), t.Name("a"))),
+                      t.Return(t.Tuple(
+                          t.Div(t.Add(t.Negate(t.Name("b")), t.Name("dis")),
+                                t.Name("a2")),
+                          t.Div(t.Sub(t.Negate(t.Name("b")), t.Name("dis")),
+                                t.Name("a2")),
+                      )),
+                  ])
+        self.succeed(i, o)
 
 
 class TestParameterList(TC):
@@ -407,7 +440,7 @@ class TestParameterList(TC):
 
     def test_params_multiple(self):
         i = "x, y"
-        o = t.Parameters([t.Identifier("x"), t.Identifier("y")], None, None)
+        o = t.Parameters([t.Name("x"), t.Name("y")], None, None)
         self.succeed(i, o)
 
 
@@ -423,7 +456,7 @@ class TestExpr(TC):
 
     def test_attr_literal(self):
         i = "an.attr"
-        o = t.Attribute(t.Identifier("an"), t.Identifier("attr"))
+        o = t.Attribute(t.Name("an"), t.Name("attr"))
         self.succeed(i, o)
 
     def test_if_else_literals(self):
@@ -433,14 +466,14 @@ class TestExpr(TC):
 
     def test_if_else_complex(self):
         i = "('this' if it.succeeds() else 'that')"
-        o = t.IfExp(t.Call(t.Attribute(t.Identifier("it"),
-            t.Identifier("succeeds")), t.Arguments()), t.Str("this"),
+        o = t.IfExp(t.Call(t.Attribute(t.Name("it"),
+            t.Name("succeeds")), t.Arguments()), t.Str("this"),
             t.Str("that"))
         self.succeed(i, o)
 
     def test_method(self):
         i = "(test.method())"
-        o = t.Call(t.Attribute(t.Identifier("test"), t.Identifier("method")),
+        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")),
                 t.Arguments())
         self.succeed(i, o)
 
@@ -456,21 +489,21 @@ class TestArguments(TC):
 
     def test_arguments_single(self):
         i = "foo"
-        o = t.Arguments(t.Identifier("foo"))
+        o = t.Arguments(t.Name("foo"))
         self.succeed(i, o)
 
     def test_arguments_single_trailing(self):
         i = "foo,"
-        o = t.Arguments(t.Identifier("foo"))
+        o = t.Arguments(t.Name("foo"))
         self.succeed(i, o)
 
     def test_arguments_plural(self):
         i = "foo,bar"
-        o = t.Arguments(t.Identifier("foo"), t.Identifier("bar"))
+        o = t.Arguments(t.Name("foo"), t.Name("bar"))
         self.succeed(i, o)
 
     def test_arguments_plural_trailing(self):
         i = "foo,bar,"
-        o = t.Arguments(t.Identifier("foo"), t.Identifier("bar"))
+        o = t.Arguments(t.Name("foo"), t.Name("bar"))
         self.succeed(i, o)
         """
