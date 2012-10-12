@@ -268,6 +268,17 @@ class TestAndTest(TC):
         self.succeed(i, o)
 
 
+class TestLambdaForm(TC):
+
+    rule = "lambda_form"
+
+    def test_lambda_id(self):
+        i = "lambda id: id"
+        o = t.Lambda(t.Parameters([t.Identifier("id")], None, None),
+                t.Identifier("id"))
+        self.succeed(i, o)
+
+
 class TestPassStmt(TC):
 
     rule = "pass_stmt"
@@ -356,11 +367,6 @@ class TestExpr(TC):
         o = t.IfExp(t.Call(t.Attribute(t.Identifier("it"),
             t.Identifier("succeeds")), t.Arguments()), t.Str("this"),
             t.Str("that"))
-        self.succeed(i, o)
-
-    def test_lambda_id(self):
-        i = "lambda id: id"
-        o = t.Lambda(t.Arguments(t.Identifier("id")), t.Identifier("id"))
         self.succeed(i, o)
 
     def test_method(self):

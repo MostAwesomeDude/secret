@@ -410,11 +410,16 @@ decorator = token("@") dotted_name
 funcdef = keyword("def") funcname token("(") parameter_list? token(")")
           token(":") suite
 dotted_name = identifier (token(".") identifier)*
-parameter_list = (defparameter token(","))*
-                 (token("*") identifier (token(",") token("**") identifier)?
-                | token("**") identifier
-                | defparameter token(",")?)
-defparameter = parameter (token("=") expression)?
+parameter_list = (defparameter token(","))*:init
+                 (token("*") identifier:args
+                  (token(",") token("**") identifier)?:kwargs
+                -> t.Parameters(init, args, kwargs)
+                | token("**") identifier:kwargs
+                -> t.Parameters(init, None, kwargs)
+                | defparameter:last token(",")?
+                -> t.Parameters(init + [last], None, None))
+defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
+             | parameter
 sublist = parameter (token(",") parameter)* token(",")?
 parameter = identifier | token("(") sublist token(")")
 funcname = identifier
