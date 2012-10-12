@@ -368,22 +368,37 @@ class TestFuncdef(TC):
 
     def test_empty_pass(self):
         i = "def empty():\n pass\n"
-        o = t.Def(t.Parameters(None, None, None), [t.Pass()])
+        o = t.Def(t.Identifier("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_one_line(self):
         i = "def empty(): pass\n"
-        o = t.Def(t.Parameters(None, None, None), [t.Pass()])
+        o = t.Def(t.Identifier("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass()])
         self.succeed(i, o)
 
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
-        o = t.Def(
-                t.Parameters([t.Identifier("x"), t.Identifier("y")],
-                    None, None),
-                [t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))]
-            )
+        o = t.Def(t.Identifier("add"),
+                  t.Parameters([t.Identifier("x"), t.Identifier("y")], None,
+                               None),
+                  [t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))])
         self.succeed(i, o)
+
+    def test_quadratic(self):
+        i = """def quadratic(a, b, c):
+            d = sqrt(b ** 2 - 4 * a * c)
+            a2 = 2 * a
+            return (-b + dis) / a2, (-b - dis) / a2
+        """
+        o = t.Def(t.Identifier("quadratic"),
+                  t.Parameters([t.Identifier("a"), t.Identifier("b"),
+                                t.Identifier("c")], None, None),
+                  [
+                      t.Assign(t.Identifier("d"), t.Call())])
 
 
 class TestParameterList(TC):

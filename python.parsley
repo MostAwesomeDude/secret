@@ -407,8 +407,8 @@ decorated = decorators (classdef | funcdef)
 decorators = decorator+
 decorator = token("@") dotted_name
             (token("(") (argument_list token(",")?)? token(")"))? newline
-funcdef = keyword("def") funcname token("(") parameter_list:ps token(")")
-          token(":") suite:ss -> t.Def(ps, ss)
+funcdef = keyword("def") funcname:name token("(") parameter_list:ps token(")")
+          token(":") suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (token(".") identifier)*:tail
             -> t.Identifier(".".join(head, *tail) if tail else head)
 parameter_list = (defparameter:p token(",") -> p)*:init
