@@ -236,8 +236,8 @@ lambda_form = keyword("lambda") parameter_list:p token(":") expression:e
             -> t.Lambda(p, e)
 
 # 5.13
-expression_list = expression:head (token(",") expression)*:tail token(",")?
-                -> [head] + tail
+expression_list = expression:head (token(",") expression)*:tail token(",")?:t
+                -> self.tuplify(head, tail, t)
 
 # http://docs.python.org/reference/simple_stmts.html
 
@@ -262,12 +262,13 @@ simple_stmt = expression_stmt
 expression_stmt = expression_list
 
 # 6.2
-# XXX ast
-assignment_stmt = (target_list token("="))+ (expression_list | yield_expression)
-target_list = target (token(",") target)* token(",")?
+assignment_stmt = (target_list:lhs token("=") -> lhs)+:lhss
+                  (expression_list | yield_expression):rhs -> t.Assign(lhss, rhs)
+target_list = target:head (token(",") target)*:tail token(",")?:t
+            -> self.tuplify(head, tail, t)
 target = identifier
-       | token("(") target_list token(")")
-       | token("[") target_list token("]")
+       | token("(") target_list:l token(")") -> l
+       | token("[") target_list:l token("]") -> l
        | attributeref
        | subscription
        | slicing

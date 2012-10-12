@@ -279,6 +279,16 @@ class TestLambdaForm(TC):
         self.succeed(i, o)
 
 
+class TestAssignmentStmt(TC):
+
+    rule = "assignment_stmt"
+
+    def test_assign_simple(self):
+        i = "x = 0"
+        o = t.Assign([t.Name("x")], t.Num(0))
+        self.succeed(i, o)
+
+
 class TestPassStmt(TC):
 
     rule = "pass_stmt"
@@ -407,7 +417,7 @@ class TestFuncdef(TC):
                   t.Parameters([t.Name("x"), t.Name("y")], None,
                                None),
                   [
-                      t.Assign(t.Name("z"), t.Add(t.Name("x"), t.Name("y"))),
+                      t.Assign([t.Name("z")], t.Add(t.Name("x"), t.Name("y"))),
                       t.Return(t.Name("z")),
                   ])
         self.succeed(i, o)
@@ -422,8 +432,8 @@ class TestFuncdef(TC):
                   t.Parameters([t.Name("a"), t.Name("b"),
                                 t.Name("c")], None, None),
                   [
-                      t.Assign(t.Name("d"), t.Call(t.Name("sqrt"))),
-                      t.Assign(t.Name("a2"), t.Mul(t.Num(2), t.Name("a"))),
+                      t.Assign([t.Name("d")], t.Call(t.Name("sqrt"))),
+                      t.Assign([t.Name("a2")], t.Mul(t.Num(2), t.Name("a"))),
                       t.Return(t.Tuple(
                           t.Div(t.Add(t.Negate(t.Name("b")), t.Name("dis")),
                                 t.Name("a2")),

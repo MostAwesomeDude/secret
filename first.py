@@ -46,6 +46,18 @@ class Parser(OMeta.makeGrammar(g, globals())):
     def keyword_pred(self, first, second):
         return first + second in self.keywords
 
+    def tuplify(self, head, tail, trailing):
+        """
+        Perform tuplification logic.
+        """
+
+        if tail:
+            return t.Tuple(head, *tail)
+        elif trailing:
+            return t.Tuple(head)
+        else:
+            return head
+
 if __name__ == "__main__":
     import sys
     print Parser(open(sys.argv[1]).read()).rule_expr()
