@@ -232,7 +232,7 @@ conditional_expression = or_test:left keyword("if") or_test:cond
 expression = conditional_expression | lambda_form
 
 # 5.12
-lambda_form = keyword("lambda") parameter_list?:p token(":") expression:e
+lambda_form = keyword("lambda") parameter_list:p token(":") expression:e
             -> t.Lambda(p, e)
 
 # 5.13
@@ -407,9 +407,10 @@ decorated = decorators (classdef | funcdef)
 decorators = decorator+
 decorator = token("@") dotted_name
             (token("(") (argument_list token(",")?)? token(")"))? newline
-funcdef = keyword("def") funcname token("(") parameter_list? token(")")
-          token(":") suite
-dotted_name = identifier (token(".") identifier)*
+funcdef = keyword("def") funcname token("(") parameter_list:ps token(")")
+          token(":") suite:ss -> t.Def(ps, ss)
+dotted_name = identifier:head (token(".") identifier)*:tail
+            -> t.Identifier(".".join(head, *tail) if tail else head)
 parameter_list = (defparameter token(","))*:init
                  (token("*") identifier:args
                   (token(",") token("**") identifier)?:kwargs
@@ -418,6 +419,7 @@ parameter_list = (defparameter token(","))*:init
                 -> t.Parameters(init, None, kwargs)
                 | defparameter:last token(",")?
                 -> t.Parameters(init + [last], None, None))
+               | -> t.Parameters(None, None, None)
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
 sublist = parameter (token(",") parameter)* token(",")?
