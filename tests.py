@@ -341,6 +341,11 @@ class TestWhileStmt(TC):
         o = t.While(t.Identifier("True"), [t.Pass()])
         self.succeed(i, o)
 
+    def test_while_expr_pass(self):
+        i = "while 1 + 2:\n pass\n"
+        o = t.While(t.Add(t.Num(1), t.Num(2)), [t.Pass()])
+        self.succeed(i, o)
+
 
 """
 class TestExpr(TC):
