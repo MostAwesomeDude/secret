@@ -123,18 +123,15 @@ subscription = primary:obj token("[") expression_list:item token("]")
 slicing = simple_slicing | extended_slicing
 simple_slicing = primary:obj token("[") short_slice:s token("]")
                -> t.Subscript(obj, s)
-extended_slicing = primary:obj token("[") short_list:s token("]")
+extended_slicing = primary:obj token("[") slice_list:s token("]")
                  -> t.Subscript(obj, s)
-slice_list = slice_item:head (token(",") slice_item)*:tail token(",")?
-           -> [head] + tail
+slice_list = slice_item:head (token(",") slice_item)*:tail token(",")?:t
+           -> self.tuplify(head, tail, t)
 slice_item = ellipsis | proper_slice | expression
 proper_slice = long_slice | short_slice
-short_slice = lower_bound?:lower token(":") upper_bound?:upper
+short_slice = expression?:lower token(":") expression?:upper
             -> t.Slice(lower, upper, t.Num(1))
-long_slice = short_slice:s token(":") stride?:st -> t.Slice(s, st)
-lower_bound = expression
-upper_bound = expression
-stride = expression
+long_slice = short_slice:s token(":") expression?:stride -> t.Slice(s, stride)
 ellipsis = token("...") -> t.Ellipsis()
 
 # 5.3.4

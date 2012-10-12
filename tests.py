@@ -128,6 +128,16 @@ class TestSlicing(TC):
     rule = "slicing"
 
     def test_ellipsis(self):
+        i = "x[...]"
+        o = t.Subscript(t.Name("x"), t.Ellipsis())
+        self.succeed(i, o)
+
+
+class TestEllipsis(TC):
+
+    rule = "ellipsis"
+
+    def test_ellipsis(self):
         i = "..."
         o = t.Ellipsis()
         self.succeed(i, o)
