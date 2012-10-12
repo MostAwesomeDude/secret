@@ -289,6 +289,21 @@ class TestPassStmt(TC):
         self.succeed(i, o)
 
 
+class TestReturnStmt(TC):
+
+    rule = "return_stmt"
+
+    def test_return(self):
+        i = "return"
+        o = t.Return(None)
+        self.succeed(i, o)
+
+    def test_return_add(self):
+        i = "return x + y"
+        o = t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))
+        self.succeed(i, o)
+
+
 class TestBreakStmt(TC):
 
     rule = "break_stmt"
@@ -344,6 +359,25 @@ class TestWhileStmt(TC):
     def test_while_expr_pass(self):
         i = "while 1 + 2:\n pass\n"
         o = t.While(t.Add(t.Num(1), t.Num(2)), [t.Pass()])
+        self.succeed(i, o)
+
+
+class TestFuncdef(TC):
+
+    rule = "funcdef"
+
+    def test_empty_pass(self):
+        i = "def empty():\n pass\n"
+        o = t.Def(t.Parameters(None, None, None), [t.Pass()])
+        self.succeed(i, o)
+
+    def test_add_one_line(self):
+        i = "def add(x, y): return x + y\n"
+        o = t.Def(
+                t.Parameters([t.Identifier("x"), t.Identifier("y")],
+                    None, None),
+                [t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))]
+            )
         self.succeed(i, o)
 
 
