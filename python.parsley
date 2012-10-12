@@ -411,7 +411,7 @@ funcdef = keyword("def") funcname token("(") parameter_list:ps token(")")
           token(":") suite:ss -> t.Def(ps, ss)
 dotted_name = identifier:head (token(".") identifier)*:tail
             -> t.Identifier(".".join(head, *tail) if tail else head)
-parameter_list = (defparameter token(","))*:init
+parameter_list = (defparameter:p token(",") -> p)*:init
                  (token("*") identifier:args
                   (token(",") token("**") identifier)?:kwargs
                 -> t.Parameters(init, args, kwargs)

@@ -371,6 +371,11 @@ class TestFuncdef(TC):
         o = t.Def(t.Parameters(None, None, None), [t.Pass()])
         self.succeed(i, o)
 
+    def test_empty_pass_one_line(self):
+        i = "def empty(): pass\n"
+        o = t.Def(t.Parameters(None, None, None), [t.Pass()])
+        self.succeed(i, o)
+
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
         o = t.Def(
@@ -378,6 +383,16 @@ class TestFuncdef(TC):
                     None, None),
                 [t.Return(t.Add(t.Identifier("x"), t.Identifier("y")))]
             )
+        self.succeed(i, o)
+
+
+class TestParameterList(TC):
+
+    rule = "parameter_list"
+
+    def test_params_multiple(self):
+        i = "x, y"
+        o = t.Parameters([t.Identifier("x"), t.Identifier("y")], None, None)
         self.succeed(i, o)
 
 
