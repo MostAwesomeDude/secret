@@ -341,6 +341,7 @@ as_name = keyword("as") identifier:n -> t.As(n)
 
 # 6.12.1
 # XXX ast
+# XXX not hooked up? :T
 future_statement = keyword("from") token("__future__") keyword("import")
                    feature as_name? (token(",") feature as_name?)*
                  | keyword("from") token("__future__") keyword("import")
@@ -370,9 +371,9 @@ compound_stmt = if_stmt
               | decorated
 suite = stmt_list:ss newline -> ss
       | newline indent statement+:ss dedent -> ss
-statement = !(sum(self.indents)):n leading_space{n} ~leading_space
-            (stmt_list:ss newline -> ss
-           | compound_stmt:s -> s)
+# Carefully step around the possible {0} here.
+statement = (?(not self.indents) | !(sum(self.indents)):n leading_space{n})
+            ~leading_space (stmt_list:ss newline -> ss | compound_stmt:s -> s)
 stmt_list = simple_stmt:head (token(";") simple_stmt)*:tail token(";")?
           -> [head] + tail
 
