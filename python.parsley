@@ -22,6 +22,12 @@ cc = leading_space* '}' !(self.pc())
 so = leading_space* '[' !(self.po())
 sc = leading_space* ']' !(self.pc())
 
+# Thankfully, there are only a couple other bits of punctuation used in
+# Python.
+comma = leading_space* ','
+colon = leading_space* ':'
+semi = leading_space* ';'
+
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
@@ -108,10 +114,10 @@ generator_expression = po expression:e comp_for:c pc -> t.Generator(e, c)
 # 5.2.7
 dict_display = co key_datum_list?:e cc -> t.Dict(*e) if e else t.Dict()
              | co dict_comprehension:e cc -> t.Dict(e)
-key_datum_list = key_datum:head (token(",") key_datum)*:tail token(",")?
+key_datum_list = key_datum:head (comma key_datum)*:tail comma?
                -> [head] + tail
-key_datum = expression:k token(":") expression:v -> t.Pair(k, v)
-dict_comprehension = expression:k token(":") expression:v comp_for:c
+key_datum = expression:k colon expression:v -> t.Pair(k, v)
+dict_comprehension = expression:k colon expression:v comp_for:c
                    -> t.Comprehension(k, v, c)
 
 # 5.2.8
@@ -135,38 +141,38 @@ subscription = primary:obj so expression_list:item sc
 slicing = simple_slicing | extended_slicing
 simple_slicing = primary:obj so short_slice:s sc -> t.Subscript(obj, s)
 extended_slicing = primary:obj so slice_list:s sc -> t.Subscript(obj, s)
-slice_list = slice_item:head (token(",") slice_item)*:tail token(",")?:t
+slice_list = slice_item:head (comma slice_item)*:tail comma?:t
            -> self.tuplify(head, tail, t)
 slice_item = ellipsis | proper_slice | expression
 proper_slice = long_slice | short_slice
-short_slice = expression?:lower token(":") expression?:upper
+short_slice = expression?:lower colon expression?:upper
             -> t.Slice(lower, upper, t.Num(1))
-long_slice = short_slice:s token(":") expression?:stride -> t.Slice(s, stride)
+long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
 ellipsis = token("...") -> t.Ellipsis()
 
 # 5.3.4
-call = primary:f po (argument_list token(",")? | expression genexpr_for)?:args
-       pc -> t.Call(f, args)
+call = primary:f po (argument_list comma? | expression genexpr_for)?:args pc
+     -> t.Call(f, args)
 argument_list = positional_arguments:args
-                (token(",") keyword_arguments)?:kwargs
-                (token(",") token("*") expression)?:starargs
-                (token(",") keyword_arguments)?:morekwargs
-                (token(",") token("**") expression)?:starkwargs
+                (comma keyword_arguments)?:kwargs
+                (comma token("*") expression)?:starargs
+                (comma keyword_arguments)?:morekwargs
+                (comma token("**") expression)?:starkwargs
                 -> t.Arguments(args, self.argdicts(kwargs, morekwargs),
                                starargs, starkwargs)
               | keyword_arguments:kwargs
-                (token(",") token("*") expression)?:starargs
-                (token(",") token("**") expression)?:starkwargs
+                (comma token("*") expression)?:starargs
+                (comma token("**") expression)?:starkwargs
                 -> t.Arguments(None, kwargs, starargs, starkwargs)
               | token("*") expression:starargs
-                (token(",") token("*") expression)?:morestarargs
-                (token(",") token("**") expression)?:starkwargs
+                (comma token("*") expression)?:morestarargs
+                (comma token("**") expression)?:starkwargs
                 -> t.Arguments(starargs, None, morestarargs, starkwargs)
               | token("**") expression:kwargs
                 -> t.Arguments(None, None, None, kwargs)
-positional_arguments = expression:head (token(",") expression)*:tail
+positional_arguments = expression:head (comma expression)*:tail
                      -> [head] + tail
-keyword_arguments = keyword_item:head (token(",") keyword_item)*:tail
+keyword_arguments = keyword_item:head (comma keyword_item)*:tail
                   -> [head] + tail
 keyword_item = identifier:k token("=") expression:v -> t.Pair(k, v)
 
@@ -238,11 +244,11 @@ conditional_expression = or_test:left keyword("if") or_test:cond
 expression = conditional_expression | lambda_form
 
 # 5.12
-lambda_form = keyword("lambda") parameter_list:p token(":") expression:e
+lambda_form = keyword("lambda") parameter_list:p colon expression:e
             -> t.Lambda(p, e)
 
 # 5.13
-expression_list = expression:head (token(",") expression)*:tail token(",")?:t
+expression_list = expression:head (comma expression)*:tail comma?:t
                 -> self.tuplify(head, tail, t)
 
 # http://docs.python.org/reference/simple_stmts.html
@@ -252,8 +258,6 @@ expression_list = expression:head (token(",") expression)*:tail token(",")?:t
 # only be attempted at the very end of the list, after all other simple
 # statements. Most of them start with keywords anyway.
 simple_stmt = assert_stmt
-            | assignment_stmt
-            | augmented_assignment_stmt
             | pass_stmt
             | del_stmt
             | print_stmt
@@ -265,6 +269,8 @@ simple_stmt = assert_stmt
             | import_stmt
             | global_stmt
             | exec_stmt
+            | augmented_assignment_stmt
+            | assignment_stmt
             | expression_stmt
 
 # 6.1
@@ -273,7 +279,7 @@ expression_stmt = expression_list
 # 6.2
 assignment_stmt = (target_list:lhs token("=") -> lhs)+:lhss
                   (expression_list | yield_expression):rhs -> t.Assign(lhss, rhs)
-target_list = target:head (token(",") target)*:tail token(",")?:t
+target_list = target:head (comma target)*:tail comma?:t
             -> self.tuplify(head, tail, t)
 target = identifier
        | po target_list:l pc -> l
@@ -292,7 +298,7 @@ augop = token("+=") | token("-=") | token("*=") | token("/=") | token("//=")
 
 # 6.3
 # XXX ast
-assert_stmt = keyword("assert") expression (token(",") expression)?
+assert_stmt = keyword("assert") expression (comma expression)?
 
 # 6.4
 pass_stmt = keyword("pass") -> t.Pass()
@@ -304,8 +310,8 @@ del_stmt = keyword("del") target_list:t -> t.Del(t)
 # XXX ast
 # XXX oh noes, do we even want this? :T
 print_stmt = keyword("print")
-             ((expression (token(",") expression)* token(",")?)
-             | token(">>") expression (token(",") expression)+ token(",")?)
+             ((expression (comma expression)* comma?)
+             | token(">>") expression (comma expression)+ comma?)
 
 # 6.7
 return_stmt = keyword("return") expression_list?:rv -> t.Return(rv)
@@ -316,7 +322,7 @@ yield_stmt = yield_expression
 # 6.9
 raise_stmt = keyword("raise")
              (expression:t
-              (token(",") expression:v (token(",") expression:tb)?)?)?
+              (comma expression:v (comma expression:tb)?)?)?
            -> t.Raise(t, v, tb)
 
 # 6.10
@@ -332,12 +338,11 @@ continue_stmt = keyword("continue") -> t.Continue()
 # name = identifier
 # ...Yeah, that's why.
 # XXX ast
-import_stmt = keyword("import") module as_name? (token(",") module as_name)*
+import_stmt = keyword("import") module as_name? (comma module as_name)*
             | keyword("from") relative_module keyword("import") identifier
-              as_name (token(",") identifier as_name)*
-            | keyword("from") relative_module keyword("import") po
-              identifier as_name (token(",") identifier as_name)* token(",")?
-              pc
+              as_name (comma identifier as_name)*
+            | keyword("from") relative_module keyword("import") po identifier
+              as_name (comma identifier as_name)* comma?  pc
 module = (identifier token("."))* identifier
 relative_module = token(".")* module | token(".")+
 as_name = keyword("as") identifier:n -> t.As(n)
@@ -346,20 +351,19 @@ as_name = keyword("as") identifier:n -> t.As(n)
 # XXX ast
 # XXX not hooked up? :T
 future_statement = keyword("from") token("__future__") keyword("import")
-                   feature as_name? (token(",") feature as_name?)*
-                 | keyword("from") token("__future__") keyword("import")
-                   po feature as_name? (token(",") feature as_name?)*
-                   token(",")? pc
+                   feature as_name? (comma feature as_name?)*
+                 | keyword("from") token("__future__") keyword("import") po
+                   feature as_name? (comma feature as_name?)* comma? pc
 feature = identifier
 
 # 6.13
 # XXX ast
-global_stmt = keyword("global") identifier (token(",") identifier)*
+global_stmt = keyword("global") identifier (comma identifier)*
 
 # 6.14
 # XXX ast
 exec_stmt = keyword("exec") or_expr
-            (keyword("in") expression (token(",") expression)?)?
+            (keyword("in") expression (comma expression)?)?
 
 # http://docs.python.org/reference/compound_stmts.html
 
@@ -377,39 +381,36 @@ suite = stmt_list:ss newline -> ss
 # Carefully step around the possible {0} here.
 statement = (?(not self.indents) | !(sum(self.indents)):n leading_space{n})
             ~leading_space (stmt_list:ss newline -> ss | compound_stmt:s -> s)
-stmt_list = simple_stmt:head (token(";") simple_stmt)*:tail token(";")?
-          -> [head] + tail
+stmt_list = simple_stmt:head (semi simple_stmt)*:tail semi? -> [head] + tail
 
 # 7.1
-if_stmt = keyword("if") expression:e token(":") suite:then
-          (keyword("elif") expression:ele token(":") suite:elthen
+if_stmt = keyword("if") expression:e colon suite:then
+          (keyword("elif") expression:ele colon suite:elthen
            -> (ele, elthen))*:elifs
-          (keyword("else") token(":") suite)?:elsethen
+          (keyword("else") colon suite)?:elsethen
         -> t.If(e, then, elifs, elsethen)
 
 # 7.2
-while_stmt = keyword("while") expression:e token(":") suite:s -> t.While(e, s)
+while_stmt = keyword("while") expression:e colon suite:s -> t.While(e, s)
 
 # 7.3
 # XXX ast
-for_stmt = keyword("for") target_list keyword("in") expression_list token(":")
-           suite (keyword("else") token(":") suite)?
+for_stmt = keyword("for") target_list keyword("in") expression_list colon
+           suite (keyword("else") colon suite)?
 
 # 7.4
 # XXX ast
 try_stmt = try1_stmt | try2_stmt
-try1_stmt = keyword("try") token(":") suite
+try1_stmt = keyword("try") colon suite
             (keyword("except")
-             (expression ((keyword("as") | token(",")) target)?)? token(":")
-              suite)+
-            (keyword("else") token(":") suite)?
-            (keyword("finally") token(":") suite)?
-try2_stmt = keyword("try") token(":") suite
-            keyword("finally") token(":") suite
+             (expression ((keyword("as") | comma) target)?)? colon suite)+
+            (keyword("else") colon suite)?
+            (keyword("finally") colon suite)?
+try2_stmt = keyword("try") colon suite keyword("finally") colon suite
 
 # 7.5
 # XXX ast
-with_stmt = keyword("with") with_item (token(",") with_item)* token(":") suite
+with_stmt = keyword("with") with_item (comma with_item)* colon suite
 with_item = expression (keyword("as") target)?
 
 # 7.6
@@ -417,29 +418,29 @@ with_item = expression (keyword("as") target)?
 decorated = decorators (classdef | funcdef)
 decorators = decorator+
 decorator = token("@") dotted_name
-            (po (argument_list token(",")?)? pc)? newline
-funcdef = keyword("def") funcname:name po parameter_list:ps pc
-          token(":") suite:ss -> t.Def(name, ps, ss)
+            (po (argument_list comma?)? pc)? newline
+funcdef = keyword("def") funcname:name po parameter_list:ps pc colon suite:ss
+        -> t.Def(name, ps, ss)
 dotted_name = identifier:head (token(".") identifier)*:tail
             -> t.Name(".".join(head, *tail) if tail else head)
-parameter_list = (defparameter:p token(",") -> p)*:init
+parameter_list = (defparameter:p comma -> p)*:init
                  (token("*") identifier:args
-                  (token(",") token("**") identifier)?:kwargs
+                  (comma token("**") identifier)?:kwargs
                 -> t.Parameters(init, args, kwargs)
                 | token("**") identifier:kwargs
                 -> t.Parameters(init, None, kwargs)
-                | defparameter:last token(",")?
+                | defparameter:last comma?
                 -> t.Parameters(init + [last], None, None))
                | -> t.Parameters(None, None, None)
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
-sublist = parameter (token(",") parameter)* token(",")?
+sublist = parameter (comma parameter)* comma?
 parameter = identifier | po sublist pc
 funcname = identifier
 
 # 7.7
 # XXX ast
-classdef = keyword("class") classname inheritance? token(":") suite
+classdef = keyword("class") classname inheritance? colon suite
 inheritance = po expression_list? pc
 classname = identifier
 
