@@ -10,8 +10,17 @@ leading_space = ?(self.parens) newline_ | leading_space_
 indent = leading_space+:ss !(self.indents.append(len(ss)))
 dedent = !(self.indents.pop())
 
+# Parentheses...
 po = leading_space* '(' !(self.po())
 pc = leading_space* ')' !(self.pc())
+
+# ...curly braces...
+co = leading_space* '{' !(self.po())
+cc = leading_space* '}' !(self.pc())
+
+# ...and square brackets.
+so = leading_space* '[' !(self.po())
+sc = leading_space* ']' !(self.pc())
 
 # http://docs.python.org/reference/lexical_analysis.html
 
@@ -84,8 +93,8 @@ parenth_form = po expression_list?:e pc -> e if e else t.Tuple()
 
 # 5.2.4, 5.2.5
 # We generalize comprehensions entirely.
-list_display = token("[") expression_list?:l token("]") -> t.List(*l)
-             | token("[") list_comprehension:l token("]") -> l
+list_display = so expression_list?:l sc -> t.List(*l)
+             | so list_comprehension:l sc -> l
 list_comprehension = expression:e list_for:f -> l.ListComp(e, f)
 comp_for = keyword("for") target_list:t keyword("in") expression_list:i
            list_iter?:f
@@ -97,9 +106,8 @@ comp_if = keyword("if") expression:e comp_iter?:f -> l.CompIf(e, f)
 generator_expression = po expression:e comp_for:c pc -> t.Generator(e, c)
 
 # 5.2.7
-dict_display = token("{") key_datum_list?:e token("}")
-               -> t.Dict(*e) if e else t.Dict()
-             | token("{") dict_comprehension:e token("}") -> t.Dict(e)
+dict_display = co key_datum_list?:e cc -> t.Dict(*e) if e else t.Dict()
+             | co dict_comprehension:e cc -> t.Dict(e)
 key_datum_list = key_datum:head (token(",") key_datum)*:tail token(",")?
                -> [head] + tail
 key_datum = expression:k token(":") expression:v -> t.Pair(k, v)
@@ -107,8 +115,7 @@ dict_comprehension = expression:k token(":") expression:v comp_for:c
                    -> t.Comprehension(k, v, c)
 
 # 5.2.8
-set_display = token("{") (expression_list | list_comprehension):e token("}")
-            -> t.Set(e)
+set_display = co (expression_list | list_comprehension):e cc -> t.Set(e)
 
 # 5.2.10
 yield_atom = po yield_expression:e pc -> e
@@ -121,15 +128,13 @@ primary = atom | attributeref | subscription | slicing | call
 attributeref = primary token(".") identifier -> t.Attribute(primary, identifier)
 
 # 5.3.2
-subscription = primary:obj token("[") expression_list:item token("]")
+subscription = primary:obj so expression_list:item sc
              -> t.Subscript(obj, item)
 
 # 5.3.3
 slicing = simple_slicing | extended_slicing
-simple_slicing = primary:obj token("[") short_slice:s token("]")
-               -> t.Subscript(obj, s)
-extended_slicing = primary:obj token("[") slice_list:s token("]")
-                 -> t.Subscript(obj, s)
+simple_slicing = primary:obj so short_slice:s sc -> t.Subscript(obj, s)
+extended_slicing = primary:obj so slice_list:s sc -> t.Subscript(obj, s)
 slice_list = slice_item:head (token(",") slice_item)*:tail token(",")?:t
            -> self.tuplify(head, tail, t)
 slice_item = ellipsis | proper_slice | expression

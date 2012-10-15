@@ -217,6 +217,15 @@ class TestDictDisplay(TC):
         o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
         self.succeed(i, o)
 
+    def test_dict_display_plural_newline_trailing(self):
+        """
+        A practical dictionary reflecting commonly-used indentation.
+        """
+
+        i = "{\n 1:2,\n 3:4,\n}"
+        o = t.Dict(t.Pair(t.Num(1), t.Num(2)), t.Pair(t.Num(3), t.Num(4)))
+        self.succeed(i, o)
+
 
 class TestSetDisplay(TC):
 
