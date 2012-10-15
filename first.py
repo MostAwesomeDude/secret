@@ -70,6 +70,12 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
         raise NotImplementedError()
 
+    def po(self):
+        self.parens += 1
+
+    def pc(self):
+        self.parens -= 1
+
 
 if __name__ == "__main__":
     import sys
