@@ -122,6 +122,11 @@ class TestParenthForm(TC):
         o = t.Tuple(t.Num(1), t.Num(2))
         self.succeed(i, o)
 
+    def test_tuple_empty_newline(self):
+        i = "(\n)"
+        o = t.Tuple()
+        self.succeed(i, o)
+
 
 class TestSlicing(TC):
 
@@ -256,6 +261,10 @@ class TestUExpr(TC):
         i = "~0"
         o = t.Invert(t.Num(0))
         self.succeed(i, o)
+
+    def test_u_expr_invert_num_newline(self):
+        i = "~\n0"
+        self.fail(i)
 
 
 class TestMExpr(TC):

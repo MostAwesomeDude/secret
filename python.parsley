@@ -3,15 +3,17 @@
 # * <>
 
 # Core primitives that will be needed later.
-newline = '\r' '\n' | '\r' | '\n' -> None
-leading_space = ' '
+newline_ = '\r' '\n' | '\r' | '\n'
+leading_space_ = ' '
+newline = ?(not self.parens) newline_
+leading_space = ?(self.parens) newline_ | leading_space_
 indent = leading_space+:ss !(self.indents.append(len(ss)))
 dedent = !(self.indents.pop())
 
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
-identifier = spaces? (letter | '_'):first <letterOrDigit*>:second
+identifier = leading_space* (letter | '_'):first <letterOrDigit*>:second
              ?(not self.keyword_pred(first, second))
            -> t.Name(first + second)
 letter = lowercase | uppercase
@@ -23,7 +25,7 @@ digit = anything:c ?(c in "0123456789") -> c
 keyword :k = token(k) ~letterOrDigit -> k
 
 # 2.4.1
-stringliteral = spaces? stringprefix?:p (longstring | shortstring):s
+stringliteral = leading_space* stringprefix?:p (longstring | shortstring):s
               -> t.Str(p, s)
 stringprefix = 'r' | 'u' | "ur" | 'R' | 'U' | "UR" | "Ur" | "uR" | 'b' | 'B'
              | "br" | "Br" | "bR" | "BR"
@@ -38,7 +40,8 @@ escapeseq = '\\' anything
 
 # 2.4.4
 longinteger = integer:i ('l' | 'L') -> i
-integer = spaces? (octinteger | hexinteger | bininteger | decimalinteger):i
+integer = leading_space*
+          (octinteger | hexinteger | bininteger | decimalinteger):i
         -> t.Num(i)
 decimalinteger = nonzerodigit:first <digit*>:second -> int(first + second)
                | '0' -> 0

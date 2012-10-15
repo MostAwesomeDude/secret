@@ -5,6 +5,8 @@ g = open("python.parsley").read()
 
 class Parser(OMeta.makeGrammar(g, globals())):
 
+    parens = 0
+
     keywords = [
         "and",
         "as",
@@ -71,4 +73,4 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
 if __name__ == "__main__":
     import sys
-    print Parser(open(sys.argv[1]).read()).rule_expr()
+    print Parser(open(sys.argv[1]).read()).rule_file_input()
