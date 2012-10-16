@@ -40,7 +40,8 @@ uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ") -> c
 digit = anything:c ?(c in "0123456789") -> c
 
 # 2.3.1
-keyword :k = token(k) ~letterOrDigit -> k
+# XXX ugh, token() is not good here.
+keyword :k = leading_space* token(k) ~letterOrDigit -> k
 
 # 2.4.1
 stringliteral = leading_space* stringprefix?:p (longstring | shortstring):s
@@ -351,10 +352,9 @@ as_name = keyword("as") identifier:n -> t.As(n)
 # XXX ast
 # XXX not hooked up? :T
 future_statement = keyword("from") token("__future__") keyword("import")
-                   feature as_name? (comma feature as_name?)*
+                   identifier as_name? (comma identifier as_name?)*
                  | keyword("from") token("__future__") keyword("import") po
-                   feature as_name? (comma feature as_name?)* comma? pc
-feature = identifier
+                   identifier as_name? (comma identifier as_name?)* comma? pc
 
 # 6.13
 # XXX ast
@@ -419,8 +419,8 @@ decorated = decorators (classdef | funcdef)
 decorators = decorator+
 decorator = token("@") dotted_name
             (po (argument_list comma?)? pc)? newline
-funcdef = keyword("def") funcname:name po parameter_list:ps pc colon suite:ss
-        -> t.Def(name, ps, ss)
+funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
+          suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (token(".") identifier)*:tail
             -> t.Name(".".join(head, *tail) if tail else head)
 parameter_list = (defparameter:p comma -> p)*:init
@@ -436,13 +436,11 @@ defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
 sublist = parameter (comma parameter)* comma?
 parameter = identifier | po sublist pc
-funcname = identifier
 
 # 7.7
 # XXX ast
-classdef = keyword("class") classname inheritance? colon suite
+classdef = keyword("class") identifier inheritance? colon suite
 inheritance = po expression_list? pc
-classname = identifier
 
 # http://docs.python.org/reference/toplevel_components.html
 
