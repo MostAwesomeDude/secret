@@ -6,6 +6,24 @@ g = open("python.parsley").read()
 
 class Parser(OMeta.makeGrammar(g, globals())):
 
+    depth = 0
+
+    def derp(self):
+        print self.indents
+
+    def _apply(self, *args):
+        self.depth += 1
+        print " " * self.depth, "apply", args[1:]
+        try:
+            rv = super(Parser, self)._apply(*args)
+            print " " * self.depth, "success", args[1:], rv
+            return rv
+        except:
+            print " " * self.depth, "failed", args[1:]
+            raise
+        finally:
+            self.depth -= 1
+
     parens = 0
 
     keywords = [
