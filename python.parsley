@@ -8,7 +8,7 @@ leading_space_ = ' '
 newline = ?(not self.parens) newline_
 leading_space = ?(self.parens) newline_ | leading_space_
 # Carefully step around the possible {0} here.
-indentation = !(self.derp()) (?(not self.indents) | !(sum(self.indents)):n leading_space{n})
+indentation = ?(not self.indents) | !(sum(self.indents)):n leading_space{n}
 indent = indentation leading_space+:ss !(self.indents.append(len(ss)))
 dedent = !(self.indents.pop())
 

@@ -8,9 +8,6 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
     depth = 0
 
-    def derp(self):
-        print self.indents
-
     def _apply(self, *args):
         self.depth += 1
         print " " * self.depth, "apply", args[1:]
