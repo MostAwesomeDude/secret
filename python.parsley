@@ -27,6 +27,7 @@ sc = leading_space* ']' !(self.pc())
 comma = leading_space* ','
 colon = leading_space* ':'
 semi = leading_space* ';'
+dot = leading_space* '.'
 
 # http://docs.python.org/reference/lexical_analysis.html
 
@@ -132,7 +133,7 @@ yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 primary = atom | attributeref | subscription | slicing | call
 
 # 5.3.1
-attributeref = primary token(".") identifier -> t.Attribute(primary, identifier)
+attributeref = primary dot identifier -> t.Attribute(primary, identifier)
 
 # 5.3.2
 subscription = primary:obj so expression_list:item sc
@@ -149,7 +150,7 @@ proper_slice = long_slice | short_slice
 short_slice = expression?:lower colon expression?:upper
             -> t.Slice(lower, upper, t.Num(1))
 long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
-ellipsis = token("...") -> t.Ellipsis()
+ellipsis = dot '.' '.' -> t.Ellipsis()
 
 # 5.3.4
 call = primary:f po (argument_list comma? | expression genexpr_for)?:args pc
@@ -284,7 +285,7 @@ target_list = target:head (comma target)*:tail comma?:t
             -> self.tuplify(head, tail, t)
 target = identifier
        | po target_list:l pc -> l
-       | token("[") target_list:l token("]") -> l
+       | so target_list:l sc -> l
        | attributeref
        | subscription
        | slicing
@@ -344,8 +345,8 @@ import_stmt = keyword("import") module as_name? (comma module as_name)*
               as_name (comma identifier as_name)*
             | keyword("from") relative_module keyword("import") po identifier
               as_name (comma identifier as_name)* comma?  pc
-module = (identifier token("."))* identifier
-relative_module = token(".")* module | token(".")+
+module = (identifier dot)* identifier
+relative_module = dot* module | dot+
 as_name = keyword("as") identifier:n -> t.As(n)
 
 # 6.12.1
@@ -421,7 +422,7 @@ decorator = token("@") dotted_name
             (po (argument_list comma?)? pc)? newline
 funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
-dotted_name = identifier:head (token(".") identifier)*:tail
+dotted_name = identifier:head (dot identifier)*:tail
             -> t.Name(".".join(head, *tail) if tail else head)
 parameter_list = (defparameter:p comma -> p)*:init
                  (token("*") identifier:args
