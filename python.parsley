@@ -248,8 +248,10 @@ expression_list = expression:head (token(",") expression)*:tail token(",")?:t
 # http://docs.python.org/reference/simple_stmts.html
 
 # 6
-simple_stmt = expression_stmt
-            | assert_stmt
+# Due to the remarkable flexibility of expression syntax, they really should
+# only be attempted at the very end of the list, after all other simple
+# statements. Most of them start with keywords anyway.
+simple_stmt = assert_stmt
             | assignment_stmt
             | augmented_assignment_stmt
             | pass_stmt
@@ -263,6 +265,7 @@ simple_stmt = expression_stmt
             | import_stmt
             | global_stmt
             | exec_stmt
+            | expression_stmt
 
 # 6.1
 expression_stmt = expression_list
