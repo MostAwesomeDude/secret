@@ -138,9 +138,74 @@ class TestParenthForm(TC):
         o = t.Num(3)
         self.succeed(i, o)
 
+    def test_m_expr_mult_num(self):
+        i = "(3 * 4)"
+        o = t.Mul(t.Num(3), t.Num(4))
+        self.succeed(i, o)
+
+    def test_a_expr_add_identifier_left(self):
+        i = "(a + 1)"
+        o = t.Add(t.Name("a"), t.Num(1))
+        self.succeed(i, o)
+
+    def test_a_expr_add_identifier_right(self):
+        i = "(1 + a)"
+        o = t.Add(t.Num(1), t.Name("a"))
+        self.succeed(i, o)
+
+    def test_and_test_num(self):
+        i = "(1 and 2)"
+        o = t.BoolOp(t.Num(1), t.And(), t.Num(2))
+        self.succeed(i, o)
+
+    def test_if_else_literals(self):
+        i = "(1 if 2 else 3)"
+        o = t.IfExp(t.Num(2), t.Num(1), t.Num(3))
+        self.succeed(i, o)
+
+    def test_attr_literal(self):
+        i = "an.attr"
+        o = t.Attribute(t.Name("an"), t.Name("attr"))
+        self.succeed(i, o)
+
+    def test_method(self):
+        i = "(test.method())"
+        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")),
+                t.Arguments(None, None, None, None))
+        self.succeed(i, o)
+
+    def test_expr_associativity_left(self):
+        i = "(a * b + c)"
+        o = t.Add(t.Mul(t.Name("a"), t.Name("b")), t.Name("c"))
+        self.succeed(i, o)
+
+    def test_expr_associativity_right(self):
+        i = "(a + b * c)"
+        o = t.Add(t.Name("a"), t.Mul(t.Name("b"), t.Name("c")))
+        self.succeed(i, o)
+
+    def test_nested_arith_left(self):
+        i = "((1 + 2) + 3)"
+        o = t.Add(t.Add(t.Num(1), t.Num(2)), t.Num(3))
+        self.succeed(i, o)
+
+    def test_nested_arith_right(self):
+        i = "(1 + (2 + 3))"
+        o = t.Add(t.Num(1), t.Add(t.Num(2), t.Num(3)))
+        self.succeed(i, o)
+
     def test_expr_discriminant(self):
         i = "(%s)" % self.discriminant_string
         o = self.discriminant
+        self.succeed(i, o)
+
+    def test_if_else_complex(self):
+        i = "('this' if it.succeeds() else 'that')"
+        o = t.IfExp(
+                t.Call(t.Attribute(t.Name("it"), t.Name("succeeds")),
+                    t.Arguments(None, None, None, None)),
+                t.Str("this"),
+                t.Str("that"))
         self.succeed(i, o)
 
 
@@ -299,31 +364,6 @@ class TestUExpr(TC):
         self.fail(i)
 
 
-class TestMExpr(TC):
-
-    rule = "m_expr"
-
-    def test_m_expr_mult_num(self):
-        i = "3 * 4"
-        o = t.Mul(t.Num(3), t.Num(4))
-        self.succeed(i, o)
-
-
-class TestAExpr(TC):
-
-    rule = "a_expr"
-
-    def test_u_expr_add_identifier_left(self):
-        i = "a + 1"
-        o = t.Add(t.Name("a"), t.Num(1))
-        self.succeed(i, o)
-
-    def test_u_expr_add_identifier_right(self):
-        i = "1 + a"
-        o = t.Add(t.Num(1), t.Name("a"))
-        self.succeed(i, o)
-
-
 class TestNotTest(TC):
 
     rule = "not_test"
@@ -331,16 +371,6 @@ class TestNotTest(TC):
     def test_unaryop_not_num(self):
         i = "not 0"
         o = t.Not(t.Num(0))
-        self.succeed(i, o)
-
-
-class TestAndTest(TC):
-
-    rule = "and_test"
-
-    def test_and_test_num(self):
-        i = "1 and 2"
-        o = t.BoolOp(t.Num(1), t.And(), t.Num(2))
         self.succeed(i, o)
 
 
@@ -529,38 +559,3 @@ class TestParameterList(TC):
         i = "x, y"
         o = t.Parameters([t.Name("x"), t.Name("y")], None, None)
         self.succeed(i, o)
-
-
-"""
-class TestExpr(TC):
-
-    rule = "expr"
-
-    def test_nested_arith_right(self):
-        i = "1 + (2 + 3)"
-        o = t.BinOp(t.Add(), t.Num(1), t.BinOp(t.Add(), t.Num(2), t.Num(3)))
-        self.succeed(i, o)
-
-    def test_attr_literal(self):
-        i = "an.attr"
-        o = t.Attribute(t.Name("an"), t.Name("attr"))
-        self.succeed(i, o)
-
-    def test_if_else_literals(self):
-        i = "1 if 2 else 3"
-        o = t.IfExp(t.Num(2), t.Num(1), t.Num(3))
-        self.succeed(i, o)
-
-    def test_if_else_complex(self):
-        i = "('this' if it.succeeds() else 'that')"
-        o = t.IfExp(t.Call(t.Attribute(t.Name("it"),
-            t.Name("succeeds")), t.Arguments()), t.Str("this"),
-            t.Str("that"))
-        self.succeed(i, o)
-
-    def test_method(self):
-        i = "(test.method())"
-        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")),
-                t.Arguments())
-        self.succeed(i, o)
-        """
