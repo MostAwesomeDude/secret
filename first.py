@@ -1,5 +1,6 @@
 from terml.nodes import termMaker as t
 from ometa.grammar import OMeta
+from ometa.runtime import ParseError
 
 g = open("python.parsley").read()
 
@@ -79,4 +80,11 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
 if __name__ == "__main__":
     import sys
-    print Parser(open(sys.argv[1]).read()).rule_file_input()
+    f = open(sys.argv[1]).read()
+    try:
+        stmts, stuff = Parser(f).rule_file_input()
+        error = ParseError(f, *stuff)
+        print stmts
+        print error.formatError()
+    except ParseError as error:
+        print error.formatError()
