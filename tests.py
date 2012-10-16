@@ -155,7 +155,7 @@ class TestParenthForm(TC):
 
     def test_and_test_num(self):
         i = "(1 and 2)"
-        o = t.BoolOp(t.Num(1), t.And(), t.Num(2))
+        o = t.And(t.Num(1), t.Num(2))
         self.succeed(i, o)
 
     def test_if_else_literals(self):
@@ -164,7 +164,7 @@ class TestParenthForm(TC):
         self.succeed(i, o)
 
     def test_attr_literal(self):
-        i = "an.attr"
+        i = "(an.attr)"
         o = t.Attribute(t.Name("an"), t.Name("attr"))
         self.succeed(i, o)
 
@@ -206,6 +206,16 @@ class TestParenthForm(TC):
                     t.Arguments(None, None, None, None)),
                 t.Str("this"),
                 t.Str("that"))
+        self.succeed(i, o)
+
+
+class TestAttributeref(TC):
+
+    rule = "attributeref"
+
+    def test_attr_single(self):
+        i = "an.attr"
+        o = t.Attribute(t.Name("an"), t.Name("attr"))
         self.succeed(i, o)
 
 
