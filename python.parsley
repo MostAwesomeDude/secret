@@ -189,7 +189,7 @@ u_expr = token("-") u_expr:e -> t.Negate(e)
        | power
 
 # 5.6
-m_expr = m_expr:left token("*") u_expr:right -> t.Mult(left, right)
+m_expr = m_expr:left token("*") u_expr:right -> t.Mul(left, right)
        | m_expr:left token("//") u_expr:right -> t.FloorDiv(left, right)
        | m_expr:left token("/") u_expr:right -> t.Div(left, right)
        | m_expr:left token("%") u_expr:right -> t.Mod(left, right)

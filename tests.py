@@ -8,6 +8,12 @@ from first import Parser
 
 class TC(TestCase):
 
+    # The discriminant from the quadratic formula. Generally useful as a test
+    # expression.
+    discriminant_string = "b ** 2 - 4 * a * c"
+    discriminant = t.Sub(t.Pow(t.Name("b"), t.Num(2)), t.Mul(t.Mul(t.Num(4),
+        t.Name("a")), t.Name("c")))
+
     def fail(self, i):
         p = Parser(i)
         m = getattr(p, "rule_%s" % self.rule)
@@ -127,6 +133,16 @@ class TestParenthForm(TC):
         o = t.Tuple()
         self.succeed(i, o)
 
+    def test_expr_num(self):
+        i = "(3)"
+        o = t.Num(3)
+        self.succeed(i, o)
+
+    def test_expr_discriminant(self):
+        i = "(%s)" % self.discriminant_string
+        o = self.discriminant
+        self.succeed(i, o)
+
 
 class TestSlicing(TC):
 
@@ -160,6 +176,13 @@ class TestCall(TC):
     def test_call_identifier_args(self):
         i = "call(arg)"
         o = t.Call(t.Name("call"), t.Arguments([t.Name("arg")], None, None, None))
+        self.succeed(i, o)
+
+    def test_call_identifier_expr(self):
+        i = "sqrt(b ** 2 - 4 * a * c)"
+        o = t.Sub(t.Pow(t.Name("b"), t.Num(2)),
+              t.Mul(t.Mul(t.Num(4), t.Name("a")), t.Name("b")))
+        o = t.Call(t.Name("sqrt"), t.Arguments([t.Name("")], None, None, None))
         self.succeed(i, o)
 
 
@@ -282,7 +305,7 @@ class TestMExpr(TC):
 
     def test_m_expr_mult_num(self):
         i = "3 * 4"
-        o = t.Mult(t.Num(3), t.Num(4))
+        o = t.Mul(t.Num(3), t.Num(4))
         self.succeed(i, o)
 
 
