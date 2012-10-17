@@ -542,7 +542,8 @@ class TestFuncdef(TC):
                                 t.Name("c")], None, None),
                   [
                       t.Assign([t.Name("d")], t.Call(t.Name("sqrt"),
-                          t.Arguments(self.discriminant))),
+                          t.Arguments([self.discriminant], None, None,
+                                      None))),
                       t.Assign([t.Name("a2")], t.Mul(t.Num(2), t.Name("a"))),
                       t.Return(t.Tuple(
                           t.Div(t.Add(t.Negate(t.Name("b")), t.Name("dis")),
