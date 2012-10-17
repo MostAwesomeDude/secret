@@ -209,39 +209,19 @@ class TestParenthForm(TC):
         self.succeed(i, o)
 
 
-class TestAttributeref(TC):
+class TestPrimary(TC):
 
-    rule = "attributeref"
+    rule = "primary"
 
     def test_attr_single(self):
         i = "an.attr"
         o = t.Attribute(t.Name("an"), t.Name("attr"))
         self.succeed(i, o)
 
-
-class TestSlicing(TC):
-
-    rule = "slicing"
-
     def test_ellipsis(self):
         i = "x[...]"
         o = t.Subscript(t.Name("x"), t.Ellipsis())
         self.succeed(i, o)
-
-
-class TestEllipsis(TC):
-
-    rule = "ellipsis"
-
-    def test_ellipsis(self):
-        i = "..."
-        o = t.Ellipsis()
-        self.succeed(i, o)
-
-
-class TestCall(TC):
-
-    rule = "call"
 
     def test_call_identifier_empty(self):
         i = "call()"
@@ -256,6 +236,16 @@ class TestCall(TC):
     def test_call_identifier_expr(self):
         i = "sqrt(%s)" % self.discriminant_string
         o = t.Call(t.Name("sqrt"), t.Arguments([self.discriminant], None, None, None))
+        self.succeed(i, o)
+
+
+class TestEllipsis(TC):
+
+    rule = "ellipsis"
+
+    def test_ellipsis(self):
+        i = "..."
+        o = t.Ellipsis()
         self.succeed(i, o)
 
 
