@@ -132,19 +132,18 @@ yield_atom = po yield_expression:e pc -> e
 yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 
 # 5.3
-primary = atom | attributeref | subscription | slicing | call
+primary = attributeref | subscription | slicing | call
 
 # 5.3.1
-attributeref = primary:p dot identifier:i -> t.Attribute(p, i)
+attributeref = (primary | atom):p dot identifier:i -> t.Attribute(p, i)
 
 # 5.3.2
-subscription = primary:obj so expression_list:item sc
+subscription = (primary | atom):obj so expression_list:item sc
              -> t.Subscript(obj, item)
 
 # 5.3.3
-slicing = simple_slicing | extended_slicing
-simple_slicing = primary:obj so short_slice:s sc -> t.Subscript(obj, s)
-extended_slicing = primary:obj so slice_list:s sc -> t.Subscript(obj, s)
+slicing = (primary | atom):obj so (short_slice | slice_list):s sc
+        -> t.Subscript(obj, s)
 slice_list = slice_item:head (comma slice_item)*:tail comma?:t
            -> self.tuplify(head, tail, t)
 slice_item = ellipsis | proper_slice | expression
@@ -155,7 +154,7 @@ long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
 ellipsis = dot '.' '.' -> t.Ellipsis()
 
 # 5.3.4
-call = primary:f po
+call = (primary | atom):f po
        (argument_list:a comma? -> a
        | expression genexpr_for)?:args pc
      -> t.Call(f, args)
@@ -183,7 +182,7 @@ keyword_arguments = keyword_item:head (comma keyword_item)*:tail
 keyword_item = identifier:k token("=") expression:v -> t.Pair(k, v)
 
 # 5.4
-power = primary:left (token("**") u_expr)?:right
+power = (primary | atom):left (token("**") u_expr)?:right
       -> t.Pow(left, right) if right else left
 
 # 5.5

@@ -402,6 +402,11 @@ class TestAssignmentStmt(TC):
         o = t.Assign([t.Name("x")], t.Num(0))
         self.succeed(i, o)
 
+    def test_assign_call(self):
+        i = "x = call()"
+        o = t.Assign([t.Name("x")], t.Call(t.Name("call"), None))
+        self.succeed(i, o)
+
 
 class TestPassStmt(TC):
 
@@ -538,10 +543,10 @@ class TestFuncdef(TC):
 
     def test_quadratic(self):
         i = """def quadratic(a, b, c):
-            d = sqrt(b ** 2 - 4 * a * c)
+            d = sqrt(%s)
             a2 = 2 * a
             return (-b + dis) / a2, (-b - dis) / a2
-        """
+        """ % self.discriminant_string
         o = t.Def(t.Name("quadratic"),
                   t.Parameters([t.Name("a"), t.Name("b"),
                                 t.Name("c")], None, None),
