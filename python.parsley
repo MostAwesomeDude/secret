@@ -155,7 +155,9 @@ long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
 ellipsis = dot '.' '.' -> t.Ellipsis()
 
 # 5.3.4
-call = primary:f po (argument_list comma? | expression genexpr_for)?:args pc
+call = primary:f po
+       (argument_list:a comma? -> a
+       | expression genexpr_for)?:args pc
      -> t.Call(f, args)
 argument_list = positional_arguments:args
                 (comma keyword_arguments)?:kwargs

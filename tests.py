@@ -254,10 +254,8 @@ class TestCall(TC):
         self.succeed(i, o)
 
     def test_call_identifier_expr(self):
-        i = "sqrt(b ** 2 - 4 * a * c)"
-        o = t.Sub(t.Pow(t.Name("b"), t.Num(2)),
-              t.Mul(t.Mul(t.Num(4), t.Name("a")), t.Name("b")))
-        o = t.Call(t.Name("sqrt"), t.Arguments([t.Name("")], None, None, None))
+        i = "sqrt(%s)" % self.discriminant_string
+        o = t.Call(t.Name("sqrt"), t.Arguments([self.discriminant], None, None, None))
         self.succeed(i, o)
 
 
