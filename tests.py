@@ -239,6 +239,16 @@ class TestPrimary(TC):
         self.succeed(i, o)
 
 
+class TestConditionalExpression(TC):
+
+    rule = "conditional_expression"
+
+    def test_if_else_literals(self):
+        i = "1 if 2 else 3"
+        o = t.IfExp(t.Num(2), t.Num(1), t.Num(3))
+        self.succeed(i, o)
+
+
 class TestEllipsis(TC):
 
     rule = "ellipsis"
