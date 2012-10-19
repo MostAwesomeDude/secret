@@ -1,4 +1,4 @@
-from terml.nodes import termMaker as t
+from terml.nodes import Term, termMaker as t
 from ometa.grammar import OMeta
 from ometa.runtime import ParseError
 
@@ -10,13 +10,13 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
     def _apply(self, *args):
         self.depth += 1
-        print " " * self.depth, "apply", args[1:]
+        #print " " * self.depth, "apply", args[1:]
         try:
             rv = super(Parser, self)._apply(*args)
-            print " " * self.depth, "success", args[1:], rv
+            #print " " * self.depth, "success", args[1:], rv
             return rv
         except:
-            print " " * self.depth, "failed", args[1:]
+            #print " " * self.depth, "failed", args[1:]
             raise
         finally:
             self.depth -= 1
@@ -91,6 +91,20 @@ class Parser(OMeta.makeGrammar(g, globals())):
 
     def pc(self):
         self.parens -= 1
+
+    def primary(self, atom, trailers):
+        """
+        Re-nest a series of trailers on an atom.
+        """
+
+        if trailers:
+            # Ugh. This trickery is necessary because Terms are hard to unpack
+            # and repack.
+            for term in trailers:
+                repacked = (atom,) + term.args[1:]
+                atom = Term(term.tag, term.data, repacked, term.span)
+
+        return atom
 
 
 if __name__ == "__main__":

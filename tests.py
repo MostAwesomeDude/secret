@@ -170,8 +170,7 @@ class TestParenthForm(TC):
 
     def test_method(self):
         i = "(test.method())"
-        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")),
-                t.Arguments(None, None, None, None))
+        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")), None)
         self.succeed(i, o)
 
     def test_expr_associativity_left(self):
@@ -202,10 +201,9 @@ class TestParenthForm(TC):
     def test_if_else_complex(self):
         i = "('this' if it.succeeds() else 'that')"
         o = t.IfExp(
-                t.Call(t.Attribute(t.Name("it"), t.Name("succeeds")),
-                    t.Arguments(None, None, None, None)),
-                t.Str("this"),
-                t.Str("that"))
+                t.Call(t.Attribute(t.Name("it"), t.Name("succeeds")), None),
+                t.Str(None, "this"),
+                t.Str(None, "that"))
         self.succeed(i, o)
 
 

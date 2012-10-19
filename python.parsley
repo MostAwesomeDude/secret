@@ -132,18 +132,17 @@ yield_atom = po yield_expression:e pc -> e
 yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 
 # 5.3
-primary = attributeref | subscription | slicing | call
+primary = atom:a (attributeref | slicing | subscription | call)*:trailers
+        -> self.primary(a, trailers)
 
 # 5.3.1
-attributeref = (primary | atom):p dot identifier:i -> t.Attribute(p, i)
+attributeref = dot identifier:i -> t.Attribute(None, i)
 
 # 5.3.2
-subscription = (primary | atom):obj so expression_list:item sc
-             -> t.Subscript(obj, item)
+subscription = so expression_list:item sc -> t.Subscript(None, item)
 
 # 5.3.3
-slicing = (primary | atom):obj so (short_slice | slice_list):s sc
-        -> t.Subscript(obj, s)
+slicing = so (short_slice | slice_list):s sc -> t.Subscript(None, s)
 slice_list = slice_item:head (comma slice_item)*:tail comma?:t
            -> self.tuplify(head, tail, t)
 slice_item = ellipsis | proper_slice | expression
@@ -154,10 +153,9 @@ long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
 ellipsis = dot '.' '.' -> t.Ellipsis()
 
 # 5.3.4
-call = (primary | atom):f po
-       (argument_list:a comma? -> a
+call = po (argument_list:a comma? -> a
        | expression genexpr_for)?:args pc
-     -> t.Call(f, args)
+     -> t.Call(None, args)
 argument_list = positional_arguments:args
                 (comma keyword_arguments)?:kwargs
                 (comma token("*") expression)?:starargs
