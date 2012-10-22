@@ -1,6 +1,8 @@
 # Omissions:
 # * ``
 # * <>
+# * Complex parameters
+# * Print statement
 
 # Core primitives that will be needed later.
 newline_ = '\r' '\n' | '\r' | '\n'
@@ -266,7 +268,6 @@ expression_list = expression:head (comma expression)*:tail comma?:t
 simple_stmt = assert_stmt
             | pass_stmt
             | del_stmt
-            | print_stmt
             | return_stmt
             | yield_stmt
             | raise_stmt
@@ -311,13 +312,6 @@ pass_stmt = keyword("pass") -> t.Pass()
 
 # 6.5
 del_stmt = keyword("del") target_list:t -> t.Del(t)
-
-# 6.6
-# XXX ast
-# XXX oh noes, do we even want this? :T
-print_stmt = keyword("print")
-             ((expression (comma expression)* comma?)
-             | token(">>") expression (comma expression)+ comma?)
 
 # 6.7
 return_stmt = keyword("return") expression_list?:rv -> t.Return(rv)
