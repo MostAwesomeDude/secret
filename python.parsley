@@ -46,7 +46,6 @@ uppercase = anything:c ?(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ") -> c
 digit = anything:c ?(c in "0123456789") -> c
 
 # 2.3.1
-# XXX ugh, token() is not good here.
 keyword :k = leading_space* token(k) ~letterOrDigit -> k
 
 # 2.4.1
@@ -352,14 +351,6 @@ identifier_as_name = identifier:i as_name?:n -> t.As(i, n)
 relative_module = dot* module | dot+
 as_name = keyword("as") identifier
 
-# 6.12.1
-# XXX ast
-# XXX not hooked up? :T
-future_statement = keyword("from") token("__future__") keyword("import")
-                   identifier as_name? (comma identifier as_name?)*
-                 | keyword("from") token("__future__") keyword("import") po
-                   identifier as_name? (comma identifier as_name?)* comma? pc
-
 # 6.13
 global_stmt = keyword("global") identifier:head (comma identifier)*:tail
             -> t.Global([head] + tail)
@@ -404,14 +395,15 @@ for_stmt = keyword("for") target_list:tgts keyword("in") expression_list:exprs
          -> t.For(tgts, exprs, s, elses)
 
 # 7.4
-# XXX ast
 try_stmt = try1_stmt | try2_stmt
-try1_stmt = keyword("try") colon suite
+try1_stmt = keyword("try") colon suite:s
             (keyword("except")
-             (expression ((keyword("as") | comma) target)?)? colon suite)+
-            (keyword("else") colon suite)?
-            (keyword("finally") colon suite)?
-try2_stmt = keyword("try") colon suite keyword("finally") colon suite
+             (expression ((keyword("as") | comma) target)?)? colon suite)+:excepts
+            (keyword("else") colon suite)?:e
+            (keyword("finally") colon suite)?:f
+          -> t.Try(s, excepts, e, f)
+try2_stmt = keyword("try") colon suite:s keyword("finally") colon suite:f
+          -> t.Try(s, f)
 
 # 7.5
 with_stmt = keyword("with") with_item:head (comma with_item)*:tail colon
@@ -421,11 +413,11 @@ with_item = expression:expr (keyword("as") target:tgt)?
           -> t.Context(expr, tgt)
 
 # 7.6
-# XXX ast
-decorated = decorators (classdef | funcdef)
+decorated = decorators:ds (classdef | funcdef):f -> t.Decorated(ds, f)
 decorators = decorator+
-decorator = token("@") dotted_name
-            (po (argument_list comma?)? pc)? newline
+decorator = token("@") dotted_name:name
+            (po (argument_list:args comma? -> args)?:args pc -> args)?:args
+            newline -> t.Decorator(name, args)
 funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail
@@ -441,8 +433,8 @@ parameter_list = (defparameter:p comma -> p)*:init
                | -> t.Parameters(None, None, None)
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
-sublist = parameter (comma parameter)* comma?
-parameter = identifier | po sublist pc
+sublist = parameter:head (comma parameter)*:tail comma? -> [head] + tail
+parameter = identifier | po sublist:s pc -> s
 
 # 7.7
 classdef = keyword("class") identifier:cls inheritance?:parents colon suite:s
