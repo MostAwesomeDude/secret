@@ -371,9 +371,9 @@ global_stmt = keyword("global") identifier:head (comma identifier)*:tail
             -> t.Global([head] + tail)
 
 # 6.14
-# XXX ast
-exec_stmt = keyword("exec") or_expr
-            (keyword("in") expression (comma expression)?)?
+exec_stmt = keyword("exec") or_expr:expr
+            (keyword("in") expression:gs (comma expression:ls)?)?
+          -> t.Exec(expr, gs, ls)
 
 # http://docs.python.org/reference/compound_stmts.html
 
