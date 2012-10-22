@@ -367,8 +367,8 @@ future_statement = keyword("from") token("__future__") keyword("import")
                    identifier as_name? (comma identifier as_name?)* comma? pc
 
 # 6.13
-# XXX ast
-global_stmt = keyword("global") identifier (comma identifier)*
+global_stmt = keyword("global") identifier:head (comma identifier)*:tail
+            -> t.Global([head] + tail)
 
 # 6.14
 # XXX ast
@@ -405,9 +405,9 @@ if_stmt = keyword("if") expression:e colon suite:then
 while_stmt = keyword("while") expression:e colon suite:s -> t.While(e, s)
 
 # 7.3
-# XXX ast
-for_stmt = keyword("for") target_list keyword("in") expression_list colon
-           suite (keyword("else") colon suite)?
+for_stmt = keyword("for") target_list:tgts keyword("in") expression_list:exprs
+           colon suite:s (keyword("else") colon suite)?:elses
+         -> t.For(tgts, exprs, s, elses)
 
 # 7.4
 # XXX ast
@@ -420,9 +420,11 @@ try1_stmt = keyword("try") colon suite
 try2_stmt = keyword("try") colon suite keyword("finally") colon suite
 
 # 7.5
-# XXX ast
-with_stmt = keyword("with") with_item (comma with_item)* colon suite
-with_item = expression (keyword("as") target)?
+with_stmt = keyword("with") with_item:head (comma with_item)*:tail colon
+            suite:s
+          -> t.With([head] + tail, s)
+with_item = expression:expr (keyword("as") target:tgt)?
+          -> t.Context(expr, tgt)
 
 # 7.6
 # XXX ast
@@ -449,9 +451,9 @@ sublist = parameter (comma parameter)* comma?
 parameter = identifier | po sublist pc
 
 # 7.7
-# XXX ast
-classdef = keyword("class") identifier inheritance? colon suite
-inheritance = po expression_list? pc
+classdef = keyword("class") identifier:cls inheritance?:parents colon suite:s
+         -> t.Class(cls, parents, s)
+inheritance = po expression_list?:e pc -> e
 
 # http://docs.python.org/reference/toplevel_components.html
 
