@@ -134,6 +134,8 @@ yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 # 5.3
 primary = atom:a (attributeref | slicing | subscription | call)*:trailers
         -> self.primary(a, trailers)
+primary_nocall = atom:a (attributeref | slicing | subscription)*:trailers
+        -> self.primary(a, trailers)
 
 # 5.3.1
 attributeref = dot identifier:i -> t.Attribute(None, i)
@@ -292,9 +294,9 @@ target = identifier
        | slicing
 
 # 6.2.1
-# XXX ast
-augmented_assignment_stmt = augtarget augop (expression_list | yield_expression)
-augtarget = identifier | attributeref | subscription | slicing
+augmented_assignment_stmt = primary_nocall:p augop:op
+                            (yield_expression | expression_list):expr
+                          -> t.AugAssign(p, op, expr)
 augop = token("+=") | token("-=") | token("*=") | token("/=") | token("//=")
       | token("%=") | token("**=") | token(">>=") | token("<<=") | token("&=")
       | token("^=") | token("|=")

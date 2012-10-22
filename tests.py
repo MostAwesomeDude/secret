@@ -406,6 +406,16 @@ class TestAssignmentStmt(TC):
         self.succeed(i, o)
 
 
+class TestAugmentedAssignmentStmt(TC):
+
+    rule = "augmented_assignment_stmt"
+
+    def test_augassign_simple(self):
+        i = "x += 1"
+        o = t.AugAssign(t.Name("x"), "+=", t.Num(1))
+        self.succeed(i, o)
+
+
 class TestPassStmt(TC):
 
     rule = "pass_stmt"
