@@ -460,6 +460,15 @@ class TestContinueStmt(TC):
         o = t.Continue()
         self.succeed(i, o)
 
+class TestImportStmt(TC):
+
+    rule = "import_stmt"
+
+    def test_import_sys(self):
+        i = "import sys"
+        o = t.Import([t.As(t.Module("sys"), None)])
+        self.succeed(i, o)
+
 
 class TestIfStmt(TC):
 
