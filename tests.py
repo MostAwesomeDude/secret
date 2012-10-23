@@ -401,8 +401,7 @@ class TestLambdaForm(TC):
 
     def test_lambda_id(self):
         i = "lambda id: id"
-        o = t.Lambda(t.Parameters([t.Name("id")], None, None),
-                t.Name("id"))
+        o = t.Lambda(t.Parameters([t.Name("id")]), t.Name("id"))
         self.succeed(i, o)
 
 
@@ -529,37 +528,27 @@ class TestFuncdef(TC):
 
     def test_empty_pass(self):
         i = "def empty():\n pass\n"
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_trailing_space(self):
         i = "def empty():\n pass \n"
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_trailing_comment(self):
         i = "def empty():\n pass # comment\n"
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_trailing_comment_pass(self):
         i = "def empty(): # comment\n pass\n"
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_one_line(self):
         i = "def empty(): pass\n"
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_multiline(self):
@@ -567,16 +556,13 @@ class TestFuncdef(TC):
             pass
             pass
         """
-        o = t.Def(t.Name("empty"),
-                  t.Parameters(None, None, None),
-                  [t.Pass(), t.Pass()])
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass(), t.Pass()])
         self.succeed(i, o)
 
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
         o = t.Def(t.Name("add"),
-                  t.Parameters([t.Name("x"), t.Name("y")], None,
-                               None),
+                  t.Parameters([t.Name("x"), t.Name("y")]),
                   [t.Return(t.Add(t.Name("x"), t.Name("y")))])
         self.succeed(i, o)
 
@@ -586,8 +572,7 @@ class TestFuncdef(TC):
             return z
         """
         o = t.Def(t.Name("add"),
-                  t.Parameters([t.Name("x"), t.Name("y")], None,
-                               None),
+                  t.Parameters([t.Name("x"), t.Name("y")]),
                   [
                       t.Assign([t.Name("z")], t.Add(t.Name("x"), t.Name("y"))),
                       t.Return(t.Name("z")),
@@ -601,8 +586,7 @@ class TestFuncdef(TC):
             return (-b + dis) / a2, (-b - dis) / a2
         """ % self.discriminant_string
         o = t.Def(t.Name("quadratic"),
-                  t.Parameters([t.Name("a"), t.Name("b"),
-                                t.Name("c")], None, None),
+                  t.Parameters([t.Name("a"), t.Name("b"), t.Name("c")]),
                   [
                       t.Assign([t.Name("d")], t.Call(t.Name("sqrt"),
                           t.Arguments([self.discriminant], None, None,
@@ -624,5 +608,20 @@ class TestParameterList(TC):
 
     def test_params_multiple(self):
         i = "x, y"
-        o = t.Parameters([t.Name("x"), t.Name("y")], None, None)
+        o = t.Parameters([t.Name("x"), t.Name("y")])
+        self.succeed(i, o)
+
+    def test_params_args(self):
+        i = "*args"
+        o = t.Parameters([], t.Name("args"), None)
+        self.succeed(i, o)
+
+    def test_params_kwargs(self):
+        i = "**kwargs"
+        o = t.Parameters([], t.Name("kwargs"))
+        self.succeed(i, o)
+
+    def test_params_args_kwargs(self):
+        i = "*args, **kwargs"
+        o = t.Parameters([], t.Name("args"), t.Name("kwargs"))
         self.succeed(i, o)

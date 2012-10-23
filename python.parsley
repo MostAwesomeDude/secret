@@ -426,15 +426,19 @@ funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail
             -> t.Name(".".join(head, *tail) if tail else head)
+# Parameters have multiple arities.
+# Parameters/0 means no parameters.
+# Parameters/1 is a list of positional arguments.
+# Parameters/2 is that and **kwargs.
+# Parameters/3 is positional arguments, *args, and **kwargs. Note that kwargs
+# can be None in this case.
 parameter_list = (defparameter:p comma -> p)*:init
                  (token("*") identifier:args
                   (comma token("**") identifier)?:kwargs
                 -> t.Parameters(init, args, kwargs)
-                | token("**") identifier:kwargs
-                -> t.Parameters(init, None, kwargs)
-                | defparameter:last comma?
-                -> t.Parameters(init + [last], None, None))
-               | -> t.Parameters(None, None, None)
+                | token("**") identifier:kwargs -> t.Parameters(init, kwargs)
+                | defparameter:last comma? -> t.Parameters(init + [last]))
+               | -> t.Parameters()
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
 sublist = parameter:head (comma parameter)*:tail comma? -> [head] + tail
