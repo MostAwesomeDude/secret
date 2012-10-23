@@ -1,10 +1,17 @@
 from terml.nodes import Term, termMaker as t
-from ometa.grammar import OMeta
+from ometa.boot import BootOMetaGrammar
 from ometa.runtime import ParseError
 
 g = open("python.parsley").read()
 
-class Parser(OMeta.makeGrammar(g, globals())):
+def join(separator, seq):
+    "A Twine-friendly string join."
+    if not seq:
+        return ''
+    return seq[0].__class__(separator).join(seq)
+
+
+class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
 
     depth = 0
 

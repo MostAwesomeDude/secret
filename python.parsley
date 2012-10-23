@@ -349,7 +349,7 @@ import_stmt = keyword("import") module_as_name:head
               identifier_as_name:head (comma identifier_as_name)*:tail comma?
               pc -> t.Import([head] + tail, m)
 module = (identifier_:i dot -> i)*:init identifier_:last
-       -> t.Module(".".join(init + [last]))
+       -> t.Module(join(".", init + [last]))
 module_as_name = module:m as_name?:n -> t.As(m, n)
 identifier_as_name = identifier:i as_name?:n -> t.As(i, n)
 relative_module = dot* module | dot+
@@ -425,7 +425,7 @@ decorator = token("@") dotted_name:name
 funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail
-            -> t.Name(".".join(head, *tail) if tail else head)
+            -> t.Name(join('.', head, *tail) if tail else head)
 # Parameters have multiple arities.
 # Parameters/0 means no parameters.
 # Parameters/1 is a list of positional arguments.

@@ -483,6 +483,15 @@ class TestImportStmt(TC):
         o = t.Import([t.As(t.Module("sys"), None)])
         self.succeed(i, o)
 
+    def test_import_dotted(self):
+        i = "import os.path"
+        o = t.Import([t.As(t.Module("os.path"), None)])
+        self.succeed(i, o)
+
+    def test_import_as(self):
+        i = "import os.path as path"
+        o = t.Import([t.As(t.Module("os.path"), t.Name("path"))])
+        self.succeed(i, o)
 
 class TestIfStmt(TC):
 
