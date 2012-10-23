@@ -14,6 +14,10 @@ indentation = ?(not self.indents) | !(sum(self.indents)):n leading_space{n}
 indent = indentation leading_space+:ss !(self.indents.append(len(ss)))
 dedent = !(self.indents.pop())
 
+# Trailing spaces at the end of a line.
+comment = '#' <(~newline_ anything)*>
+trailing_space = (' ' | '\t')* comment?
+
 # Parentheses...
 po = leading_space* '(' !(self.po())
 pc = leading_space* ')' !(self.pc())
@@ -371,11 +375,11 @@ compound_stmt = if_stmt
               | funcdef
               | classdef
               | decorated
-suite = newline indent statement:s suite_stmt*:ss dedent
+suite = trailing_space newline indent statement:s suite_stmt*:ss dedent
         -> s + [x for l in ss for x in l]
-      | stmt_list:ss newline -> ss
+      | stmt_list:ss trailing_space newline -> ss
 statement = compound_stmt:s -> [s]
-          | stmt_list:ss newline -> ss
+          | stmt_list:ss trailing_space newline -> ss
 suite_stmt = indentation ~leading_space statement
 stmt_list = simple_stmt:head (semi simple_stmt)*:tail semi? -> [head] + tail
 
@@ -417,7 +421,7 @@ decorated = decorators:ds (classdef | funcdef):f -> t.Decorated(ds, f)
 decorators = decorator+
 decorator = token("@") dotted_name:name
             (po (argument_list:args comma? -> args)?:args pc -> args)?:args
-            newline -> t.Decorator(name, args)
+            trailing_space newline -> t.Decorator(name, args)
 funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail

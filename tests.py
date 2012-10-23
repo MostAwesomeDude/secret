@@ -25,6 +25,21 @@ class TC(TestCase):
         self.assertEqual(result, o)
 
 
+class TestComment(TC):
+
+    rule = "comment"
+
+    def test_comment(self):
+        i = "#test"
+        o = "test"
+        self.succeed(i, o)
+
+    def test_comment_newline(self):
+        i = "#test\n"
+        o = "test"
+        self.succeed(i, o)
+
+
 class TestIdentifier(TC):
 
     rule = "identifier"
@@ -514,6 +529,27 @@ class TestFuncdef(TC):
 
     def test_empty_pass(self):
         i = "def empty():\n pass\n"
+        o = t.Def(t.Name("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass()])
+        self.succeed(i, o)
+
+    def test_empty_pass_trailing_space(self):
+        i = "def empty():\n pass \n"
+        o = t.Def(t.Name("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass()])
+        self.succeed(i, o)
+
+    def test_empty_pass_trailing_comment(self):
+        i = "def empty():\n pass # comment\n"
+        o = t.Def(t.Name("empty"),
+                  t.Parameters(None, None, None),
+                  [t.Pass()])
+        self.succeed(i, o)
+
+    def test_empty_trailing_comment_pass(self):
+        i = "def empty(): # comment\n pass\n"
         o = t.Def(t.Name("empty"),
                   t.Parameters(None, None, None),
                   [t.Pass()])
