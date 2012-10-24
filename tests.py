@@ -665,3 +665,13 @@ class TestParameterList(TC):
         i = "*args, **kwargs"
         o = t.Parameters([], t.Name("args"), t.Name("kwargs"))
         self.succeed(i, o)
+
+
+class TestClassdef(TC):
+
+    rule = "classdef"
+
+    def test_class_depth(self):
+        i = "class Depth: depth = 0\n"
+        o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
+        self.succeed(i, o)

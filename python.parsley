@@ -445,7 +445,7 @@ sublist = parameter:head (comma parameter)*:tail comma? -> [head] + tail
 parameter = identifier | po sublist:s pc -> s
 
 # 7.7
-classdef = keyword("class") identifier:cls inheritance?:parents colon suite:s
+classdef = keyword("class") identifier_:cls inheritance?:parents colon suite:s
          -> t.Class(cls, parents, s)
 inheritance = po expression_list?:e pc -> e
 
