@@ -120,7 +120,8 @@ if __name__ == "__main__":
     try:
         stmts, stuff = Parser(f).rule_file_input()
         error = ParseError(f, *stuff)
-        print stmts
+        from pprint import pprint
+        pprint(stmts)
         print error.formatError()
     except ParseError as error:
         print error.formatError()
