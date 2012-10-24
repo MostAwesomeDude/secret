@@ -568,6 +568,37 @@ class TestFuncdef(TC):
         o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass(), t.Pass()])
         self.succeed(i, o)
 
+    def test_empty_pass_multiline_blanks(self):
+        i = """def empty():
+
+            pass
+        """
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        self.succeed(i, o)
+
+    def test_empty_pass_multiline_blanks_multiple(self):
+        i = """def empty():
+
+            pass
+
+            pass
+        """
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass(), t.Pass()])
+        self.succeed(i, o)
+
+    def test_empty_pass_multiline_blanks_leading(self):
+        """
+        Yes, there is a trailing space in the middle of this test. It is
+        intentional. Please do not touch it.
+        """
+
+        i = """def empty():
+    
+            pass
+        """
+        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        self.succeed(i, o)
+
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
         o = t.Def(t.Name("add"),

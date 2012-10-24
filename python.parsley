@@ -5,7 +5,7 @@
 # * Print statement
 
 # Core primitives that will be needed later.
-newline_ = '\r' '\n' | '\r' | '\n'
+newline_ = ((' ' | '\t')* ('\r' '\n' | '\r' | '\n'))+
 leading_space_ = ' '
 newline = ?(not self.parens) newline_
 leading_space = ?(self.parens) newline_ | leading_space_
