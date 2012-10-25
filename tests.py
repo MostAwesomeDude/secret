@@ -180,12 +180,12 @@ class TestParenthForm(TC):
 
     def test_attr_literal(self):
         i = "(an.attr)"
-        o = t.Attribute(t.Name("an"), t.Name("attr"))
+        o = t.Attribute(t.Name("an"), "attr")
         self.succeed(i, o)
 
     def test_method(self):
         i = "(test.method())"
-        o = t.Call(t.Attribute(t.Name("test"), t.Name("method")), None)
+        o = t.Call(t.Attribute(t.Name("test"), "method"), None)
         self.succeed(i, o)
 
     def test_expr_associativity_left(self):
@@ -216,7 +216,7 @@ class TestParenthForm(TC):
     def test_if_else_complex(self):
         i = "('this' if it.succeeds() else 'that')"
         o = t.IfExp(
-                t.Call(t.Attribute(t.Name("it"), t.Name("succeeds")), None),
+                t.Call(t.Attribute(t.Name("it"), "succeeds"), None),
                 t.Str(None, "this"),
                 t.Str(None, "that"))
         self.succeed(i, o)
@@ -228,7 +228,7 @@ class TestPrimary(TC):
 
     def test_attr_single(self):
         i = "an.attr"
-        o = t.Attribute(t.Name("an"), t.Name("attr"))
+        o = t.Attribute(t.Name("an"), "attr")
         self.succeed(i, o)
 
     def test_ellipsis(self):
@@ -674,4 +674,21 @@ class TestClassdef(TC):
     def test_class_depth(self):
         i = "class Depth: depth = 0\n"
         o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
+        self.succeed(i, o)
+
+    def test_class_parser(self):
+        i = "class Parser(BootOMetaGrammar.makeGrammar(g, globals())): pass"
+        o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
+        self.succeed(i, o)
+
+
+class TestInheritance(TC):
+
+    rule = "inheritance"
+
+    def test_inheritance_parser(self):
+        i = "(BootOMetaGrammar.makeGrammar(g, globals()))"
+        o = t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
+            t.Arguments([t.Name("g"), t.Call(t.Name("globals"), None)], None,
+                None, None))
         self.succeed(i, o)

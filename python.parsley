@@ -144,7 +144,7 @@ primary_nocall = atom:a (attributeref | slicing | subscription)*:trailers
         -> self.primary(a, trailers)
 
 # 5.3.1
-attributeref = dot identifier:i -> t.Attribute(None, i)
+attributeref = dot identifier_:i -> t.Attribute(None, i)
 
 # 5.3.2
 subscription = so expression_list:item sc -> t.Subscript(None, item)
