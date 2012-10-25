@@ -677,8 +677,16 @@ class TestClassdef(TC):
         self.succeed(i, o)
 
     def test_class_parser(self):
-        i = "class Parser(BootOMetaGrammar.makeGrammar(g, globals())): pass"
+        i = """class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
+            pass
+        """
         o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
+        o = t.Class("Parser",
+                t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
+                    t.Arguments([t.Name("g"), t.Call(t.Name("globals"),
+                        None)], None, None, None)),
+                    [t.Pass()]
+        )
         self.succeed(i, o)
 
 
