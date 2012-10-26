@@ -123,6 +123,13 @@ class TestStringLiteral(TC):
         o = t.Str(None, "abc")
         self.succeed(i, o)
 
+    def test_longstring_docstring(self):
+        i =  '''"""
+        Docstring
+        """'''
+        o = t.Str(None, "\n        Docstring\n        \n")
+        self.succeed(i, o)
+
 
 class TestParenthForm(TC):
 

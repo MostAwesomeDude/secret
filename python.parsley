@@ -63,7 +63,7 @@ shortstringdouble = '"' <(escapeseq | ~'"' ~'\n' anything)*>:s '"' -> s
 longstring = '\'' '\'' '\'' <longstringitem*>:s '\'' '\'' '\'' -> s
            | '"' '"' '"' <longstringitem*>:s '"' '"' '"' -> s
 longstringitem = longstringchar | escapeseq
-longstringchar = ~'\\'
+longstringchar = ~'\\' anything
 escapeseq = '\\' anything
 
 # 2.4.4
