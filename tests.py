@@ -500,6 +500,32 @@ class TestImportStmt(TC):
         o = t.Import([t.As(t.Module("os.path"), t.Name("path"))])
         self.succeed(i, o)
 
+
+class TestStatement(TC):
+
+    rule = "statement"
+
+    def test_statement_compound_while(self):
+        i = "while True: pass\n"
+        o = [t.While(t.Name("True"), [t.Pass()])]
+        self.succeed(i, o)
+
+    def test_statement_compound_while_multiline(self):
+        i = """while True:
+            pass
+        """
+        o = [t.While(t.Name("True"), [t.Pass()])]
+        self.succeed(i, o)
+
+    def test_statement_compound_while_multiline_leading(self):
+        i = """while True:
+
+            pass
+        """
+        o = [t.While(t.Name("True"), [t.Pass()])]
+        self.succeed(i, o)
+
+
 class TestIfStmt(TC):
 
     rule = "if_stmt"
