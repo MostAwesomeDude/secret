@@ -1,6 +1,6 @@
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
-from ometa.runtime import ParseError
+from ometa.runtime import ParseError, expected
 
 g = open("python.parsley").read()
 
@@ -67,6 +67,33 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
     def __init__(self, *args, **kwargs):
         super(Parser, self).__init__(*args, **kwargs)
         self.indents = []
+
+    def rule_until(self, rule, token):
+        """
+        Parse up until a given token, using the given rule.
+
+        The token may be multiple characters or a single character.
+        """
+
+        m = self.input
+        rule = rule[0]
+
+        try:
+            result = []
+            while True:
+                try:
+                    s = self.input
+                    for char in token:
+                        v, e = self.exactly(char)
+                    return result, e
+                except ParseError:
+                    self.input = s
+                    v, e = self.apply(rule)
+                    result.append(v)
+        except ParseError, pe:
+            self.input = m
+            raise ParseError(self.input.data, pe[0],
+                    expected("%s until" % rule, token))
 
     def keyword_pred(self, first, second):
         return first + second in self.keywords

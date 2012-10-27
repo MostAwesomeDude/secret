@@ -127,7 +127,7 @@ class TestStringLiteral(TC):
         i =  '''"""
         Docstring
         """'''
-        o = t.Str(None, "\n        Docstring\n        \n")
+        o = t.Str(None, "\n        Docstring\n        ")
         self.succeed(i, o)
 
 
