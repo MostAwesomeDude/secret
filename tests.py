@@ -707,3 +707,17 @@ class TestInheritance(TC):
             t.Arguments([t.Name("g"), t.Call(t.Name("globals"), None)], None,
                 None, None))
         self.succeed(i, o)
+
+
+class TestFileInput(TC):
+
+    rule = "file_input"
+
+    def test_file_input_simple(self):
+        i = """
+class Simple(object):
+    pass
+
+        """
+        o = [[t.Class("Simple", t.Name("object"), [t.Pass()])]]
+        self.succeed(i, o)
