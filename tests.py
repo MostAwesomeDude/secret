@@ -570,27 +570,27 @@ class TestFuncdef(TC):
 
     def test_empty_pass(self):
         i = "def empty():\n pass\n"
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_trailing_space(self):
         i = "def empty():\n pass \n"
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_trailing_comment(self):
         i = "def empty():\n pass # comment\n"
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_trailing_comment_pass(self):
         i = "def empty(): # comment\n pass\n"
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_one_line(self):
         i = "def empty(): pass\n"
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_multiline(self):
@@ -598,7 +598,7 @@ class TestFuncdef(TC):
             pass
             pass
         """
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass(), t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass(), t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_multiline_blanks(self):
@@ -606,7 +606,7 @@ class TestFuncdef(TC):
 
             pass
         """
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_multiline_blanks_multiple(self):
@@ -616,7 +616,7 @@ class TestFuncdef(TC):
 
             pass
         """
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass(), t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass(), t.Pass()])
         self.succeed(i, o)
 
     def test_empty_pass_multiline_blanks_leading(self):
@@ -629,19 +629,19 @@ class TestFuncdef(TC):
     
             pass
         """
-        o = t.Def(t.Name("empty"), t.Parameters(), [t.Pass()])
+        o = t.Def("empty", t.Parameters(), [t.Pass()])
         self.succeed(i, o)
 
     def test_doc_short(self):
         i = """def doc():
             "Short doc."
         """
-        o = t.Def(t.Name("doc"), t.Parameters(), [t.Str(None, "Short doc.")])
+        o = t.Def("doc", t.Parameters(), [t.Str(None, "Short doc.")])
         self.succeed(i, o)
 
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
-        o = t.Def(t.Name("add"),
+        o = t.Def("add",
                   t.Parameters([t.Name("x"), t.Name("y")]),
                   [t.Return(t.Add(t.Name("x"), t.Name("y")))])
         self.succeed(i, o)
@@ -651,7 +651,7 @@ class TestFuncdef(TC):
             z = x + y
             return z
         """
-        o = t.Def(t.Name("add"),
+        o = t.Def("add",
                   t.Parameters([t.Name("x"), t.Name("y")]),
                   [
                       t.Assign([t.Name("z")], t.Add(t.Name("x"), t.Name("y"))),
@@ -665,7 +665,7 @@ class TestFuncdef(TC):
             a2 = 2 * a
             return (-b + dis) / a2, (-b - dis) / a2
         """ % self.discriminant_string
-        o = t.Def(t.Name("quadratic"),
+        o = t.Def("quadratic",
                   t.Parameters([t.Name("a"), t.Name("b"), t.Name("c")]),
                   [
                       t.Assign([t.Name("d")], t.Call(t.Name("sqrt"),

@@ -426,7 +426,7 @@ decorators = decorator+
 decorator = token("@") dotted_name:name
             (po (argument_list:args comma? -> args)?:args pc -> args)?:args
             newline -> t.Decorator(name, args)
-funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
+funcdef = keyword("def") identifier_:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail
             -> t.Name(join('.', head, *tail) if tail else head)
