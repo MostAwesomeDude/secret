@@ -304,6 +304,16 @@ class TestArgumentList(TC):
         self.succeed(i, o)
 
 
+class TestListDisplay(TC):
+
+    rule = "list_display"
+
+    def test_list_display_empty(self):
+        i = "[]"
+        o = t.List()
+        self.succeed(i, o)
+
+
 class TestDictDisplay(TC):
 
     rule = "dict_display"

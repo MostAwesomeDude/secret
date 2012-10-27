@@ -113,7 +113,7 @@ parenth_form = po expression_list?:e pc -> e if e else t.Tuple()
 
 # 5.2.4, 5.2.5
 # We generalize comprehensions entirely.
-list_display = so expression_list?:l sc -> t.List(*l)
+list_display = so expression_list?:l sc -> t.List(*l) if l else t.List()
              | so list_comprehension:l sc -> l
 list_comprehension = expression:e list_for:f -> l.ListComp(e, f)
 comp_for = keyword("for") target_list:t keyword("in") expression_list:i
