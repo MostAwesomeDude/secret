@@ -5,18 +5,22 @@
 # * Print statement
 
 # Core primitives that will be needed later.
-newline_ = ((' ' | '\t')* ('\r' '\n' | '\r' | '\n'))+ -> None
+
+newline_ = ('\r' '\n' | '\r' | '\n')+
 leading_space_ = ' '
-newline = ?(not self.parens) newline_
+# Comments.
+comment = '#' <(~newline_ anything)*>
+# Trailing spaces at the end of a line, including comments.
+trailing_space = (' ' | '\t')* comment?
+
+# A full newline is trailing spaces, possibly a comment, and finally a newline
+# character.
+newline = ?(not self.parens) trailing_space newline_ -> None
 leading_space = ?(self.parens) newline_ | leading_space_
 # Carefully step around the possible {0} here.
 indentation = ?(not self.indents) | !(sum(self.indents)):n leading_space{n}
 indent = indentation leading_space+:ss !(self.indents.append(len(ss)))
 dedent = !(self.indents.pop())
-
-# Trailing spaces at the end of a line.
-comment = '#' <(~newline_ anything)*>
-trailing_space = (' ' | '\t')* comment?
 
 # Parentheses...
 po = leading_space* '(' !(self.po())
@@ -375,11 +379,11 @@ compound_stmt = if_stmt
               | funcdef
               | classdef
               | decorated
-suite = trailing_space newline indent statement:s suite_stmt*:ss dedent
+suite = newline indent statement:s suite_stmt*:ss dedent
         -> s + [x for l in ss for x in l]
-      | stmt_list:ss trailing_space newline -> ss
+      | stmt_list:ss newline -> ss
 statement = compound_stmt:s -> [s]
-          | stmt_list:ss trailing_space newline -> ss
+          | stmt_list:ss newline -> ss
 suite_stmt = indentation ~leading_space statement
 stmt_list = simple_stmt:head (semi simple_stmt)*:tail semi? -> [head] + tail
 
@@ -421,7 +425,7 @@ decorated = decorators:ds (classdef | funcdef):f -> t.Decorated(ds, f)
 decorators = decorator+
 decorator = token("@") dotted_name:name
             (po (argument_list:args comma? -> args)?:args pc -> args)?:args
-            trailing_space newline -> t.Decorator(name, args)
+            newline -> t.Decorator(name, args)
 funcdef = keyword("def") identifier:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)
 dotted_name = identifier:head (dot identifier)*:tail
