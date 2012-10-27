@@ -639,6 +639,16 @@ class TestFuncdef(TC):
         o = t.Def("doc", t.Parameters(), [t.Str(None, "Short doc.")])
         self.succeed(i, o)
 
+    def test_doc_long(self):
+        i = """def doc():
+            '''
+            Long doc.
+            '''
+        """
+        o = t.Def("doc", t.Parameters(),
+                [t.Str(None, "\n            Long doc.\n            ")])
+        self.succeed(i, o)
+
     def test_add_one_line(self):
         i = "def add(x, y): return x + y\n"
         o = t.Def("add",
