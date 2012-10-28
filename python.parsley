@@ -41,6 +41,10 @@ colon = leading_space* ':'
 semi = leading_space* ';'
 dot = leading_space* '.'
 
+# Higher-order helper for generically finding comma-separated lists of things.
+comma_list :rule = !(self.apply(rule)[0]):x (comma !(self.apply(rule)[0]))*:xs comma?
+                 -> [x] + xs
+
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
@@ -128,8 +132,7 @@ generator_expression = po expression:e comp_for:c pc -> t.Generator(e, c)
 # 5.2.7
 dict_display = co key_datum_list?:e cc -> t.Dict(*e) if e else t.Dict()
              | co dict_comprehension:e cc -> t.Dict(e)
-key_datum_list = key_datum:head (comma key_datum)*:tail comma?
-               -> [head] + tail
+key_datum_list = comma_list("key_datum")
 key_datum = expression:k colon expression:v -> t.Pair(k, v)
 dict_comprehension = expression:k colon expression:v comp_for:c
                    -> t.Comprehension(k, v, c)
@@ -350,8 +353,8 @@ import_stmt = keyword("import") module_as_name:head
               identifier_as_name:head (comma identifier_as_name)*:tail
               -> t.Import([head] + tail, m)
             | keyword("from") relative_module:m keyword("import") po
-              identifier_as_name:head (comma identifier_as_name)*:tail comma?
-              pc -> t.Import([head] + tail, m)
+              comma_list("identifier_as_name"):identifiers pc
+              -> t.Import(identifiers, m)
 module = (identifier_:i dot -> i)*:init identifier_:last
        -> t.Module(join(".", init + [last]))
 module_as_name = module:m as_name?:n -> t.As(m, n)
@@ -445,7 +448,7 @@ parameter_list = (defparameter:p comma -> p)*:init
                | -> t.Parameters()
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
              | parameter
-sublist = parameter:head (comma parameter)*:tail comma? -> [head] + tail
+sublist = comma_list("parameter")
 parameter = identifier | po sublist:s pc -> s
 
 # 7.7
