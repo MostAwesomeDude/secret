@@ -76,7 +76,6 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
         """
 
         m = self.input
-        rule = rule[0]
 
         try:
             result = []
