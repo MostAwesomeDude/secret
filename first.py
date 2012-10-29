@@ -12,7 +12,7 @@ def join(separator, seq):
     return seq[0].__class__(separator).join(seq)
 
 
-class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
+class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
 
     depth = 0
 
@@ -53,7 +53,7 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
     ]
 
     def __init__(self, *args, **kwargs):
-        super(Parser, self).__init__(*args, **kwargs)
+        super(PythonParser, self).__init__(*args, **kwargs)
         self.indents = []
 
     def rule_until(self, rule, token):
@@ -130,7 +130,7 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
 if __name__ == "__main__":
     import sys
     f = open(sys.argv[1]).read()
-    g = wrapGrammar(Parser)
+    g = wrapGrammar(PythonParser)
     stmts = g(f).file_input()
     from pprint import pprint
     pprint(stmts)

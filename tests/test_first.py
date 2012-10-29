@@ -3,7 +3,7 @@ from unittest import TestCase
 from ometa.runtime import ParseError
 from terml.nodes import termMaker as t
 
-from first import Parser
+from first import PythonParser as Parser
 
 
 class TC(TestCase):
