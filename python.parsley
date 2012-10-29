@@ -298,12 +298,11 @@ assignment_stmt = (target_list:lhs token("=") -> lhs)+:lhss
                   (expression_list | yield_expression):rhs -> t.Assign(lhss, rhs)
 target_list = target:head (comma target)*:tail comma?:t
             -> self.tuplify(head, tail, t)
-target = identifier
+target = identifier:id
+         (attributeref | slicing | subscription | call)*:trailers
+         -> self.primary(id, trailers)
        | po target_list:l pc -> l
        | so target_list:l sc -> l
-       | attributeref
-       | subscription
-       | slicing
 
 # 6.2.1
 augmented_assignment_stmt = primary_nocall:p augop:op
