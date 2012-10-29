@@ -784,5 +784,6 @@ class TestGrammarStmt(TC):
         i = """grammar Ones:
             ones = '1'+
         """
-        o = None
+        o = t.Grammar("Ones", [t.Rule("ones", t.And([t.And([]),
+            t.Or([t.And([t.Many1(t.Exactly("1"))])])]))])
         self.succeed(i, o)
