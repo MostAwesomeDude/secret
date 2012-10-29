@@ -1,6 +1,7 @@
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
 from ometa.runtime import ParseError, expected
+from parsley import wrapGrammar
 
 g = open("python.parsley").read()
 
@@ -14,19 +15,6 @@ def join(separator, seq):
 class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
 
     depth = 0
-
-    def _apply(self, *args):
-        self.depth += 1
-        #print " " * self.depth, "apply", args[1:]
-        try:
-            rv = super(Parser, self)._apply(*args)
-            #print " " * self.depth, "success", args[1:], rv
-            return rv
-        except:
-            #print " " * self.depth, "failed", args[1:]
-            raise
-        finally:
-            self.depth -= 1
 
     parens = 0
 
@@ -91,8 +79,7 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
                     result.append(v)
         except ParseError, pe:
             self.input = m
-            raise ParseError(self.input.data, pe[0],
-                    expected("%s until" % rule, token))
+            raise pe.withMessage(expected("%s until" % rule, token))
 
     def keyword_pred(self, first, second):
         return first + second in self.keywords
@@ -143,11 +130,7 @@ class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
 if __name__ == "__main__":
     import sys
     f = open(sys.argv[1]).read()
-    try:
-        stmts, stuff = Parser(f).rule_file_input()
-        error = ParseError(f, *stuff)
-        from pprint import pprint
-        pprint(stmts)
-        print error.formatError()
-    except ParseError as error:
-        print error.formatError()
+    g = wrapGrammar(Parser)
+    stmts = g(f).file_input()
+    from pprint import pprint
+    pprint(stmts)
