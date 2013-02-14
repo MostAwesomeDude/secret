@@ -1,5 +1,4 @@
 # Omissions:
-# * ``
 # * <>
 # * Complex parameters
 # * Print statement
@@ -33,6 +32,10 @@ cc = leading_space* '}' !(self.pc())
 # ...and square brackets.
 so = leading_space* '[' !(self.po())
 sc = leading_space* ']' !(self.pc())
+
+# Oh, and backticks.
+bo = leading_space* '`' !(self.po())
+bc = leading_space* '`' !(self.pc())
 
 # Thankfully, there are only a couple other bits of punctuation used in
 # Python.
@@ -144,8 +147,12 @@ set_display = co (expression_list | list_comprehension):e cc -> t.Set(e)
 yield_atom = po yield_expression:e pc -> e
 yield_expression = keyword("yield") expression_list?:e -> t.Yield(e)
 
+# Our little extension to 5.3: Quasiliterals.
+quasi = bo <(~'`' anything)*>:q bc -> t.Quasi(None, q)
+
 # 5.3
-primary = atom:a (attributeref | slicing | subscription | call)*:trailers
+primary = atom:a
+          (attributeref | slicing | subscription | call | quasi)*:trailers
         -> self.primary(a, trailers)
 primary_nocall = atom:a (attributeref | slicing | subscription)*:trailers
         -> self.primary(a, trailers)

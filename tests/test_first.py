@@ -190,6 +190,11 @@ class TestParenthForm(TC):
         o = t.Attribute(t.Name("an"), "attr")
         self.succeed(i, o)
 
+    def test_quasiliteral(self):
+        i = "(just`a test`)"
+        o = t.Quasi(t.Name("just"), "a test")
+        self.succeed(i, o)
+
     def test_method(self):
         i = "(test.method())"
         o = t.Call(t.Attribute(t.Name("test"), "method"), None)
