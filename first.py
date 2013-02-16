@@ -184,6 +184,9 @@ class PythonWriter(object):
     def term_Name(self, t):
         self.parts.append(t.args[0].data)
 
+    def term_Num(self, t):
+        self.parts.append(str(t.args[0].data))
+
     def term_Pass(self, t):
         self.start_line()
         # I think we can end the line ourselves, thanks. :3
