@@ -2,7 +2,6 @@ import sys
 
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
-from ometa.builder import TextWriter
 from ometa.runtime import ParseError, expected
 from parsley import wrapGrammar
 
@@ -132,24 +131,50 @@ class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
 
 class PythonWriter(object):
 
-    def __init__(self, statements):
-        self.statements = statements
-        handle = sys.stdout
-        self.writer = TextWriter(handle)
+    indent = 0
 
-    def write(self):
-        self._write(self.statements)
+    def __init__(self):
+        self.parts = []
 
-    def _write(self, s):
-        for statement in s:
-            if isinstance(statement, list):
-                for x in statement:
-                    self.term(x)
-            else:
-                self.term(statement)
+    def write(self, statements):
+        for statement in statements:
+            self._write(statement)
+
+    def _write(self, t):
+        if isinstance(t, list):
+            for s in t:
+                self._write(s)
+        else:
+            self.term(t)
+
+    def start_line(self):
+        self.parts.append(" " * self.indent)
+
+    def end_line(self):
+        self.parts.append("\n")
 
     def term(self, t):
         getattr(self, "term_%s" % t.tag.name)(t)
+
+    def term_Class(self, t):
+        self.start_line()
+        self.parts.append("class %s(" % (t.args[0].data,))
+        for parent in t.args[1:-1]:
+            self.term(parent)
+        self.parts.append("):")
+        self.end_line()
+        self.indent += 1
+        for statement in t.args[-1].args:
+            self.term(statement)
+        self.indent -= 1
+
+    def term_Name(self, t):
+        self.parts.append(t.args[0].data)
+
+    def term_Pass(self, t):
+        self.start_line()
+        # I think we can end the line ourselves, thanks. :3
+        self.parts.append("pass\n")
 
 
 if __name__ == "__main__":
@@ -159,5 +184,7 @@ if __name__ == "__main__":
     from pprint import pprint
     pprint(stmts)
 
-    pw = PythonWriter(stmts)
-    pw.write()
+    pw = PythonWriter()
+    pw.write(stmts)
+    print pw.parts
+    print "".join(pw.parts)
