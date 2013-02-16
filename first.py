@@ -1,5 +1,8 @@
+import sys
+
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
+from ometa.builder import TextWriter
 from ometa.runtime import ParseError, expected
 from parsley import wrapGrammar
 
@@ -127,10 +130,34 @@ class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
         return atom
 
 
+class PythonWriter(object):
+
+    def __init__(self, statements):
+        self.statements = statements
+        handle = sys.stdout
+        self.writer = TextWriter(handle)
+
+    def write(self):
+        self._write(self.statements)
+
+    def _write(self, s):
+        for statement in s:
+            if isinstance(statement, list):
+                for x in statement:
+                    self.term(x)
+            else:
+                self.term(statement)
+
+    def term(self, t):
+        getattr(self, "term_%s" % t.tag.name)(t)
+
+
 if __name__ == "__main__":
-    import sys
     f = open(sys.argv[1]).read()
     g = wrapGrammar(PythonParser)
     stmts = g(f).file_input()
     from pprint import pprint
     pprint(stmts)
+
+    pw = PythonWriter(stmts)
+    pw.write()
