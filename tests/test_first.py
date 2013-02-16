@@ -123,6 +123,16 @@ class TestStringLiteral(TC):
         o = t.Str(None, "abc")
         self.succeed(i, o)
 
+    def test_raw_empty(self):
+        i = 'r""'
+        o = t.Str('r', "")
+        self.succeed(i, o)
+
+    def test_raw(self):
+        i = 'r"abc"'
+        o = t.Str('r', "abc")
+        self.succeed(i, o)
+
     def test_longstring_docstring(self):
         i =  '''"""
         Docstring
