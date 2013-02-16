@@ -156,6 +156,19 @@ class PythonWriter(object):
     def term(self, t):
         getattr(self, "term_%s" % t.tag.name)(t)
 
+    def term_Assign(self, t):
+        self.start_line()
+        # XXX doesn't support lvalue unpacks
+        self.term(t.args[0].args[0])
+        self.parts.append(" = ")
+        self.term(t.args[1])
+        self.end_line()
+
+    def term_Call(self, t):
+        self.term(t.args[0])
+        # XXX doesn't support actually emitting parameters to calls yet
+        self.parts.append("()")
+
     def term_Class(self, t):
         self.start_line()
         self.parts.append("class %s(" % (t.args[0].data,))
