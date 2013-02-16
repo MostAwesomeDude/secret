@@ -1,0 +1,2 @@
+class Trivial(object):
+    pass

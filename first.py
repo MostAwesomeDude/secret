@@ -171,10 +171,24 @@ class PythonWriter(object):
 
     def term_Class(self, t):
         self.start_line()
-        self.parts.append("class %s(" % (t.args[0].data,))
+        self.parts.append("class ")
+        self.parts.append(t.args[0].data)
+        self.parts.append("(")
         for parent in t.args[1:-1]:
             self.term(parent)
         self.parts.append("):")
+        self.end_line()
+        self.indent += 1
+        for statement in t.args[-1].args:
+            self.term(statement)
+        self.indent -= 1
+
+    def term_Def(self, t):
+        self.start_line()
+        self.parts.append("def ")
+        self.parts.append(t.args[0].data)
+        # XXX doesn't insert parameters
+        self.parts.append("():")
         self.end_line()
         self.indent += 1
         for statement in t.args[-1].args:
@@ -191,6 +205,19 @@ class PythonWriter(object):
         self.start_line()
         # I think we can end the line ourselves, thanks. :3
         self.parts.append("pass\n")
+
+    def term_Return(self, t):
+        self.start_line()
+        self.parts.append("return ")
+        self.term(t.args[0])
+        self.end_line()
+
+    def term_Tuple(self, t):
+        self.parts.append("(")
+        for element in t.args:
+            self.term(element)
+            self.parts.append(",")
+        self.parts.append(")")
 
 
 if __name__ == "__main__":
