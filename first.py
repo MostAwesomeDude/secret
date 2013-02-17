@@ -2,7 +2,8 @@ import sys
 
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
-from ometa.runtime import ParseError, expected
+from ometa.runtime import ParseError, expected, TreeTransformerBase
+from ometa.grammar import TreeTransformerGrammar
 from parsley import wrapGrammar
 
 g = open("python.parsley").read()
@@ -252,6 +253,70 @@ class PythonWriter(object):
             self.parts.append(",")
         self.parts.append(")")
 
+unparser = r"""
+assign_lhs_part = (Attribute(assign_lhs_part:o @attr) --> $o.$attr
+                  |Subscript(assign_lhs_part:o @sub) --> $o[$sub]
+                  |Call(assign_lhs_part:o @args) --> $o($args)
+                  |Name(@n) --> n
+                  )
+assign_lhs = Tuple(assign_lhs_part*:parts) -> ', '.join(parts)
+multi_assign = assign_lhs+:lhs -> " = ".join(lhs)
+Assign([multi_assign:lhss] @rhs) --> $lhss = $rhs
+
+Attribute(@expr @name) --> $expr.$name
+
+Call(@expr null) --> $expr()
+Call(@expr @args) --> $expr($args)
+
+Class(@name null @suite) ==>
+class $name:
+    $suite
+<==
+Class(@name (Name(@p) | cls_parents:p) @suite) ==>
+class $name($p):
+    $suite
+<==
+cls_parents [transform*:es] -> ", ".join(es)
+
+Def(@name @params @suite) ==>
+def $name($p):
+    $suite
+<==
+elifs = [@ele @elthen] ==>
+elif $ele:
+    $elthen
+<==
+If(@test @consq [elifs*]:els null) ==>
+if $test:
+    $consq
+$els
+<==
+If(@test @consq [elifs*]:els @alt) ==>
+if $test:
+    $consq
+$els
+else:
+    $alt
+<==
+
+Name(@n) -> n
+Not(@expr) --> (not $expr)
+Num(@n) -> str(n)
+Pass() --> pass
+Return(@expr) --> return $expr
+Str(@prefix @s) -> prefix + repr(s)
+Subscript(@expr @sub) --> $expr[$sub]
+
+Tuple(@single) --> ($single,)
+Tuple(transform*:elts) -> '(' + ', '.join(elts) + ')'
+
+"""
+
+PythonUnparser = TreeTransformerGrammar.makeGrammar(
+    unparser, globals(),
+    'PythonUnparser', superclass=TreeTransformerBase)
+
+
 
 if __name__ == "__main__":
     f = open(sys.argv[1]).read()
@@ -259,8 +324,18 @@ if __name__ == "__main__":
     stmts = g(f).file_input()
     from pprint import pprint
     pprint(stmts)
+    print PythonUnparser.transform(stmts[0][0])[0]
+    # pw = PythonWriter()
+    # pw.write(stmts)
+    # print pw.parts
+    # print "".join(pw.parts)
 
-    pw = PythonWriter()
-    pw.write(stmts)
-    print pw.parts
-    print "".join(pw.parts)
+
+
+
+
+
+
+
+
+
