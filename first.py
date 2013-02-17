@@ -235,8 +235,9 @@ class PythonWriter(object):
         self.end_line()
 
     def term_Str(self, t):
-        # XXX print out header?
-        self.parts.append(repr(t.args[0].data))
+        if t.args[0].data:
+            self.parts.append(" %s" % (t.args[0].data,))
+        self.parts.append(repr(t.args[1].data))
 
     def term_Subscript(self, t):
         self.term(t.args[0])
