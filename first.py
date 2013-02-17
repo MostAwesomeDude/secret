@@ -164,6 +164,11 @@ class PythonWriter(object):
         self.term(t.args[1])
         self.end_line()
 
+    def term_Attribute(self, t):
+        self.term(t.args[0])
+        self.parts.append(".")
+        self.parts.append(t.args[1].data)
+
     def term_Call(self, t):
         self.term(t.args[0])
         # XXX doesn't support actually emitting parameters to calls yet
@@ -195,8 +200,25 @@ class PythonWriter(object):
             self.term(statement)
         self.indent -= 1
 
+    def term_If(self, t):
+        self.start_line()
+        self.parts.append("if ")
+        self.term(t.args[0])
+        self.parts.append(":")
+        self.end_line()
+        self.indent += 1
+        for statement in t.args[1].args:
+            self.term(statement)
+        self.indent -= 1
+        # XXX else?
+
     def term_Name(self, t):
         self.parts.append(t.args[0].data)
+
+    def term_Not(self, t):
+        self.parts.append("(not ")
+        self.term(t.args[0])
+        self.parts.append(")")
 
     def term_Num(self, t):
         self.parts.append(str(t.args[0].data))
@@ -211,6 +233,16 @@ class PythonWriter(object):
         self.parts.append("return ")
         self.term(t.args[0])
         self.end_line()
+
+    def term_Str(self, t):
+        # XXX print out header?
+        self.parts.append(repr(t.args[0].data))
+
+    def term_Subscript(self, t):
+        self.term(t.args[0])
+        self.parts.append("[")
+        self.term(t.args[1])
+        self.parts.append("]")
 
     def term_Tuple(self, t):
         self.parts.append("(")
