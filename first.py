@@ -268,36 +268,36 @@ Attribute(@expr @name) --> $expr.$name
 Call(@expr null) --> $expr()
 Call(@expr @args) --> $expr($args)
 
-Class(@name null @suite) ==>
+Class(@name null @suite) {{{
 class $name:
     $suite
-<==
-Class(@name (Name(@p) | cls_parents:p) @suite) ==>
+}}}
+Class(@name (Name(@p) | cls_parents:p) @suite) {{{
 class $name($p):
     $suite
-<==
+}}}
 cls_parents [transform*:es] -> ", ".join(es)
 
-Def(@name @params @suite) ==>
+Def(@name @params @suite) {{{
 def $name($p):
     $suite
-<==
-elifs = [@ele @elthen] ==>
+}}}
+elifs = [@ele @elthen] {{{
 elif $ele:
     $elthen
-<==
-If(@test @consq [elifs*]:els null) ==>
+}}}
+If(@test @consq [elifs*]:els null) {{{
 if $test:
     $consq
 $els
-<==
-If(@test @consq [elifs*]:els @alt) ==>
+}}}
+If(@test @consq [elifs*]:els @alt) {{{
 if $test:
     $consq
 $els
 else:
     $alt
-<==
+}}}
 
 Name(@n) -> n
 Not(@expr) --> (not $expr)
