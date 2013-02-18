@@ -465,4 +465,5 @@ inheritance = po expression_list?:e pc -> e
 # http://docs.python.org/reference/toplevel_components.html
 
 # 8.2
-file_input = (newline | statement)*:i -> [x for x in i if x]
+file_input = (newline | statement)*:i -> t.File(list(itertools.chain(
+                                                *[x for x in i if x])))

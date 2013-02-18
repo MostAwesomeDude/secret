@@ -1,4 +1,4 @@
-import sys
+import sys, itertools
 
 from terml.nodes import Term, termMaker as t
 from ometa.boot import BootOMetaGrammar
@@ -257,11 +257,12 @@ unparser = r"""
 assign_lhs_part = (Attribute(assign_lhs_part:o @attr) --> $o.$attr
                   |Subscript(assign_lhs_part:o @sub) --> $o[$sub]
                   |Call(assign_lhs_part:o @args) --> $o($args)
-                  |Name(@n) --> n
+                  |Name(@n) -> n
                   )
 assign_lhs = Tuple(assign_lhs_part*:parts) -> ', '.join(parts)
 multi_assign = assign_lhs+:lhs -> " = ".join(lhs)
-Assign([multi_assign:lhss] @rhs) --> $lhss = $rhs
+#Assign([multi_assign:lhss] @rhs) --> $lhss = $rhs
+Assign([assign_lhs_part:lhss] @rhs) --> $lhss = $rhs
 
 Attribute(@expr @name) --> $expr.$name
 
@@ -272,16 +273,19 @@ Class(@name null @suite) {{{
 class $name:
     $suite
 }}}
-Class(@name (Name(@p) | cls_parents:p) @suite) {{{
+Class(@name (@p | cls_parents:p) @suite) {{{
 class $name($p):
     $suite
 }}}
-cls_parents [transform*:es] -> ", ".join(es)
+cls_parents Tuple(transform*:es) -> ", ".join(es)
 
 Def(@name @params @suite) {{{
-def $name($p):
+def $name($params):
     $suite
 }}}
+
+Parameters() -> ""
+
 elifs = [@ele @elthen] {{{
 elif $ele:
     $elthen
@@ -310,6 +314,9 @@ Subscript(@expr @sub) --> $expr[$sub]
 Tuple(@single) --> ($single,)
 Tuple(transform*:elts) -> '(' + ', '.join(elts) + ')'
 
+File([transform*:stmts]) {{{
+$stmts
+}}}
 """
 
 PythonUnparser = TreeTransformerGrammar.makeGrammar(
@@ -324,7 +331,7 @@ if __name__ == "__main__":
     stmts = g(f).file_input()
     from pprint import pprint
     pprint(stmts)
-    print PythonUnparser.transform(stmts[0][0])[0]
+    print PythonUnparser.transform(stmts)[0]
     # pw = PythonWriter()
     # pw.write(stmts)
     # print pw.parts
