@@ -1,0 +1,72 @@
+assign_lhs_part = (Attribute(assign_lhs_part:o @attr) --> $o.$attr
+                  |Subscript(assign_lhs_part:o @sub) --> $o[$sub]
+                  |Call(assign_lhs_part:o @args) --> $o($args)
+                  |Name(@n) -> n
+                  )
+assign_lhs = Tuple(assign_lhs_part*:parts) -> ', '.join(parts)
+multi_assign = assign_lhs+:lhs -> " = ".join(lhs)
+#Assign([multi_assign:lhss] @rhs) --> $lhss = $rhs
+Assign([assign_lhs_part:lhss] @rhs) --> $lhss = $rhs
+
+Attribute(@expr @name) --> $expr.$name
+
+Call(@expr null) --> $expr()
+Call(@expr @args) --> $expr($args)
+
+docstring_suite = [Str(@prefix @docstring) transform*:rest] -> [(prefix or '') + '"""\n' + repr(docstring)[1:-1].replace('\\"', '"').replace('"""', '\"\"\"') + '\n"""'] + rest
+docstring_suite = @suite
+
+Class(@name null docstring_suite:suite) {{{
+class $name:
+    $suite
+}}}
+Class(@name (@p | cls_parents:p) docstring_suite:suite) {{{
+class $name($p):
+    $suite
+}}}
+cls_parents Tuple(transform*:es) -> ", ".join(es)
+
+Def(@name @params docstring_suite:suite) {{{
+def $name($params):
+    $suite
+}}}
+
+Arguments(@positional null null null) -> ', '.join(positional)
+
+Parameters(@positional) -> ', '.join(positional)
+Parameters() -> ""
+
+elifs = [] -> ""
+elifs = elif+:es -> '\n'.join(es)
+
+elif = [@ele @elthen] {{{
+elif $ele:
+    $elthen
+}}}
+If(@test @consq elifs:els null) {{{
+if $test:
+    $consq
+$els
+}}}
+If(@test @consq [elifs*]:els @alt) {{{
+if $test:
+    $consq
+$els
+else:
+    $alt
+}}}
+
+Name(@n) -> n
+Not(@expr) --> (not $expr)
+Num(@n) -> str(n)
+Pass() --> pass
+Return(@expr) --> return $expr
+Str(@prefix @s) -> (prefix or '') + repr(s)
+Subscript(@expr @sub) --> $expr[$sub]
+
+Tuple(@single) --> ($single,)
+Tuple(transform*:elts) -> '(' + ', '.join(elts) + ')'
+
+File([transform*:stmts]) {{{
+$stmts
+}}}

@@ -1,0 +1,66 @@
+IfExp(@cond @left @right) = prec(9) --> if $cond then $left else $right
+Or(@left @right) = prec(8) --> $left or $right
+And(@left @right) = prec(7) --> $left and $right
+Not(@e) = prec(6) --> not $e
+pair = Pair(cmpop:op @right) --> $op$right
+cmpop = (Eq() -> " == "
+      |  NotEq() -> " != "
+      |  Lt() -> " < "
+      |  LtE() -> " <= "
+      |  Gt() -> " > "
+      |  GtE() -> " >= "
+      |  Is() -> " is "
+      |  IsNot() -> " is not "
+      |  In() -> " in "
+      |  notin() -> " not in "
+      )
+Compare(@left pair+:ps) = prec(5) --> $left$ps
+
+BitOr(@left @right) = prec(4) --> $left | $right
+BitXor(@left @right) = prec(3) --> $left ^ $right
+BitAnd(@left @right) = prec(2) --> $left & $right
+LShift(@left @right) = prec(1) --> $left << $right
+RShift(@left @right) = prec(1) --> $left >> $right
+
+Add(@left @right) = prec(0) --> $left + $right
+Sub(@left @right) = prec(0) --> $left - $right
+
+Mul(@left @right) = prec(-1) --> $left * $right
+FloorDiv(@left @right) = prec(-1) --> $left // $right
+Div(@left @right) = prec(-1) --> $left / $right
+Mod(@left @right) = prec(-1) --> $left % $right
+
+Negate(@e) = prec(-2) --> -$e
+Invert(@e) = prec(-2) --> ~$e
+
+Pow(@left @right) = prec(-3) --> $left ** $right
+
+Attribute(@left @right) = prec(-4) --> $left.$right
+Subscript(@left @right) = prec(-4) --> $left[$right]
+Call(@left null) = prec(-4) --> $left()
+Call(@left @right) = prec(-4) --> $left($right)
+Quasi(@prefix @contents) = prec(-4) --> $prefix`$contents`
+Name(@n) = prec(-5) --> $n
+Num(@i) = prec(-5) --> $i
+Str(@prefix @s) = (?('u' in prefix) -> "u" + repr(s)
+                  | -> repr(s))
+Tuple(transform*:items) = prec(-9) -> '(' + ', '.join(str(i) for i in items) + ')'
+
+List(transform*:items) = prec(-9) -> '[' + ', '.join(str(i) for i in items) + ']'
+
+ListComp(@expr @tail) = prec(-9) --> [$expr $tail]
+Generator(@expr @tail) = prec(-9) --> ($expr $tail)
+#more listcomp/gencomp
+
+dict_pair = Pair(@k @v) prec(-9) --> $k: $v
+dict_pairs = dict_pair*:ps -> ', '.join(str(p) for p in ps)
+Dict(Comprehension(@k @v @tail)) = prec(-9) --> {$k: $v $tail}
+Dict(dict_pairs*:ps) = prec(-9) --> {$ps}
+
+
+Set(ListComp(@e @tail)) prec(-9) --> {$e $tail}
+Set(transform*:items) = prec(-9) -> '{' + ', '.join(str(i) for i in items) + '}'
+Yield(@e) prec(-9) --> (yield $e)
+
+# just for testing
+File([@e]) prec(10) --> $e
