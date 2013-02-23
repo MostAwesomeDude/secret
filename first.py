@@ -1,9 +1,8 @@
 import sys, itertools
 
 from terml.nodes import Term, termMaker as t
-from ometa.boot import BootOMetaGrammar
-from ometa.runtime import ParseError, expected, TreeTransformerBase
-from ometa.grammar import TreeTransformerGrammar
+from ometa.runtime import ParseError, expected, TreeTransformerBase, OMetaBase
+from ometa.grammar import OMeta, TreeTransformerGrammar
 from parsley import wrapGrammar
 
 g = open("python.parsley").read()
@@ -15,7 +14,8 @@ def join(separator, seq):
     return seq[0].__class__(separator).join(seq)
 
 
-class PythonParser(BootOMetaGrammar.makeGrammar(g, globals(), name="PythonParser")):
+class PythonParser(OMeta.makeGrammar(g, name="PythonParser")
+                   .createParserClass(OMetaBase, globals())):
 
     depth = 0
 
@@ -175,13 +175,13 @@ class PrecedenceTransformer(TreeTransformerBase):
         return pt
 
 PythonExpressionUnparser = TreeTransformerGrammar.makeGrammar(
-    open("expression_unparser.parsley").read(), globals(),
-    'PythonExpressionUnparser', superclass=PrecedenceTransformer)
+    open("expression_unparser.parsley").read(),
+    'PythonExpressionUnparser').createParserClass(PrecedenceTransformer, globals())
 
 
 PythonStatementUnparser = TreeTransformerGrammar.makeGrammar(
-    open("statement_unparser.parsley").read(), globals(),
-    'PythonStatementUnparser', superclass=TreeTransformerBase)
+    open("statement_unparser.parsley").read(),
+    'PythonStatementUnparser').createParserClass(TreeTransformerBase, globals())
 
 
 if __name__ == "__main__":
