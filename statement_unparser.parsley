@@ -1,3 +1,5 @@
+unknown_term = PythonExpressionUnparser.transform:ex -> str(ex)
+
 assign_lhs_part = (Attribute(assign_lhs_part:o @attr) --> $o.$attr
                   |Subscript(assign_lhs_part:o @sub) --> $o[$sub]
                   |Call(assign_lhs_part:o @args) --> $o($args)
@@ -8,33 +10,32 @@ multi_assign = assign_lhs+:lhs -> " = ".join(lhs)
 #Assign([multi_assign:lhss] @rhs) --> $lhss = $rhs
 Assign([assign_lhs_part:lhss] @rhs) --> $lhss = $rhs
 
-Attribute(@expr @name) --> $expr.$name
+AugAssign(@lhs @op @expr) --> $lhs $op $expr
+Assert(@test null) --> assert $test
+Assert(@test @reason) --> assert $test, $reason
 
-Call(@expr null) --> $expr()
-Call(@expr @args) --> $expr($args)
+Del(@target) --> del $target
 
-docstring_suite = [Str(@prefix @docstring) transform*:rest] -> [(prefix or '') + '"""\n' + repr(docstring)[1:-1].replace('\\"', '"').replace('"""', '\"\"\"') + '\n"""'] + rest
-docstring_suite = @suite
+Return(@expr) --> return $expr
 
-Class(@name null docstring_suite:suite) {{{
-class $name:
-    $suite
-}}}
-Class(@name (@p | cls_parents:p) docstring_suite:suite) {{{
-class $name($p):
-    $suite
-}}}
-cls_parents Tuple(transform*:es) -> ", ".join(es)
+Raise(null null null) --> raise
+Raise(@expr null null) --> raise $expr
+Raise(@typ @val null) --> raise $typ, $val
+Raise(@typ @val @tb) --> raise $typ, $val, $tb
 
-Def(@name @params docstring_suite:suite) {{{
-def $name($params):
-    $suite
-}}}
+Break() --> break
+Continue() --> continue
+Pass() --> pass
 
-Arguments(@positional null null null) -> ', '.join(positional)
+namelist = [transform*:names] -> ", ".join(name)
+Import(namelist:names) --> import $names
+Import(namelist:names @rel) --> from $rel import $names
+As(@m @n) --> $m as $n
 
-Parameters(@positional) -> ', '.join(positional)
-Parameters() -> ""
+Global(namelist:names) --> global $names
+Exec(@expr null null) --> exec $expr
+Exec(@expr @gs null) --> exec $expr in $gs
+Exec(@expr @gs @ls) --> exec $expr in $gs, $ls
 
 elifs = [] -> ""
 elifs = elif+:es -> '\n'.join(es)
@@ -56,16 +57,95 @@ else:
     $alt
 }}}
 
-Name(@n) -> n
-Not(@expr) --> (not $expr)
-Num(@n) -> str(n)
-Pass() --> pass
-Return(@expr) --> return $expr
-Str(@prefix @s) -> (prefix or '') + repr(s)
-Subscript(@expr @sub) --> $expr[$sub]
+While(@expr @suite) {{{
+while $expr:
+    $suite
+}}}
 
-Tuple(@single) --> ($single,)
-Tuple(transform*:elts) -> '(' + ', '.join(elts) + ')'
+For(@targets @exprs @suite null) {{{
+for $targets in $exprs:
+    $suite
+}}}
+
+For(@targets @exprs @suite @els) {{{
+for $targets in $exprs:
+    $suite
+else:
+    $els
+}}}
+
+exc ExceptHandler(@typ null @s) {{{
+except $typ:
+    $s
+}}}
+exc ExceptHandler(@typ @val @s) {{{
+except $typ as $val:
+    $s
+}}}
+Try(@s exc*:excepts null null) {{{
+try:
+    $s
+$excepts
+}}}
+Try(@s exc*:excepts @e null) {{{
+try:
+    $s
+$excepts
+else:
+    $e
+}}}
+Try(@s exc*:excepts null @f) {{{
+try:
+    $s
+$excepts
+finally:
+    $f
+}}}
+Try(@s exc*:excepts @e @f) {{{
+try:
+    $s
+$excepts
+else:
+    $e
+finally:
+    $f
+}}}
+Try(@s @f) {{{
+try:
+    $s
+finally:
+    $f
+}}}
+Context(@expr @target) --> $expr as $target
+With(@items @s) {{{
+with $items:
+    $s
+}}}
+
+Decorator(@name @args) --> @$name($args)
+Decorated(@ds @f) {{{
+$ds
+$f
+}}}
+docstring_suite = [Str(@prefix @docstring) transform*:rest] -> [(prefix or '') + '"""\n' + repr(docstring)[1:-1].replace('\\"', '"').replace('"""', '\"\"\"') + '\n"""'] + rest
+docstring_suite = @suite
+
+Class(@name null docstring_suite:suite) {{{
+class $name:
+    $suite
+}}}
+Class(@name (@p | cls_parents:p) docstring_suite:suite) {{{
+class $name($p):
+    $suite
+}}}
+cls_parents Tuple(transform*:es) -> ", ".join(es)
+
+Def(@name @params docstring_suite:suite) {{{
+def $name($params):
+    $suite
+}}}
+
+
 
 File([transform*:stmts]) {{{
 $stmts

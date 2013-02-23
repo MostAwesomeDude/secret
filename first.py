@@ -15,7 +15,7 @@ def join(separator, seq):
     return seq[0].__class__(separator).join(seq)
 
 
-class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
+class PythonParser(BootOMetaGrammar.makeGrammar(g, globals(), name="PythonParser")):
 
     depth = 0
 
@@ -26,7 +26,7 @@ class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
         "as",
         "assert",
         "break",
-        "class",
+        "`class",
         "continue",
         "def",
         "del",
@@ -132,7 +132,7 @@ class PythonParser(BootOMetaGrammar.makeGrammar(g, globals())):
 
 class PrecedenceTemplate(object):
     def __init__(self, prec, contents):
-        self.prec = prec
+        self.prec = prec or 0
         self.contents = contents
 
     def __str__(self):
@@ -141,9 +141,7 @@ class PrecedenceTemplate(object):
             if isinstance(item, basestring):
                 parts.append(item)
             else:
-                prec = getattr(item, 'prec', None)
-                if prec is None:
-                    prec = -float('inf')
+                prec = getattr(item, 'prec', None) or 0
                 if prec > self.prec:
                     parts.append("(%s)" % (item,))
                 else:
@@ -180,6 +178,7 @@ PythonExpressionUnparser = TreeTransformerGrammar.makeGrammar(
     open("expression_unparser.parsley").read(), globals(),
     'PythonExpressionUnparser', superclass=PrecedenceTransformer)
 
+
 PythonStatementUnparser = TreeTransformerGrammar.makeGrammar(
     open("statement_unparser.parsley").read(), globals(),
     'PythonStatementUnparser', superclass=TreeTransformerBase)
@@ -192,5 +191,6 @@ if __name__ == "__main__":
     stmts = g(sys.argv[1] + '\n').file_input()
     from pprint import pprint
     pprint(stmts)
-    pt = PythonExpressionUnparser.transform(stmts)[0]
+#    import pdb; pdb.set_trace()
+    pt = PythonStatementUnparser.transform(stmts)[0]
     print pt

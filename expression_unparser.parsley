@@ -1,7 +1,18 @@
-IfExp(@cond @left @right) = prec(9) --> if $cond then $left else $right
-Or(@left @right) = prec(8) --> $left or $right
-And(@left @right) = prec(7) --> $left and $right
-Not(@e) = prec(6) --> not $e
+Lambda(@params @expr) = prec(15) --> lambda $params: $expr
+
+kwarg = Pair(@k @v) --> $k=$v
+param = kwarg | (@p -> p)
+Parameters() -> ""
+Parameters([param*:ps]) -> ', '.join(ps)
+Parameters([param*:ps] @starkw) -> ', '.join(ps + ["**" + starkw])
+Parameters([param*:ps] @star null) -> ', '.join(ps + ["*" + star])
+Parameters([param*:ps] @star @starkw) -> ', '.join(ps + ["*" + star, "**" + starkw])
+
+
+IfExp(@cond @left @right) = prec(14) --> if $cond then $left else $right
+Or(@left @right) = prec(13) --> $left or $right
+And(@left @right) = prec(12) --> $left and $right
+Not(@e) = prec(11) --> not $e
 pair = Pair(cmpop:op @right) --> $op$right
 cmpop = (Eq() -> " == "
       |  NotEq() -> " != "
@@ -14,53 +25,78 @@ cmpop = (Eq() -> " == "
       |  In() -> " in "
       |  notin() -> " not in "
       )
-Compare(@left pair+:ps) = prec(5) --> $left$ps
+Compare(@left [pair+:ps]) = prec(10) --> $left$ps
 
-BitOr(@left @right) = prec(4) --> $left | $right
-BitXor(@left @right) = prec(3) --> $left ^ $right
-BitAnd(@left @right) = prec(2) --> $left & $right
-LShift(@left @right) = prec(1) --> $left << $right
-RShift(@left @right) = prec(1) --> $left >> $right
+BitOr(@left @right) = prec(9) --> $left | $right
+BitXor(@left @right) = prec(8) --> $left ^ $right
+BitAnd(@left @right) = prec(7) --> $left & $right
+LShift(@left @right) = prec(6) --> $left << $right
+RShift(@left @right) = prec(6) --> $left >> $right
 
-Add(@left @right) = prec(0) --> $left + $right
-Sub(@left @right) = prec(0) --> $left - $right
+Add(@left @right) = prec(5) --> $left + $right
+Sub(@left @right) = prec(5) --> $left - $right
 
-Mul(@left @right) = prec(-1) --> $left * $right
-FloorDiv(@left @right) = prec(-1) --> $left // $right
-Div(@left @right) = prec(-1) --> $left / $right
-Mod(@left @right) = prec(-1) --> $left % $right
+Mul(@left @right) = prec(4) --> $left * $right
+FloorDiv(@left @right) = prec(4) --> $left // $right
+Div(@left @right) = prec(4) --> $left / $right
+Mod(@left @right) = prec(4) --> $left % $right
 
-Negate(@e) = prec(-2) --> -$e
-Invert(@e) = prec(-2) --> ~$e
+Negate(@e) = prec(3) --> -$e
+Invert(@e) = prec(3) --> ~$e
 
-Pow(@left @right) = prec(-3) --> $left ** $right
+Pow(@left @right) = prec(2) --> $left ** $right
 
-Attribute(@left @right) = prec(-4) --> $left.$right
-Subscript(@left @right) = prec(-4) --> $left[$right]
-Call(@left null) = prec(-4) --> $left()
-Call(@left @right) = prec(-4) --> $left($right)
-Quasi(@prefix @contents) = prec(-4) --> $prefix`$contents`
-Name(@n) = prec(-5) --> $n
-Num(@i) = prec(-5) --> $i
-Str(@prefix @s) = (?('u' in prefix) -> "u" + repr(s)
+Attribute(@left @right) = prec(1) --> $left.$right
+Subscript(@left @right) = prec(1) --> $left[$right]
+
+Slice(@start @stop @step) (?(step == 1) --> $start:$stop
+                          |             --> $start:$stop:$step
+                          )
+
+Call(@left null) = prec(1) --> $left()
+Call(@left @right) = prec(1) --> $left($right)
+
+
+star @expr --> *$expr
+starkw @expr --> **$expr
+Arguments(null null null starkw:starkw)
+    -> starkw
+Arguments(null null star:star null)
+    -> star
+Arguments(null [kwarg*:kwargs] null null)
+    -> ', '.join(str(a) for a in kwargs)
+Arguments(@positional [kwarg*:kwargs] null null)
+    -> ', '.join(str(a) for a in positional + kwargs)
+Arguments(@pos [kwarg*:kwargs] null starkw:starkw)
+    -> ', '.join(str(a) for a in positional + kwargs + [starkw])
+Arguments(@pos null star:star null)
+    -> ', '.join(str(a) for a in positional + [star])
+Arguments(@pos [kwarg*:kwargs] star:star null)
+    -> ', '.join(str(a) for a in positional + kwargs + [star])
+Arguments(@pos null star:star starkw:starkw)
+    -> ', '.join(str(a) for a in positional + [star, starkw])
+Arguments(@pos [kwarg*:kwargs] star:star starkw:starkw)
+    -> ', '.join(str(a) for a in positional + kwargs + [star, starkw])
+
+Quasi(@prefix @contents) = prec(0) --> $prefix`$contents`
+Name(@n) = prec(0) --> $n
+Num(@i) = prec(0) --> $i
+Str(@prefix @s) = prec(0) (?('u' in prefix) -> "u" + repr(s)
                   | -> repr(s))
-Tuple(transform*:items) = prec(-9) -> '(' + ', '.join(str(i) for i in items) + ')'
+Tuple(transform*:items) = prec(0) -> '(' + ', '.join(str(i) for i in items) + ')'
 
-List(transform*:items) = prec(-9) -> '[' + ', '.join(str(i) for i in items) + ']'
+List(transform*:items) = prec(0) -> '[' + ', '.join(str(i) for i in items) + ']'
 
-ListComp(@expr @tail) = prec(-9) --> [$expr $tail]
-Generator(@expr @tail) = prec(-9) --> ($expr $tail)
+ListComp(@expr @tail) = prec(0) --> [$expr $tail]
+Generator(@expr @tail) = prec(0) --> ($expr $tail)
 #more listcomp/gencomp
 
-dict_pair = Pair(@k @v) prec(-9) --> $k: $v
+dict_pair = Pair(@k @v) prec(0) --> $k: $v
 dict_pairs = dict_pair*:ps -> ', '.join(str(p) for p in ps)
-Dict(Comprehension(@k @v @tail)) = prec(-9) --> {$k: $v $tail}
-Dict(dict_pairs*:ps) = prec(-9) --> {$ps}
+Dict(Comprehension(@k @v @tail)) = prec(0) --> {$k: $v $tail}
+Dict(dict_pairs*:ps) = prec(0) --> {$ps}
 
 
-Set(ListComp(@e @tail)) prec(-9) --> {$e $tail}
-Set(transform*:items) = prec(-9) -> '{' + ', '.join(str(i) for i in items) + '}'
-Yield(@e) prec(-9) --> (yield $e)
-
-# just for testing
-File([@e]) prec(10) --> $e
+Set(ListComp(@e @tail)) prec(0) --> {$e $tail}
+Set(transform*:items) = prec(0) -> '{' + ', '.join(str(i) for i in items) + '}'
+Yield(@e) prec(0) --> (yield $e)

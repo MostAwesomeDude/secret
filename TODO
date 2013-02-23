@@ -1,2 +1,8 @@
 * Examples
-  * inherits.py unparses bad code; inheritance is wrong
+** inherits.py unparses bad code; inheritance is wrong
+* Parser
+** List comprehensions not handled satisfactorily.
+** Assignment doesn't accept expressions+trailers.
+** long_slice syntax nests wrong.
+** Occasional weirdness around 'Tuple'.
+** Build proper structure for ExceptHandlers
