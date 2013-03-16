@@ -38,6 +38,8 @@ class CAMP(object):
     x is a char, and i is a signed offset.
     """
 
+    noisy = True
+
     pc = 0
     pos = 0
 
@@ -47,6 +49,10 @@ class CAMP(object):
         self.caps = []
 
         self.input = input
+
+    def log(self, message):
+        if self.noisy:
+            print message
 
     def read(self):
         try:
@@ -58,6 +64,8 @@ class CAMP(object):
 
     def next(self):
         if self.pc is fail:
+            self.log("Backtracking...")
+
             if not self.stack:
                 raise Failure()
 
@@ -72,6 +80,10 @@ class CAMP(object):
                 return
 
         bc = self.read()
+
+        self.log("pc=%d bc=%s pos=%d stack=%r" %
+                (self.pc, bc, self.pos, self.stack))
+
         if bc == "E":
             target = self.read()
             if self.pos >= len(self.input):
