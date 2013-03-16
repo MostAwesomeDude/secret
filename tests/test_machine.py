@@ -12,6 +12,15 @@ class TestCAMP(TestCase):
         self.assertFalse(CAMP(bc, input).run())
 
 
+class TestAnything(TestCAMP):
+
+    def test_anything(self):
+        self.succeeds("A", "x")
+
+    def test_anything_eof(self):
+        self.fails("A", "")
+
+
 class TestExactly(TestCAMP):
 
     def test_single_char(self):
@@ -60,3 +69,15 @@ class TestOrderedChoice(TestCAMP):
 
     def test_x_or_y_or_z_right_third(self):
         self.succeeds("H\x04ExM\x08H\x04EyM\x02Ez", "z")
+
+
+class TestNot(TestCAMP):
+    """
+    eof => ~anything -> "H\x04AM\x00F"
+    """
+
+    def test_eof(self):
+        self.succeeds("H\x04AM\x00F", "")
+
+    def test_eof_fail(self):
+        self.fails("H\x04AM\x00F", "x")

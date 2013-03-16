@@ -27,6 +27,7 @@ class CAMP(object):
     Corbin's Abstract Machine for PEGs.
 
     Bytecode understood by this machine:
+        A: Anything
         Ex: Exactly x
         Ji: Jump i
         Hi: cHoice i
@@ -84,7 +85,12 @@ class CAMP(object):
         self.log("pc=%d bc=%s pos=%d stack=%r" %
                 (self.pc, bc, self.pos, self.stack))
 
-        if bc == "E":
+        if bc == "A":
+            if self.pos >= len(self.input):
+                self.pc = fail
+            else:
+                self.pos += 1
+        elif bc == "E":
             target = self.read()
             if self.pos >= len(self.input):
                 self.pc = fail
