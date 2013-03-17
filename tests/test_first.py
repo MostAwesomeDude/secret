@@ -273,6 +273,16 @@ class TestPrimary(TC):
         o = t.Call(t.Name("sqrt"), t.Arguments([self.discriminant], None, None, None))
         self.succeed(i, o)
 
+    def test_quasi_empty(self):
+        i = "quasi``"
+        o = t.Quasi(t.Name("quasi"), "")
+        self.succeed(i, o)
+
+    def test_quasi(self):
+        i = "quasi`stuff`"
+        o = t.Quasi(t.Name("quasi"), "stuff")
+        self.succeed(i, o)
+
 
 class TestConditionalExpression(TC):
 
