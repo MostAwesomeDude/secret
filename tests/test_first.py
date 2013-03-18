@@ -286,7 +286,7 @@ class TestPrimary(TC):
     def test_call_identifier_kwargs(self):
         i = "call(kwarg=x)"
         o = t.Call(t.Name("call"),
-                t.Arguments(None, {"kwarg": t.Name("x")}, None, None))
+                t.Arguments(None, [t.Pair("kwarg", t.Name("x"))], None, None))
         self.succeed(i, o)
 
     def test_call_identifier_expr(self):
@@ -382,7 +382,13 @@ class TestArgList(TC):
 
     def test_args_keyword_args(self):
         i = "foo=bar"
-        o = t.Arguments(None, {"foo": t.Name("bar")}, None, None)
+        o = t.Arguments(None, [t.Pair("foo", t.Name("bar"))], None, None)
+        self.succeed(i, o)
+
+    def test_args_positional_and_keyword(self):
+        i = "foo, bar=baz"
+        o = t.Arguments([t.Name("foo")], [t.Pair("bar", t.Name("baz"))], None,
+                None)
         self.succeed(i, o)
 
     def test_args_star_args(self):
@@ -844,8 +850,8 @@ class TestClassdef(TC):
         i = 'class P(f(g, k="s")): pass'
         o = t.Class("P",
                 t.Call(t.Name("f"),
-                    t.Arguments([t.Name("g")], {"k": t.Str(None, "s")}, None,
-                        None)),
+                    t.Arguments([t.Name("g")],
+                        [t.Pair("k", t.Str(None, "s"))], None, None)),
                     [t.Pass()]
         )
         self.succeed(i, o)

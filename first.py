@@ -1,4 +1,5 @@
-import sys, itertools
+import itertools
+import sys
 
 from terml.nodes import Term, termMaker as t
 from ometa.runtime import ParseError, expected, TreeTransformerBase, OMetaBase
@@ -104,10 +105,10 @@ class PythonParser(OMeta.makeGrammar(g, name="PythonParser")
         Combine two dictionaries of arguments.
         """
 
-        if not first and not second:
-            return None
+        first = first or []
+        second = second or []
 
-        raise NotImplementedError()
+        return first + second or None
 
     def po(self):
         self.parens += 1
@@ -185,9 +186,10 @@ PythonStatementUnparser = TreeTransformerGrammar.makeGrammar(
 
 if __name__ == "__main__":
     from terml.parser import parseTerm as term
-    # f = open(sys.argv[1]).read()
+    f = open(sys.argv[1]).read()
     g = wrapGrammar(PythonParser)
-    stmts = g(sys.argv[1] + '\n').file_input()
+    # stmts = g(sys.argv[1] + '\n').file_input()
+    stmts = g(f).file_input()
     from pprint import pprint
     pprint(stmts)
 #    import pdb; pdb.set_trace()

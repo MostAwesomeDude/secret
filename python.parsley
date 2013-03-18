@@ -192,7 +192,9 @@ arg_list = (
    | args:x (comma kwargs)?:y (comma starargs)?:z (comma kwargs)?:q
      (comma starkwargs)?:w comma? -> t.Arguments(x, self.argdicts(y, q), z, w)
    )
-args = expression:head (comma expression)*:tail -> [head] + tail
+# Use lookahead to prevent kwargs from being mistaken for args.
+arg = expression:e ~token("=") -> e
+args = arg:head (comma arg)*:tail -> [head] + tail
 kwargs = keyword_item:head (comma keyword_item)*:tail -> [head] + tail
 keyword_item = identifier_:k token("=") expression:v -> t.Pair(k, v)
 
