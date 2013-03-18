@@ -51,7 +51,7 @@ comma_list :rule = !(self.apply(rule)[0]):x (comma !(self.apply(rule)[0]))*:xs c
 # http://docs.python.org/reference/lexical_analysis.html
 
 # 2.3
-identifier_ = leading_space* (letter | '_'):first <letterOrDigit*>:second
+identifier_ = leading_space* (letter | '_'):first <('_' | letterOrDigit)*>:second
               ?(not self.keyword_pred(first, second))
             -> first + second
 identifier = identifier_:i -> t.Name(i)

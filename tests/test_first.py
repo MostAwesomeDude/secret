@@ -49,6 +49,16 @@ class TestIdentifier(TC):
         o = t.Name("foo")
         self.succeed(i, o)
 
+    def test_dunder(self):
+        i = "__file__"
+        o = t.Name("__file__")
+        self.succeed(i, o)
+
+    def test_dunder_keyword(self):
+        i = "__class__"
+        o = t.Name("__class__")
+        self.succeed(i, o)
+
     def test_class(self):
         i = "class"
         self.fail(i)
