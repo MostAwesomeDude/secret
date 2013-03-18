@@ -342,7 +342,9 @@ class TestExpressionList(TC):
 
     def test_expression_list_call_kwargs(self):
         i = 'f(g, k="s")'
-        o = t.Call(t.Name("f"), t.Arguments([t.Name("g")], None, None, None))
+        o = t.Call(t.Name("f"),
+                t.Arguments([t.Name("g")], [t.Pair("k", t.Str(None, "s"))],
+                    None, None))
         self.succeed(i, o)
 
 
@@ -847,7 +849,7 @@ class TestClassdef(TC):
         self.succeed(i, o)
 
     def test_class_parent_kwargs(self):
-        i = 'class P(f(g, k="s")): pass'
+        i = 'class P(f(g, k="s")): pass\n'
         o = t.Class("P",
                 t.Call(t.Name("f"),
                     t.Arguments([t.Name("g")],
