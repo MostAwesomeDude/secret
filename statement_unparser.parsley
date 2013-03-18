@@ -27,9 +27,10 @@ Break() --> break
 Continue() --> continue
 Pass() --> pass
 
-namelist = [transform*:names] -> ", ".join(name)
+namelist = [transform*:names] -> ", ".join(names)
 Import(namelist:names) --> import $names
 Import(namelist:names @rel) --> from $rel import $names
+As(@m null) --> $m
 As(@m @n) --> $m as $n
 
 Global(namelist:names) --> global $names

@@ -3,10 +3,13 @@ Lambda(@params @expr) = prec(15) --> lambda $params: $expr
 kwarg = Pair(@k @v) --> $k=$v
 param = kwarg | (@p -> p)
 Parameters() -> ""
-Parameters([param*:ps]) -> ', '.join(ps)
-Parameters([param*:ps] @starkw) -> ', '.join(ps + ["**" + starkw])
-Parameters([param*:ps] @star null) -> ', '.join(ps + ["*" + star])
-Parameters([param*:ps] @star @starkw) -> ', '.join(ps + ["*" + star, "**" + starkw])
+Parameters([param*:ps]) -> ', '.join(map(str, ps))
+Parameters([param*:ps] @starkw)
+    -> ', '.join(map(str, ps) + ["**" + str(starkw)])
+Parameters([param*:ps] @star null)
+    -> ', '.join(map(str, ps) + ["*" + str(star)])
+Parameters([param*:ps] @star @starkw)
+    -> ', '.join(ps + ["*" + str(star), "**" + str(starkw)])
 
 
 IfExp(@cond @left @right) = prec(14) --> if $cond then $left else $right
@@ -81,7 +84,7 @@ Arguments(@pos [kwarg*:kwargs] star:star starkw:starkw)
 Quasi(@prefix @contents) = prec(0) --> $prefix`$contents`
 Name(@n) = prec(0) --> $n
 Num(@i) = prec(0) --> $i
-Str(@prefix @s) = prec(0) (?('u' in prefix) -> "u" + repr(s)
+Str(@prefix @s) = prec(0) (?(prefix and 'u' in prefix) -> "u" + repr(s)
                   | -> repr(s))
 Tuple(transform*:items) = prec(0) -> '(' + ', '.join(str(i) for i in items) + ')'
 
