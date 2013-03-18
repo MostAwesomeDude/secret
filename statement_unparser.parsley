@@ -32,6 +32,7 @@ Import(namelist:names) --> import $names
 Import(namelist:names @rel) --> from $rel import $names
 As(@m null) --> $m
 As(@m @n) --> $m as $n
+Module(@name) -> name
 
 Global(namelist:names) --> global $names
 Exec(@expr null null) --> exec $expr
