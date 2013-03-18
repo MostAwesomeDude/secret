@@ -308,6 +308,21 @@ class TestConditionalExpression(TC):
         self.succeed(i, o)
 
 
+class TestExpressionList(TC):
+
+    rule = "expression_list"
+
+    def test_expression_list_num(self):
+        i = "0"
+        o = t.Num(0)
+        self.succeed(i, o)
+
+    def test_expression_list_str(self):
+        i = '"PythonParser"'
+        o = t.Str(None, "PythonParser")
+        self.succeed(i, o)
+
+
 class TestEllipsis(TC):
 
     rule = "ellipsis"
@@ -811,5 +826,5 @@ class Simple(object):
     pass
 
         """
-        o = [[t.Class("Simple", t.Name("object"), [t.Pass()])]]
+        o = t.File([t.Class("Simple", t.Name("object"), [t.Pass()])])
         self.succeed(i, o)
