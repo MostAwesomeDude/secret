@@ -175,31 +175,29 @@ long_slice = short_slice:s colon expression?:stride -> t.Slice(s, stride)
 ellipsis = dot '.' '.' -> t.Ellipsis()
 
 # 5.3.4
-call = po (argument_list:a comma? -> a
+call = po (arg_list:a comma? -> a
        | expression genexpr_for)?:args pc
      -> t.Call(None, args)
-argument_list = positional_arguments:args
-                (comma keyword_arguments)?:kwargs
-                (comma token("*") expression)?:starargs
-                (comma keyword_arguments)?:morekwargs
-                (comma token("**") expression)?:starkwargs
-                -> t.Arguments(args, self.argdicts(kwargs, morekwargs),
-                               starargs, starkwargs)
-              | keyword_arguments:kwargs
-                (comma token("*") expression)?:starargs
-                (comma token("**") expression)?:starkwargs
-                -> t.Arguments(None, kwargs, starargs, starkwargs)
-              | token("*") expression:starargs
-                (comma token("*") expression)?:morestarargs
-                (comma token("**") expression)?:starkwargs
-                -> t.Arguments(starargs, None, morestarargs, starkwargs)
-              | token("**") expression:kwargs
-                -> t.Arguments(None, None, None, kwargs)
-positional_arguments = expression:head (comma expression)*:tail
-                     -> [head] + tail
-keyword_arguments = keyword_item:head (comma keyword_item)*:tail
-                  -> [head] + tail
-keyword_item = identifier:k token("=") expression:v -> t.Pair(k, v)
+# There are five branches here,
+# Which is kinda crazy.
+# And most of these are optional,
+# So commas maybe?
+arg_list = (
+     starkwargs:w comma? -> t.Arguments(None, None, None, w)
+   | kwargs:y (comma starkwargs)?:w comma? -> t.Arguments(None, y, None, w)
+   | starargs:z (comma kwargs)?:y (comma starkwargs)?:w comma?
+     -> t.Arguments(None, y, z, w)
+   | kwargs:y (comma starargs)?:z (comma kwargs)?:q (comma starkwargs)?:w
+     comma? -> t.Arguments(None, self.argdicts(y, q), z, w)
+   | args:x (comma kwargs)?:y (comma starargs)?:z (comma kwargs)?:q
+     (comma starkwargs)?:w comma? -> t.Arguments(x, self.argdicts(y, q), z, w)
+   )
+args = expression:head (comma expression)*:tail -> [head] + tail
+kwargs = keyword_item:head (comma keyword_item)*:tail -> [head] + tail
+keyword_item = identifier_:k token("=") expression:v -> t.Pair(k, v)
+
+starargs = token("*") expression
+starkwargs = token("**") expression
 
 # 5.4
 power = (primary | atom):left (token("**") u_expr)?:right
@@ -433,7 +431,7 @@ with_item = expression:expr (keyword("as") target:tgt)?
 decorated = decorators:ds (classdef | funcdef):f -> t.Decorated(ds, f)
 decorators = decorator+
 decorator = token("@") dotted_name:name
-            (po (argument_list:args comma? -> args)?:args pc -> args)?:args
+            (po (arg_list:args comma? -> args)?:args pc -> args)?:args
             newline -> t.Decorator(name, args)
 funcdef = keyword("def") identifier_:name po parameter_list:ps pc colon
           suite:ss -> t.Def(name, ps, ss)

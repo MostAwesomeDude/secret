@@ -279,12 +279,20 @@ class TestPrimary(TC):
 
     def test_call_identifier_args(self):
         i = "call(arg)"
-        o = t.Call(t.Name("call"), t.Arguments([t.Name("arg")], None, None, None))
+        o = t.Call(t.Name("call"),
+                t.Arguments([t.Name("arg")], None, None, None))
+        self.succeed(i, o)
+
+    def test_call_identifier_kwargs(self):
+        i = "call(kwarg=x)"
+        o = t.Call(t.Name("call"),
+                t.Arguments(None, {"kwarg": t.Name("x")}, None, None))
         self.succeed(i, o)
 
     def test_call_identifier_expr(self):
         i = "sqrt(%s)" % self.discriminant_string
-        o = t.Call(t.Name("sqrt"), t.Arguments([self.discriminant], None, None, None))
+        o = t.Call(t.Name("sqrt"),
+                t.Arguments([self.discriminant], None, None, None))
         self.succeed(i, o)
 
     def test_quasi_empty(self):
@@ -295,6 +303,16 @@ class TestPrimary(TC):
     def test_quasi(self):
         i = "quasi`stuff`"
         o = t.Quasi(t.Name("quasi"), "stuff")
+        self.succeed(i, o)
+
+
+class TestKeywordItem(TC):
+
+    rule = "keyword_item"
+
+    def test_keyword_item_pair(self):
+        i = "a=b"
+        o = t.Pair("a", t.Name("b"))
         self.succeed(i, o)
 
 
@@ -322,6 +340,11 @@ class TestExpressionList(TC):
         o = t.Str(None, "PythonParser")
         self.succeed(i, o)
 
+    def test_expression_list_call_kwargs(self):
+        i = 'f(g, k="s")'
+        o = t.Call(t.Name("f"), t.Arguments([t.Name("g")], None, None, None))
+        self.succeed(i, o)
+
 
 class TestEllipsis(TC):
 
@@ -333,28 +356,43 @@ class TestEllipsis(TC):
         self.succeed(i, o)
 
 
-class TestArgumentList(TC):
+class TestArgList(TC):
 
-    rule = "argument_list"
+    rule = "arg_list"
 
-    def test_arguments_positional_single(self):
+    def test_args_positional_single(self):
         i = "arg"
         o = t.Arguments([t.Name("arg")], None, None, None)
         self.succeed(i, o)
 
-    def test_arguments_positional_single_trailing(self):
+    def test_args_positional_single_trailing(self):
         i = "arg,"
         o = t.Arguments([t.Name("arg")], None, None, None)
         self.succeed(i, o)
 
-    def test_arguments_plural(self):
+    def test_args_plural(self):
         i = "foo,bar"
         o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
         self.succeed(i, o)
 
-    def test_arguments_plural_trailing(self):
+    def test_args_plural_trailing(self):
         i = "foo,bar,"
         o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
+        self.succeed(i, o)
+
+    def test_args_keyword_args(self):
+        i = "foo=bar"
+        o = t.Arguments(None, {"foo": t.Name("bar")}, None, None)
+        self.succeed(i, o)
+
+    def test_args_star_args(self):
+        i = "*args"
+        o = t.Arguments(None, None, t.Name("args"), None)
+        self.succeed(i, o)
+
+    def test_args_star_kwargs(self):
+        i = "**kwargs"
+        o = t.Arguments(None, None, None, t.Name("kwargs"))
         self.succeed(i, o)
 
 
@@ -794,11 +832,20 @@ class TestClassdef(TC):
         i = """class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
             pass
         """
-        o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
         o = t.Class("Parser",
                 t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
                     t.Arguments([t.Name("g"), t.Call(t.Name("globals"),
                         None)], None, None, None)),
+                    [t.Pass()]
+        )
+        self.succeed(i, o)
+
+    def test_class_parent_kwargs(self):
+        i = 'class P(f(g, k="s")): pass'
+        o = t.Class("P",
+                t.Call(t.Name("f"),
+                    t.Arguments([t.Name("g")], {"k": t.Str(None, "s")}, None,
+                        None)),
                     [t.Pass()]
         )
         self.succeed(i, o)
