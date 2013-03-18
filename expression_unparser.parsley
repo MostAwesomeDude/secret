@@ -94,6 +94,8 @@ List(transform*:items) = prec(0) -> '[' + ', '.join(str(i) for i in items) + ']'
 
 ListComp(@expr @tail) = prec(0) --> [$expr $tail]
 Generator(@expr @tail) = prec(0) --> ($expr $tail)
+Comprehension(@f @i null) --> for $f in $i
+Comprehension(@f @i @cs) --> for $f in $i $cs
 #more listcomp/gencomp
 
 dict_pair = Pair(@k @v) prec(0) --> $k: $v
