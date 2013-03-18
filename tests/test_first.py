@@ -49,6 +49,10 @@ class TestIdentifier(TC):
         o = t.Name("foo")
         self.succeed(i, o)
 
+    def test_class(self):
+        i = "class"
+        self.fail(i)
+
     def test_lambda(self):
         i = "lambda"
         self.fail(i)

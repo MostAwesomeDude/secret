@@ -26,7 +26,7 @@ class PythonParser(OMeta.makeGrammar(g, name="PythonParser")
         "as",
         "assert",
         "break",
-        "`class",
+        "class",
         "continue",
         "def",
         "del",
