@@ -194,6 +194,12 @@ class PrecedenceTransformer(TreeTransformerBase):
         self.nextPrecedence = None
         return pt, None
 
+
+Desugarer = TreeTransformerGrammar.makeGrammar(
+    open("desugar_augmented_assignment.parsley").read(),
+    "Desugarer").createParserClass(TreeTransformerBase, {"t": t})
+
+
 PythonExpressionUnparser = TreeTransformerGrammar.makeGrammar(
     open("expression_unparser.parsley").read(),
     'PythonExpressionUnparser').createParserClass(PrecedenceTransformer, globals())
@@ -213,5 +219,7 @@ if __name__ == "__main__":
     from pprint import pprint
     pprint(stmts)
 #    import pdb; pdb.set_trace()
-    pt = PythonStatementUnparser.transform(stmts)[0]
+    ds = Desugarer.transform(stmts)[0]
+    print ds
+    pt = PythonStatementUnparser.transform(ds)[0]
     print pt
