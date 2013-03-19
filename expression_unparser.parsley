@@ -86,8 +86,8 @@ Arguments(@pos [kwarg*:kwargs] star:star starkw:starkw)
 Quasi(@prefix @contents) = prec(0) --> $prefix`$contents`
 Name(@n) = prec(0) --> $n
 Num(@i) = prec(0) --> $i
-Str(@prefix @s) = prec(0) (?(prefix and 'u' in prefix) -> "u" + repr(s)
-                  | -> repr(s))
+Str(null @s) = prec(0) -> repr(s)
+Str(@prefix @s) = prec(0) -> prefix + repr(s)
 Tuple(transform*:items) = prec(0) -> '(' + ', '.join(str(i) for i in items) + ')'
 
 List(transform*:items) = prec(0) -> '[' + ', '.join(str(i) for i in items) + ']'
