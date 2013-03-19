@@ -96,7 +96,8 @@ ListComp(@expr @tail) = prec(0) --> [$expr $tail]
 Generator(@expr @tail) = prec(0) --> ($expr $tail)
 Comprehension(@f @i null) --> for $f in $i
 Comprehension(@f @i @cs) --> for $f in $i $cs
-#more listcomp/gencomp
+CompIf(@i null) --> if $i
+CompIf(@i @cs) --> if $i $cs
 
 dict_pair = Pair(@k @v) prec(0) --> $k: $v
 dict_pairs = dict_pair*:ps -> ', '.join(str(p) for p in ps)
