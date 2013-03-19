@@ -88,6 +88,26 @@ class PythonParser(OMeta.makeGrammar(g, name="PythonParser")
     def keyword_pred(self, first, second):
         return first + second in self.keywords
 
+    @staticmethod
+    def stringify(pieces):
+        """
+        Perform string concatentation.
+        """
+
+        unicode_needed = any("u" in piece[0].lower() for piece in pieces
+                if piece[0])
+
+        l = []
+
+        for p, s in pieces:
+            if unicode_needed and "u" not in p:
+                s = s.decode("ascii")
+            l.append(s)
+
+        prefix = "u" if unicode_needed else None
+        return t.Str(prefix, "".join(l))
+
+
     def tuplify(self, head, tail, trailing):
         """
         Perform tuplification logic.

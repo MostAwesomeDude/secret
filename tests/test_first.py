@@ -139,12 +139,47 @@ class TestStringLiteral(TC):
 
     def test_raw_empty(self):
         i = 'r""'
-        o = t.Str('r', "")
+        o = t.Str(None, "")
         self.succeed(i, o)
 
     def test_raw(self):
         i = 'r"abc"'
-        o = t.Str('r', "abc")
+        o = t.Str(None, "abc")
+        self.succeed(i, o)
+
+    def test_raw_slash(self):
+        i = 'r"abc\n"'
+        o = t.Str(None, "abc\\n")
+        self.succeed(i, o)
+
+    def test_raw_quote(self):
+        i = 'r"abc\""'
+        o = t.Str(None, "abc\\\"")
+        self.succeed(i, o)
+
+    def test_str_c_style(self):
+        i = '"abc" "def"'
+        o = t.Str(None, "abcdef")
+        self.succeed(i, o)
+
+    def test_str_long_single(self):
+        i = "'''single'''"
+        o = t.Str(None, "single")
+        self.succeed(i, o)
+
+    def test_str_long_double(self):
+        i = '"""double"""'
+        o = t.Str(None, "double")
+        self.succeed(i, o)
+
+    def test_str_long_single_newline_escape(self):
+        i = "'''single\n'''"
+        o = t.Str(None, "single\n")
+        self.succeed(i, o)
+
+    def test_str_long_single_raw(self):
+        i = "r'''single\n'''"
+        o = t.Str(None, "single\\n")
         self.succeed(i, o)
 
     def test_longstring_docstring(self):
@@ -153,7 +188,7 @@ class TestStringLiteral(TC):
         """'''
         o = t.Str(None, "\n        Docstring\n        ")
         self.succeed(i, o)
-      #'''
+
 
 class TestParenthForm(TC):
 
