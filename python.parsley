@@ -2,6 +2,7 @@
 # * <>
 # * Complex parameters
 # * Print statement
+# * Semicolons
 
 # Core primitives that will be needed later.
 
@@ -41,7 +42,6 @@ bc = leading_space* '`' !(self.pc())
 # Python.
 comma = leading_space* ','
 colon = leading_space* ':'
-semi = leading_space* ';'
 dot = leading_space* '.'
 
 # Higher-order helper for generically finding comma-separated lists of things.
@@ -403,13 +403,11 @@ compound_stmt = if_stmt
               | funcdef
               | classdef
               | decorated
-suite = newline indent statement:s suite_stmt*:ss dedent
-        -> s + [x for l in ss for x in l]
-      | stmt_list:ss newline -> ss
-statement = compound_stmt:s -> [s]
-          | stmt_list:ss newline -> ss
+suite = newline indent statement:s suite_stmt*:ss dedent -> [s] + ss
+      | simple_stmt:s newline -> [s]
+statement = compound_stmt:s -> s
+          | simple_stmt:ss newline -> ss
 suite_stmt = indentation ~leading_space statement
-stmt_list = simple_stmt:head (semi simple_stmt)*:tail semi? -> [head] + tail
 
 # 7.1
 if_stmt = keyword("if") expression:e colon suite:then
@@ -480,5 +478,4 @@ inheritance = po expression_list?:e pc -> e
 # http://docs.python.org/reference/toplevel_components.html
 
 # 8.2
-file_input = (newline | statement)*:i -> t.File(list(itertools.chain(
-                                                *[x for x in i if x])))
+file_input = (newline | statement)*:i -> t.File([x for x in i if x])

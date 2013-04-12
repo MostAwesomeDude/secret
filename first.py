@@ -1,4 +1,3 @@
-import itertools
 import sys
 
 from terml.nodes import Term, termMaker as t
