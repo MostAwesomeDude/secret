@@ -56,7 +56,7 @@ class Str(Object):
         self._s = s
 
     def __str__(self):
-        return self._s
+        return "\"" + self._s + "\""
 
 
 class UserObject(Object):
@@ -113,7 +113,11 @@ class List(Object):
         self._l = l
 
     def __str__(self):
-        return str(self._l)
+        segments = ["["]
+        for i in self._l:
+            segments.append(i.__str__())
+        segments.append("]")
+        return "".join(segments)
 
 
 class Stack(object):
@@ -169,8 +173,6 @@ def eval(bc, frame, scope):
             args = stack.pop()
             message = stack.pop()
             target = stack.pop()
-            print "call: args: %s message: %s target: %s" % (str(args),
-                    str(message), str(target))
             rv = target.call(message, args)
             stack.push(rv)
         elif inst == SEND:
