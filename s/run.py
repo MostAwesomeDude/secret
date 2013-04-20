@@ -1,6 +1,8 @@
 import sys
 
 
+SHOW = -1
+
 DROP = 0
 DUP = 1
 SWAP = 2
@@ -12,6 +14,83 @@ SEND = 6
 GET = 7
 SET = 8
 NEW = 9
+
+
+class Object(object):
+    """
+    A black-box generic object.
+    """
+
+    def __init__(self):
+        pass
+
+    def call(self, message, arguments):
+        assert isinstance(message, Str)
+        m = message._s
+        if m == "__str__":
+            return Str(self.__str__())
+        return NoneObject()
+
+    def __str__(self):
+        return "<Object>"
+
+
+class NoneObject(Object):
+    """
+    A nullary value.
+    """
+
+    def __str__(self):
+        return "<None>"
+
+
+class Str(Object):
+    """
+    A boxed str.
+    """
+
+    _s = None
+
+    def __init__(self, s):
+        self._s = s
+
+    def __str__(self):
+        return self._s
+
+
+class UserObject(Object):
+    """
+    User-defined object.
+    """
+
+    def __init__(self, slots, messages):
+        self._slots = slots
+        self._messages = messages
+
+    def get_slot(self, slot):
+        return self._slots[slot]
+
+    def set_slot(self, slot, value):
+        self._slots[slot] = value
+
+    def call(self, message, args):
+        # XXX hmmmm....
+        return None
+
+
+class Int(Object):
+    """
+    A boxed int.
+    """
+
+    def __init__(self, i):
+        self._i = i
+
+    def call(self, message, arguments):
+        pass
+
+    def __str__(self):
+        return str(self._i)
 
 
 class Stack(object):
@@ -32,27 +111,10 @@ class Stack(object):
         self._storage.append(x)
 
     def peek(self):
-        return self._storage[-1]
-
-
-class Object(object):
-    """
-    Main definition of objects.
-    """
-
-    def __init__(self, slots, messages):
-        self._slots = slots
-        self._messages = messages
-
-    def get_slot(self, slot):
-        return self._slots[slot]
-
-    def set_slot(self, slot, value):
-        self._slots[slot] = value
-
-    def call(self, message, args):
-        # XXX hmmmm....
-        return None
+        if len(self._storage):
+            return self._storage[-1]
+        else:
+            return Object()
 
 
 def eval(bc, frame, scope):
@@ -62,7 +124,12 @@ def eval(bc, frame, scope):
     while pc < len(bc):
         inst = bc[pc]
 
-        if inst == DROP:
+        print "pc: %d inst: %d" % (pc, inst)
+        print "tos: %s" % str(stack.peek())
+
+        if inst == SHOW:
+            print stack.peek().__str__()
+        elif inst == DROP:
             stack.drop()
         elif inst == DUP:
             stack.push(stack.peek())
@@ -76,11 +143,7 @@ def eval(bc, frame, scope):
             index = bc[pc]
             stack.push(frame[index])
         elif inst == LOAD:
-            # XXX can't keep scope on the stack due to polymorphic
-            # limitations...
-            name = stack.pop()
-            stack.pop()
-            stack.push(scope[name])
+            pass # XXX
         elif inst == CALL:
             args = stack.pop()
             message = stack.pop()
@@ -90,31 +153,23 @@ def eval(bc, frame, scope):
         elif inst == SEND:
             pass # XXX
         elif inst == GET:
-            slot = stack.pop()
-            target = stack.pop()
-            rv = target.get_slot(slot)
-            stack.push(rv)
+            pass # XXX
         elif inst == SET:
-            value = stack.pop()
-            slot = stack.pop()
-            target = stack.pop()
-            target.set_slot(slot, value)
+            pass # XXX
         elif inst == NEW:
-            slots = stack.pop()
-            messages = stack.pop()
-            obj = Object(slots, messages)
-            stack.push(obj)
+            pass # XXX
 
-    pc += 1
+        pc += 1
 
 
 def run(bc):
-    frame = []
+    frame = [Int(42)]
     scope = {}
     return eval(bc, frame, scope)
 
 
 def entry_point(argv):
+    run([PUSH_CONST, 0, SHOW])
     return 0
 
 
