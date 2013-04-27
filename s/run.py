@@ -45,6 +45,21 @@ class NoneObject(Object):
         return "<None>"
 
 
+class Bool(Object):
+    """
+    A boxed bool.
+    """
+
+    def __init__(self, b):
+        self._b = b
+
+    def __str__(self):
+        if self._b:
+            return "True"
+        else:
+            return "False"
+
+
 class Str(Object):
     """
     A boxed str.
@@ -199,21 +214,23 @@ def eval(bc, frame, scope):
 
 
 def run(bc):
-    frame = [Int(6), Int(7), Str("__mul__")]
+    frame = [Bool(True), Int(6), Int(7), Str("__mul__")]
     scope = {}
     return eval(bc, frame, scope)
 
 
 def entry_point(argv):
     run([
-        # Push 6.
+        # Push True.
         PUSH_CONST, 0,
-        # Push 7.
+        # Push 6.
         PUSH_CONST, 1,
+        # Push 7.
+        PUSH_CONST, 2,
         # 7 -> [7].
         MAKE_LIST, 1,
         # Push "__mul__".
-        PUSH_CONST, 2,
+        PUSH_CONST, 3,
         # (6).__mul__([7]).
         SWAP, CALL,
         # Show.
