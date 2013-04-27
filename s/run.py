@@ -13,8 +13,9 @@ GET = 7
 SET = 8
 NEW = 9
 
-MAKE_LIST = 10
-SHOW = 11
+EQ = 10
+MAKE_LIST = 11
+SHOW = 12
 
 
 class Object(object):
@@ -135,6 +136,24 @@ class List(Object):
         return "".join(segments)
 
 
+def eq(x, y):
+    """
+    Unbox two objects, figure out whether they're equal, and return a Bool
+    with that value.
+    """
+
+    if isinstance(x, Bool) and isinstance(y, Bool):
+        rv = x._b == y._b
+    elif isinstance(x, Int) and isinstance(y, Int):
+        rv = x._i == y._i
+    elif isinstance(x, Str) and isinstance(y, Str):
+        rv = x._s == y._s
+    else:
+        rv = x is y
+
+    return Bool(rv)
+
+
 class Stack(object):
     """
     A simple stack with some convenience methods.
@@ -198,6 +217,11 @@ def eval(bc, frame, scope):
             pass # XXX
         elif inst == NEW:
             pass # XXX
+        elif inst == EQ:
+            x = stack.pop()
+            y = stack.pop()
+            rv = eq(x, y)
+            stack.push(rv)
         elif inst == MAKE_LIST:
             pc += 1
             length = bc[pc]
@@ -223,6 +247,10 @@ def entry_point(argv):
     run([
         # Push True.
         PUSH_CONST, 0,
+        # Push True.
+        PUSH_CONST, 0,
+        # Are they equal?
+        EQ,
         # Push 6.
         PUSH_CONST, 1,
         # Push 7.
