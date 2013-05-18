@@ -8,6 +8,8 @@
   * Inheritance: Inheritance does not make syntactic sense without semantics powering it.
   * Print statement
   * Semicolons
+  * Tab characters: Deal with it. We don't do vertical tabs or backspaces
+    either.
 
 * Semantics removed
 

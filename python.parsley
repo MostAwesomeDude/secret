@@ -11,7 +11,7 @@ leading_space_ = ' '
 # Comments.
 comment = '#' <(~newline_ anything)*>
 # Trailing spaces at the end of a line, including comments.
-trailing_space = (' ' | '\t')* comment?
+trailing_space = ' '* comment?
 
 # A full newline is trailing spaces, possibly a comment, and finally a newline
 # character.
