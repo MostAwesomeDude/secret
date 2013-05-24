@@ -315,19 +315,19 @@ class TestPrimary(TC):
     def test_call_identifier_args(self):
         i = "call(arg)"
         o = t.Call(t.Name("call"),
-                t.Arguments([t.Name("arg")], None, None, None))
+                t.Arguments([t.Name("arg")], None, None))
         self.succeed(i, o)
 
     def test_call_identifier_kwargs(self):
         i = "call(kwarg=x)"
         o = t.Call(t.Name("call"),
-                t.Arguments(None, [t.Pair("kwarg", t.Name("x"))], None, None))
+                t.Arguments(None, [t.Pair("kwarg", t.Name("x"))], None))
         self.succeed(i, o)
 
     def test_call_identifier_expr(self):
         i = "sqrt(%s)" % self.discriminant_string
         o = t.Call(t.Name("sqrt"),
-                t.Arguments([self.discriminant], None, None, None))
+                t.Arguments([self.discriminant], None, None))
         self.succeed(i, o)
 
     def test_quasi_empty(self):
@@ -379,7 +379,7 @@ class TestExpressionList(TC):
         i = 'f(g, k="s")'
         o = t.Call(t.Name("f"),
                 t.Arguments([t.Name("g")], [t.Pair("k", t.Str(None, "s"))],
-                    None, None))
+                    None))
         self.succeed(i, o)
 
 
@@ -399,43 +399,37 @@ class TestArgList(TC):
 
     def test_args_positional_single(self):
         i = "arg"
-        o = t.Arguments([t.Name("arg")], None, None, None)
+        o = t.Arguments([t.Name("arg")], None, None)
         self.succeed(i, o)
 
     def test_args_positional_single_trailing(self):
         i = "arg,"
-        o = t.Arguments([t.Name("arg")], None, None, None)
+        o = t.Arguments([t.Name("arg")], None, None)
         self.succeed(i, o)
 
     def test_args_plural(self):
         i = "foo,bar"
-        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
+        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None)
         self.succeed(i, o)
 
     def test_args_plural_trailing(self):
         i = "foo,bar,"
-        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None, None)
+        o = t.Arguments([t.Name("foo"), t.Name("bar")], None, None)
         self.succeed(i, o)
 
     def test_args_keyword_args(self):
         i = "foo=bar"
-        o = t.Arguments(None, [t.Pair("foo", t.Name("bar"))], None, None)
+        o = t.Arguments(None, [t.Pair("foo", t.Name("bar"))], None)
         self.succeed(i, o)
 
     def test_args_positional_and_keyword(self):
         i = "foo, bar=baz"
-        o = t.Arguments([t.Name("foo")], [t.Pair("bar", t.Name("baz"))], None,
-                None)
+        o = t.Arguments([t.Name("foo")], [t.Pair("bar", t.Name("baz"))], None)
         self.succeed(i, o)
 
     def test_args_star_args(self):
         i = "*args"
-        o = t.Arguments(None, None, t.Name("args"), None)
-        self.succeed(i, o)
-
-    def test_args_star_kwargs(self):
-        i = "**kwargs"
-        o = t.Arguments(None, None, None, t.Name("kwargs"))
+        o = t.Arguments(None, None, t.Name("args"))
         self.succeed(i, o)
 
 
@@ -824,8 +818,7 @@ class TestFuncdef(TC):
                   t.Parameters([t.Name("a"), t.Name("b"), t.Name("c")]),
                   [
                       t.Assign([t.Name("d")], t.Call(t.Name("sqrt"),
-                          t.Arguments([self.discriminant], None, None,
-                                      None))),
+                          t.Arguments([self.discriminant], None, None))),
                       t.Assign([t.Name("a2")], t.Mul(t.Num(2), t.Name("a"))),
                       t.Return(t.Tuple(
                           t.Div(t.Add(t.Negate(t.Name("b")), t.Name("dis")),
@@ -848,17 +841,7 @@ class TestParameterList(TC):
 
     def test_params_args(self):
         i = "*args"
-        o = t.Parameters([], t.Name("args"), None)
-        self.succeed(i, o)
-
-    def test_params_kwargs(self):
-        i = "**kwargs"
-        o = t.Parameters([], t.Name("kwargs"))
-        self.succeed(i, o)
-
-    def test_params_args_kwargs(self):
-        i = "*args, **kwargs"
-        o = t.Parameters([], t.Name("args"), t.Name("kwargs"))
+        o = t.Parameters([], t.Name("args"))
         self.succeed(i, o)
 
 
@@ -878,7 +861,7 @@ class TestClassdef(TC):
         o = t.Class("Parser",
                 t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
                     t.Arguments([t.Name("g"), t.Call(t.Name("globals"),
-                        None)], None, None, None)),
+                        None)], None, None)),
                     [t.Pass()]
         )
         self.succeed(i, o)
@@ -888,7 +871,7 @@ class TestClassdef(TC):
         o = t.Class("P",
                 t.Call(t.Name("f"),
                     t.Arguments([t.Name("g")],
-                        [t.Pair("k", t.Str(None, "s"))], None, None)),
+                        [t.Pair("k", t.Str(None, "s"))], None)),
                     [t.Pass()]
         )
         self.succeed(i, o)
@@ -902,7 +885,7 @@ class TestInheritance(TC):
         i = "(BootOMetaGrammar.makeGrammar(g, globals()))"
         o = t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
             t.Arguments([t.Name("g"), t.Call(t.Name("globals"), None)], None,
-                None, None))
+                None))
         self.succeed(i, o)
 
 

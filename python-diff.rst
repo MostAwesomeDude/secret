@@ -5,6 +5,10 @@
 
 * Syntax removed
 
+  * Some argument and parameter syntax removed
+
+    * Packed keyword arguments
+
   * Inheritance: Inheritance does not make syntactic sense without semantics powering it.
   * Print statement
   * Semicolons

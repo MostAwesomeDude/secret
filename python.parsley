@@ -1,8 +1,5 @@
-# Omissions:
-# * <>
-# * Complex parameters
-# * Print statement
-# * Semicolons
+# S: A language that is not Python.
+# See the docs for details.
 
 # Core primitives that will be needed later.
 
@@ -198,14 +195,12 @@ call = po (arg_list:a comma? -> a
 # And most of these are optional,
 # So commas maybe?
 arg_list = (
-     starkwargs:w comma? -> t.Arguments(None, None, None, w)
-   | kwargs:y (comma starkwargs)?:w comma? -> t.Arguments(None, y, None, w)
-   | starargs:z (comma kwargs)?:y (comma starkwargs)?:w comma?
-     -> t.Arguments(None, y, z, w)
-   | kwargs:y (comma starargs)?:z (comma kwargs)?:q (comma starkwargs)?:w
-     comma? -> t.Arguments(None, self.argdicts(y, q), z, w)
-   | args:x (comma kwargs)?:y (comma starargs)?:z (comma kwargs)?:q
-     (comma starkwargs)?:w comma? -> t.Arguments(x, self.argdicts(y, q), z, w)
+     kwargs:y comma? -> t.Arguments(None, y, None)
+   | starargs:z (comma kwargs)?:y comma?  -> t.Arguments(None, y, z)
+   | kwargs:y (comma starargs)?:z (comma kwargs)?:q comma?
+     -> t.Arguments(None, self.argdicts(y, q), z)
+   | args:x (comma kwargs)?:y (comma starargs)?:z (comma kwargs)?:q comma?
+     -> t.Arguments(x, self.argdicts(y, q), z)
    )
 # Use lookahead to prevent kwargs from being mistaken for args.
 arg = expression:e ~token("=") -> e
@@ -214,7 +209,6 @@ kwargs = keyword_item:head (comma keyword_item)*:tail -> [head] + tail
 keyword_item = identifier_:k token("=") expression:v -> t.Pair(k, v)
 
 starargs = token("*") expression
-starkwargs = token("**") expression
 
 # 5.4
 power = (primary | atom):left (token("**") u_expr)?:right
@@ -455,14 +449,9 @@ dotted_name = identifier:head (dot identifier)*:tail
 # Parameters have multiple arities.
 # Parameters/0 means no parameters.
 # Parameters/1 is a list of positional arguments.
-# Parameters/2 is that and **kwargs.
-# Parameters/3 is positional arguments, *args, and **kwargs. Note that kwargs
-# can be None in this case.
+# Parameters/2 is positional arguments and *args.
 parameter_list = (defparameter:p comma -> p)*:init
-                 (token("*") identifier:args
-                  (comma token("**") identifier)?:kwargs
-                -> t.Parameters(init, args, kwargs)
-                | token("**") identifier:kwargs -> t.Parameters(init, kwargs)
+                 (token("*") identifier:args -> t.Parameters(init, args)
                 | defparameter:last comma? -> t.Parameters(init + [last]))
                | -> t.Parameters()
 defparameter = parameter:p token("=") expression:e -> t.Pair(p, e)
