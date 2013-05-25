@@ -460,9 +460,7 @@ sublist = comma_list("parameter")
 parameter = identifier | po sublist:s pc -> s
 
 # 7.7
-classdef = keyword("class") identifier_:cls inheritance?:parents colon suite:s
-         -> t.Class(cls, parents, s)
-inheritance = po expression_list?:e pc -> e
+classdef = keyword("class") identifier_:cls colon suite:s -> t.Class(cls, s)
 
 # http://docs.python.org/reference/toplevel_components.html
 
