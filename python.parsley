@@ -395,7 +395,7 @@ compound_stmt = if_stmt
               | try_stmt
               | with_stmt
               | funcdef
-              | classdef
+              | objectdef
               | decorated
 suite = newline indent statement:s suite_stmt*:ss dedent -> [s] + ss
       | simple_stmt:s newline -> [s]
@@ -437,7 +437,7 @@ with_item = expression:expr (keyword("as") target:tgt)?
           -> t.Context(expr, tgt)
 
 # 7.6
-decorated = decorators:ds (classdef | funcdef):f -> t.Decorated(ds, f)
+decorated = decorators:ds (objectdef | funcdef):f -> t.Decorated(ds, f)
 decorators = decorator+
 decorator = token("@") dotted_name:name
             (po (arg_list:args comma? -> args)?:args pc -> args)?:args
@@ -460,7 +460,8 @@ sublist = comma_list("parameter")
 parameter = identifier | po sublist:s pc -> s
 
 # 7.7
-classdef = keyword("class") identifier_:cls colon suite:s -> t.Class(cls, s)
+objectdef = keyword("object") identifier_:name colon suite:s
+         -> t.Object(name, s)
 
 # http://docs.python.org/reference/toplevel_components.html
 

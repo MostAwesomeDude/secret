@@ -1,3 +1,8 @@
+* Syntax added
+
+  * Object statement: Object scopes similar in form and function to class
+    scopes.
+
 * Builtins removed
 
   * ``hasattr()``
@@ -9,6 +14,7 @@
 
     * Packed keyword arguments
 
+  * Class statement
   * Inheritance: Inheritance does not make syntactic sense without semantics
     powering it.
   * Print statement

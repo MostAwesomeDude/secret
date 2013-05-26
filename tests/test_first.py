@@ -59,10 +59,6 @@ class TestIdentifier(TC):
         o = t.Name("__class__")
         self.succeed(i, o)
 
-    def test_class(self):
-        i = "class"
-        self.fail(i)
-
     def test_lambda(self):
         i = "lambda"
         self.fail(i)
@@ -845,47 +841,25 @@ class TestParameterList(TC):
         self.succeed(i, o)
 
 
-class TestClassdef(TC):
+class TestObjectDef(TC):
 
-    rule = "classdef"
+    rule = "objectdef"
 
     def test_class_depth(self):
-        i = "class Depth: depth = 0\n"
-        o = t.Class("Depth", None, [t.Assign([t.Name("depth")], t.Num(0))])
+        i = "object Depth: depth = 0\n"
+        o = t.Object("Depth", [t.Assign([t.Name("depth")], t.Num(0))])
         self.succeed(i, o)
 
     def test_class_parser(self):
-        i = """class Parser(BootOMetaGrammar.makeGrammar(g, globals())):
+        i = """object Parser:
             pass
         """
-        o = t.Class("Parser",
-                t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
-                    t.Arguments([t.Name("g"), t.Call(t.Name("globals"),
-                        None)], None, None)),
-                    [t.Pass()]
-        )
+        o = t.Object("Parser", [t.Pass()])
         self.succeed(i, o)
 
     def test_class_parent_kwargs(self):
-        i = 'class P(f(g, k="s")): pass\n'
-        o = t.Class("P",
-                t.Call(t.Name("f"),
-                    t.Arguments([t.Name("g")],
-                        [t.Pair("k", t.Str(None, "s"))], None)),
-                    [t.Pass()]
-        )
-        self.succeed(i, o)
-
-
-class TestInheritance(TC):
-
-    rule = "inheritance"
-
-    def test_inheritance_parser(self):
-        i = "(BootOMetaGrammar.makeGrammar(g, globals()))"
-        o = t.Call(t.Attribute(t.Name("BootOMetaGrammar"), "makeGrammar"),
-            t.Arguments([t.Name("g"), t.Call(t.Name("globals"), None)], None,
-                None))
+        i = 'object P: pass\n'
+        o = t.Object("P", [t.Pass()])
         self.succeed(i, o)
 
 
@@ -895,9 +869,9 @@ class TestFileInput(TC):
 
     def test_file_input_simple(self):
         i = """
-class Simple(object):
+object Simple:
     pass
 
         """
-        o = t.File([t.Class("Simple", t.Name("object"), [t.Pass()])])
+        o = t.File([t.Object("Simple", [t.Pass()])])
         self.succeed(i, o)

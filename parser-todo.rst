@@ -8,4 +8,3 @@
   * Quasiliteral internal syntax
   * Rule-blocks
   * When-blocks
-  * Object-blocks
