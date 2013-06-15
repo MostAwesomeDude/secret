@@ -31,3 +31,43 @@ def infer_stack_effect(tokens):
             o += 1
 
     return i, o
+
+
+def parse_pieces(data):
+    pieces = data.split()
+    return filter(bool, pieces)
+
+
+def parse_phrases(pieces):
+    phrases = {}
+
+    while pieces:
+        try:
+            start = pieces.index(":")
+            end = pieces.index(";")
+        except ValueError:
+            break
+
+        name = pieces[start + 1]
+        phrase = pieces[start + 2:end]
+        phrases[name] = phrase
+
+        pieces = pieces[end + 1:]
+
+    return phrases
+
+
+def main(name):
+    data = open(name, "rb").read()
+    pieces = parse_pieces(data)
+    phrases = parse_phrases(pieces)
+
+    for word, phrase in phrases.items():
+        print "Word:", word
+        print "Tokens:", " ".join(phrase)
+        print "Stack effect:", infer_stack_effect(phrase)
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1])
