@@ -33,46 +33,86 @@ def infer_stack_effect(tokens):
     return i, o
 
 
-def execute(token, stack, context):
-    if False:
+class StackUnderflow(Exception):
+    """
+    The stack underflowed.
+    """
+
+
+class Stack(object):
+    """
+    A simple stack with some convenience methods.
+    """
+
+    def __init__(self):
+        self._storage = []
+
+    def drop(self):
+        self._storage.pop()
+
+    def pop(self):
+        return self._storage.pop()
+
+    def push(self, x):
+        self._storage.append(x)
+
+    def peek(self):
+        if len(self._storage):
+            return self._storage[-1]
+        else:
+            raise StackUnderflow()
+
+
+def Machine(object):
+    """
+    A virtual machine which executes Eons.
+    """
+
+    def pass_message(self, target, name, args):
         pass
-    elif token == "()":
-        stack.push([])
-    elif token == ".":
-        args = stack.pop()
-        name = stack.pop()
-        target = stack.pop()
-        result = pass_message(target, name, args)
-        stack.push(result)
-    elif token == "<-":
-        args = stack.pop()
-        name = stack.pop()
-        target = stack.pop()
-        # XXX wrong
-        stack.push((target, name, args))
-    elif token == "<method":
-        name = stack.pop()
-        code = stack.pop()
-        stack.push((name, code))
-    elif token == "drop":
-        stack.pop()
-    elif token == "dup":
-        stack.push(stack.peek())
-    elif token == "object":
-        methods = stack.pop()
-        d = dict(methods)
-        stack.push(d)
-    elif token == "push":
-        obj = stack.pop()
-        l = stack.peek()
-        l.append(obj)
-    elif token == "print":
-        print stack.pop()
-    elif token == "swap":
-        x = stack.pop()
-        y = stack.pop()
-        stack.push(x)
-        stack.push(y)
+
+    def execute(self, token, context):
+        stack = self.stack
+
+        if False:
+            pass
+        elif token == "()":
+            stack.push([])
+        elif token == ".":
+            args = stack.pop()
+            name = stack.pop()
+            target = stack.pop()
+            result = self.pass_message(target, name, args)
+            stack.push(result)
+        elif token == "<-":
+            args = stack.pop()
+            name = stack.pop()
+            target = stack.pop()
+            # XXX wrong
+            stack.push((target, name, args))
+        elif token == "<method":
+            name = stack.pop()
+            code = stack.pop()
+            stack.push((name, code))
+        elif token == "drop":
+            stack.pop()
+        elif token == "dup":
+            stack.push(stack.peek())
+        elif token == "object":
+            methods = stack.pop()
+            d = dict(methods)
+            stack.push(d)
+        elif token == "push":
+            obj = stack.pop()
+            l = stack.peek()
+            l.append(obj)
+        elif token == "print":
+            print stack.pop()
+        elif token == "swap":
+            x = stack.pop()
+            y = stack.pop()
+            stack.push(x)
+            stack.push(y)
 
 
 def parse_pieces(data):
