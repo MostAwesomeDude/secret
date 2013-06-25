@@ -1,14 +1,14 @@
 builtins = {
-    "()":      (0, 1),
-    ".":       (3, 1),
-    "<-":      (3, 1),
-    "<method": (2, 1),
-    "drop":    (1, 0),
-    "dup":     (1, 2),
-    "object":  (1, 1),
-    "print":   (1, 0),
-    "push":    (2, 1),
-    "swap":    (2, 2),
+    "()":     (0, 1),
+    ".":      (3, 1),
+    "<-":     (3, 1),
+    "<meth":  (2, 1),
+    "drop":   (1, 0),
+    "dup":    (1, 2),
+    "object": (1, 1),
+    "print":  (1, 0),
+    "<arg":   (2, 1),
+    "swap":   (2, 2),
 }
 
 
@@ -51,7 +51,10 @@ class Stack(object):
         self._storage.pop()
 
     def pop(self):
-        return self._storage.pop()
+        if len(self._storage):
+            return self._storage.pop()
+        else:
+            raise StackUnderflow()
 
     def push(self, x):
         self._storage.append(x)
@@ -63,16 +66,22 @@ class Stack(object):
             raise StackUnderflow()
 
 
-def Machine(object):
+class Machine(object):
     """
     A virtual machine which executes Eons.
     """
 
+    def __init__(self):
+        self.stack = Stack()
+
     def pass_message(self, target, name, args):
-        pass
+        print "~ Passing to %r: %s, %r" % (target, name, args)
+        return 42
 
     def execute(self, token, context):
         stack = self.stack
+
+        print "Executing", token
 
         if False:
             pass
@@ -90,7 +99,7 @@ def Machine(object):
             target = stack.pop()
             # XXX wrong
             stack.push((target, name, args))
-        elif token == "<method":
+        elif token == "<meth":
             name = stack.pop()
             code = stack.pop()
             stack.push((name, code))
@@ -102,7 +111,7 @@ def Machine(object):
             methods = stack.pop()
             d = dict(methods)
             stack.push(d)
-        elif token == "push":
+        elif token == "<arg":
             obj = stack.pop()
             l = stack.peek()
             l.append(obj)
@@ -113,11 +122,26 @@ def Machine(object):
             y = stack.pop()
             stack.push(x)
             stack.push(y)
+        else:
+            stack.push(token)
+
+    def run_phrase(self, name, phrases):
+        phrase = phrases[name]
+        for word in phrase:
+            self.execute(word, phrases)
 
 
 def parse_pieces(data):
     pieces = data.split()
-    return filter(bool, pieces)
+    filtered = filter(bool, pieces)
+
+    def try_int(x):
+        try:
+            return int(x)
+        except:
+            return x
+
+    return map(try_int, filtered)
 
 
 def parse_phrases(pieces):
@@ -146,8 +170,12 @@ def main(name):
 
     for word, phrase in phrases.items():
         print "Word:", word
-        print "Tokens:", " ".join(phrase)
+        print "Tokens:", " ".join(map(str, phrase))
         print "Stack effect:", infer_stack_effect(phrase)
+
+    if "main" in phrases:
+        vm = Machine()
+        vm.run_phrase("main", phrases)
 
 
 if __name__ == "__main__":
