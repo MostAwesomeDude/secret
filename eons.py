@@ -1,3 +1,5 @@
+import sys
+
 builtins = {
     "()":     (0, 1),
     ".":      (3, 1),
@@ -163,8 +165,8 @@ def parse_phrases(pieces):
     return phrases
 
 
-def main(name):
-    data = open(name, "rb").read()
+def entry_point(argv):
+    data = open(argv[1], "rb").read()
     pieces = parse_pieces(data)
     phrases = parse_phrases(pieces)
 
@@ -177,7 +179,12 @@ def main(name):
         vm = Machine()
         vm.run_phrase("main", phrases)
 
+    return 0
+
+
+def target(*args):
+    return entry_point, None
+
 
 if __name__ == "__main__":
-    import sys
-    main(sys.argv[1])
+    entry_point(sys.argv)
