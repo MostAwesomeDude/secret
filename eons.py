@@ -175,8 +175,11 @@ class Machine(object):
 
 
 def parse_pieces(data):
-    pieces = data.split()
-    filtered = filter(bool, pieces)
+    lines = data.split("\n")
+    pieces = []
+    for line in lines:
+        pieces.extend(line.split(" "))
+    filtered = [piece for piece in pieces if piece]
 
     def try_int(x):
         try:
@@ -194,8 +197,8 @@ def parse_pieces(data):
         except:
             return x
 
-    with_ints = map(try_int, filtered)
-    return map(maybe_str, with_ints)
+    with_ints = [try_int(x) for x in filtered]
+    return [maybe_str(x) for x in with_ints]
 
 
 def parse_phrases(pieces):
@@ -218,7 +221,7 @@ def parse_phrases(pieces):
 
 
 def read_file(name):
-    fd = os.open(name, os.O_RDONLY)
+    fd = os.open(name, os.O_RDONLY, 0777)
     l = []
     l.append(os.read(fd, 4096))
     while l[-1]:
