@@ -1,3 +1,4 @@
+import os
 import sys
 
 
@@ -216,8 +217,17 @@ def parse_phrases(pieces):
     return phrases
 
 
+def read_file(name):
+    fd = os.open(name, os.O_RDONLY)
+    l = []
+    l.append(os.read(fd, 4096))
+    while l[-1]:
+        l.append(os.read(fd, 4096))
+    return "".join(l)
+
+
 def entry_point(argv):
-    data = open(argv[1], "rb").read()
+    data = read_file(argv[1])
     pieces = parse_pieces(data)
     phrases = parse_phrases(pieces)
 
