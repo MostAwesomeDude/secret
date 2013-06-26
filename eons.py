@@ -1,5 +1,6 @@
 import sys
 
+
 builtins = {
     "()":     (0, 1),
     ".":      (3, 1),
@@ -41,6 +42,12 @@ class StackUnderflow(Exception):
     """
 
 
+class BadMessage(Exception):
+    """
+    The message was bad.
+    """
+
+
 class Stack(object):
     """
     A simple stack with some convenience methods.
@@ -68,6 +75,39 @@ class Stack(object):
             raise StackUnderflow()
 
 
+class Object(object):
+    """
+    An object.
+    """
+
+    def __str__(self):
+        return "<Object>"
+
+    def call(self, message, args):
+        raise BadMessage()
+
+
+class Int(Object):
+    """
+    An int.
+    """
+
+    def __init__(self, i):
+        self._i = i
+
+    def __str__(self):
+        return str(self._i)
+
+    def call(self, message, args):
+        if message == "mul":
+            assert len(args) == 1
+            other = args[0]
+            assert isinstance(other, Int)
+            return Int(self._i * other._i)
+        else:
+            raise BadMessage()
+
+
 class Machine(object):
     """
     A virtual machine which executes Eons.
@@ -76,9 +116,9 @@ class Machine(object):
     def __init__(self):
         self.stack = Stack()
 
-    def pass_message(self, target, name, args):
-        print "~ Passing to %r: %s, %r" % (target, name, args)
-        return 42
+    def pass_message(self, target, message, args):
+        print "~ Passing to %r: %s, %r" % (target, message, args)
+        return target.call(message, args)
 
     def execute(self, token, context):
         stack = self.stack
@@ -139,11 +179,22 @@ def parse_pieces(data):
 
     def try_int(x):
         try:
-            return int(x)
+            return Int(int(x))
         except:
             return x
 
-    return map(try_int, filtered)
+    def maybe_str(x):
+        try:
+            if x.startswith("\"") and x.endswith("\""):
+                # XXX
+                return x[1:-1]
+            else:
+                return x
+        except:
+            return x
+
+    with_ints = map(try_int, filtered)
+    return map(maybe_str, with_ints)
 
 
 def parse_phrases(pieces):
