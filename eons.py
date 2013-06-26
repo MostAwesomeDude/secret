@@ -109,6 +109,18 @@ class Int(Object):
             raise BadMessage()
 
 
+class Str(Object):
+    """
+    A str.
+    """
+
+    def __init__(self, s):
+        self._s = s
+
+    def __str__(self):
+        return self._s
+
+
 class Machine(object):
     """
     A virtual machine which executes Eons.
@@ -118,8 +130,9 @@ class Machine(object):
         self.stack = Stack()
 
     def pass_message(self, target, message, args):
+        assert isinstance(message, Str)
         print "~ Passing to %r: %s, %r" % (target, message, args)
-        return target.call(message, args)
+        return target.call(message._s, args)
 
     def execute(self, token, context):
         stack = self.stack
@@ -190,8 +203,7 @@ def parse_pieces(data):
     def maybe_str(x):
         try:
             if x.startswith("\"") and x.endswith("\""):
-                # XXX
-                return x[1:-1]
+                return Str(x[1:-1])
             else:
                 return x
         except:
