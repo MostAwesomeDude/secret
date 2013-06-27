@@ -26,6 +26,8 @@ bytecodes = {
     "swap":   SWAP,
 }
 
+bytecode_names = dict([(bytecodes[k], k) for k in bytecodes])
+
 
 builtins = {
     ARGS:        (0, 1),
@@ -124,6 +126,8 @@ class Int(Object):
     def __str__(self):
         return str(self._i)
 
+    __repr__ = __str__
+
     def call(self, message, args):
         if message == "mul":
             assert len(args) == 1
@@ -143,7 +147,36 @@ class Str(Object):
         self._s = s
 
     def __str__(self):
-        return self._s
+        return repr(self._s)
+
+
+class Bytecode(object):
+    """
+    A bytecode for Eons.
+    """
+
+class Literal(Bytecode):
+    """
+    A literal in bytecode.
+    """
+
+    def __init__(self, l):
+        self._l = l
+
+    def __str__(self):
+        return "Literal(%s)" % self._l
+
+
+class Instruction(Bytecode):
+    """
+    A bytecode instruction.
+    """
+
+    def __init__(self, i):
+        self._i = i
+
+    def __str__(self):
+        return "Instruction(%r)" % bytecode_names[self._i]
 
 
 class Machine(object):
@@ -164,47 +197,52 @@ class Machine(object):
 
         print "Executing", token
 
-        if False:
-            pass
-        elif token == ARGS:
-            stack.push([])
-        elif token == CALL:
-            args = stack.pop()
-            name = stack.pop()
-            target = stack.pop()
-            result = self.pass_message(target, name, args)
-            stack.push(result)
-        elif token == SEND:
-            args = stack.pop()
-            name = stack.pop()
-            target = stack.pop()
-            # XXX wrong
-            stack.push((target, name, args))
-        elif token == MAKE_METHOD:
-            name = stack.pop()
-            code = stack.pop()
-            stack.push((name, code))
-        elif token == DROP:
-            stack.pop()
-        elif token == DUP:
-            stack.push(stack.peek())
-        elif token == OBJECT:
-            methods = stack.pop()
-            d = dict(methods)
-            stack.push(d)
-        elif token == TO_ARG:
-            obj = stack.pop()
-            l = stack.peek()
-            l.append(obj)
-        elif token == PRINT:
-            print stack.pop()
-        elif token == SWAP:
-            x = stack.pop()
-            y = stack.pop()
-            stack.push(x)
-            stack.push(y)
+        if isinstance(token, Literal):
+            stack.push(token._l)
         else:
-            stack.push(token)
+            i = token._i
+
+            if False:
+                pass
+            elif i == ARGS:
+                stack.push([])
+            elif i == CALL:
+                args = stack.pop()
+                name = stack.pop()
+                target = stack.pop()
+                result = self.pass_message(target, name, args)
+                stack.push(result)
+            elif i == SEND:
+                args = stack.pop()
+                name = stack.pop()
+                target = stack.pop()
+                # XXX wrong
+                stack.push((target, name, args))
+            elif i == MAKE_METHOD:
+                name = stack.pop()
+                code = stack.pop()
+                stack.push((name, code))
+            elif i == DROP:
+                stack.pop()
+            elif i == DUP:
+                stack.push(stack.peek())
+            elif i == OBJECT:
+                methods = stack.pop()
+                d = dict(methods)
+                stack.push(d)
+            elif i == TO_ARG:
+                obj = stack.pop()
+                l = stack.peek()
+                l.append(obj)
+            elif i == PRINT:
+                print stack.pop()
+            elif i == SWAP:
+                x = stack.pop()
+                y = stack.pop()
+                stack.push(x)
+                stack.push(y)
+            else:
+                print "Unknown instruction", i
 
     def run_phrase(self, name, phrases):
         phrase = phrases[name]
@@ -221,15 +259,15 @@ def parse_pieces(data):
 
     def classify(x):
         if x in bytecodes:
-            return bytecodes[x]
+            return Instruction(bytecodes[x])
         else:
             try:
-                return Int(int(x))
+                return Literal(Int(int(x)))
             except ValueError:
                 pass
 
             if x.startswith("\"") and x.endswith("\""):
-                return Str(x[1:-1])
+                return Literal(Str(x[1:-1]))
 
         return x
 
