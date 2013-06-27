@@ -2,17 +2,42 @@ import os
 import sys
 
 
+# Bytecode numbering.
+(
+    DROP, DUP, SWAP,
+    ARGS, TO_ARG,
+    MAKE_METHOD,
+    OBJECT, TO_OBJECT,
+    CALL, SEND,
+    PRINT,
+) = range(11)
+
+
+bytecodes = {
+    "()":     ARGS,
+    ".":      CALL,
+    "<-":     SEND,
+    "<arg":   TO_ARG,
+    "<meth":  MAKE_METHOD,
+    "drop":   DROP,
+    "dup":    DUP,
+    "object": OBJECT,
+    "print":  PRINT,
+    "swap":   SWAP,
+}
+
+
 builtins = {
-    "()":     (0, 1),
-    ".":      (3, 1),
-    "<-":     (3, 1),
-    "<meth":  (2, 1),
-    "drop":   (1, 0),
-    "dup":    (1, 2),
-    "object": (1, 1),
-    "print":  (1, 0),
-    "<arg":   (2, 1),
-    "swap":   (2, 2),
+    ARGS:        (0, 1),
+    CALL:        (3, 1),
+    DROP:        (1, 0),
+    DUP:         (1, 2),
+    MAKE_METHOD: (2, 1),
+    OBJECT:      (1, 1),
+    PRINT:       (1, 0),
+    SEND:        (3, 1),
+    SWAP:        (2, 2),
+    TO_ARG:      (2, 1),
 }
 
 
@@ -141,39 +166,39 @@ class Machine(object):
 
         if False:
             pass
-        elif token == "()":
+        elif token == ARGS:
             stack.push([])
-        elif token == ".":
+        elif token == CALL:
             args = stack.pop()
             name = stack.pop()
             target = stack.pop()
             result = self.pass_message(target, name, args)
             stack.push(result)
-        elif token == "<-":
+        elif token == SEND:
             args = stack.pop()
             name = stack.pop()
             target = stack.pop()
             # XXX wrong
             stack.push((target, name, args))
-        elif token == "<meth":
+        elif token == MAKE_METHOD:
             name = stack.pop()
             code = stack.pop()
             stack.push((name, code))
-        elif token == "drop":
+        elif token == DROP:
             stack.pop()
-        elif token == "dup":
+        elif token == DUP:
             stack.push(stack.peek())
-        elif token == "object":
+        elif token == OBJECT:
             methods = stack.pop()
             d = dict(methods)
             stack.push(d)
-        elif token == "<arg":
+        elif token == TO_ARG:
             obj = stack.pop()
             l = stack.peek()
             l.append(obj)
-        elif token == "print":
+        elif token == PRINT:
             print stack.pop()
-        elif token == "swap":
+        elif token == SWAP:
             x = stack.pop()
             y = stack.pop()
             stack.push(x)
@@ -194,23 +219,21 @@ def parse_pieces(data):
         pieces.extend(line.split(" "))
     filtered = [piece for piece in pieces if piece]
 
-    def try_int(x):
-        try:
-            return Int(int(x))
-        except:
-            return x
+    def classify(x):
+        if x in bytecodes:
+            return bytecodes[x]
+        else:
+            try:
+                return Int(int(x))
+            except ValueError:
+                pass
 
-    def maybe_str(x):
-        try:
             if x.startswith("\"") and x.endswith("\""):
                 return Str(x[1:-1])
-            else:
-                return x
-        except:
-            return x
 
-    with_ints = [try_int(x) for x in filtered]
-    return [maybe_str(x) for x in with_ints]
+        return x
+
+    return [classify(x) for x in filtered]
 
 
 def parse_phrases(pieces):
