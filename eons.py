@@ -179,6 +179,18 @@ class Instruction(Bytecode):
         return "Instruction(%r)" % bytecode_names[self._i]
 
 
+class Reference(Bytecode):
+    """
+    A reference to a phrase.
+    """
+
+    def __init__(self, r):
+        self._r = r
+
+    def __str__(self):
+        return "Reference(%r)" % self._r
+
+
 class Machine(object):
     """
     A virtual machine which executes Eons.
@@ -200,6 +212,7 @@ class Machine(object):
         if isinstance(token, Literal):
             stack.push(token._l)
         else:
+            assert isinstance(token, Instruction)
             i = token._i
 
             if False:
@@ -262,7 +275,7 @@ def classify(x):
         if x.startswith("\"") and x.endswith("\""):
             return Literal(Str(x[1:-1]))
 
-    return x
+    return Reference(x)
 
 
 def parse_pieces(data):
@@ -305,10 +318,8 @@ def read_file(name):
 
 def classify_phrases(phrases):
     d = {}
-
     for word in phrases.keys():
         d[word] = [classify(w) for w in phrases[word]]
-
     return d
 
 
@@ -319,7 +330,7 @@ def entry_point(argv):
 
     for word, phrase in phrases.items():
         print "Word:", word
-        print "Tokens:", " ".join(map(str, phrase))
+        print "Tokens:", " ".join([str(w) for w in phrase])
         print "Stack effect:", infer_stack_effect(phrase)
 
     if "main" in phrases:
