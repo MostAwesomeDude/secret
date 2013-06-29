@@ -1,7 +1,7 @@
 import os
 import sys
 
-from s.objects import Int, Str
+from s.objects import Int, List, Str
 
 
 # Bytecode numbering.
@@ -57,8 +57,8 @@ def infer_stack_effect(tokens):
     i = o = 0
 
     for token in tokens:
-        if token in builtins:
-            ni, no = builtins[token]
+        if isinstance(token, Instruction):
+            ni, no = builtins[token._i]
             i, o = combine_stack_effects(i, o, ni, no)
         else:
             o += 1
@@ -150,8 +150,9 @@ class Machine(object):
 
     def pass_message(self, target, message, args):
         assert isinstance(message, Str)
-        print "~ Passing to %r: %s, %r" % (target, message, args)
-        return target.call(message._s, args)
+        assert isinstance(args, List)
+        print "~ Passing to %r: %s, %s" % (target, message, args)
+        return target.call(message._s, args._l)
 
     def execute(self, token, context):
         stack = self.stack
@@ -167,8 +168,7 @@ class Machine(object):
             if False:
                 pass
             elif i == ARGS:
-                # XXX wrong type
-                stack.push([])
+                stack.push(List([]))
             elif i == CALL:
                 args = stack.pop()
                 name = stack.pop()
@@ -197,9 +197,13 @@ class Machine(object):
                 stack.push(d)
             elif i == TO_ARG:
                 obj = stack.pop()
-                # XXX wrong type
                 l = stack.peek()
-                l.append(obj)
+                # Check the type. Don't use an assertion, as it will convince
+                # RPython that the entire stack should be Lists.
+                if isinstance(l, List):
+                    l.push(obj)
+                else:
+                    raise TypeError("Couldn't push into non-List %s" % l)
             elif i == PRINT:
                 print stack.pop()
             elif i == SWAP:

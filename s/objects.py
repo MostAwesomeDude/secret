@@ -69,6 +69,16 @@ class List(Object):
         segments.append("]")
         return "".join(segments)
 
+    def call(self, message, args):
+        if message == "push":
+            assert len(args) == 1
+            self.push(args[0])
+        else:
+            raise BadMessage()
+
+    def push(self, item):
+        self._l.append(item)
+
 
 class Str(Object):
     """
