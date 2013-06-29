@@ -250,6 +250,21 @@ class Machine(object):
             self.execute(word, phrases)
 
 
+def classify(x):
+    if x in bytecodes:
+        return Instruction(bytecodes[x])
+    else:
+        try:
+            return Literal(Int(int(x)))
+        except ValueError:
+            pass
+
+        if x.startswith("\"") and x.endswith("\""):
+            return Literal(Str(x[1:-1]))
+
+    return x
+
+
 def parse_pieces(data):
     lines = data.split("\n")
     pieces = []
@@ -257,21 +272,7 @@ def parse_pieces(data):
         pieces.extend(line.split(" "))
     filtered = [piece for piece in pieces if piece]
 
-    def classify(x):
-        if x in bytecodes:
-            return Instruction(bytecodes[x])
-        else:
-            try:
-                return Literal(Int(int(x)))
-            except ValueError:
-                pass
-
-            if x.startswith("\"") and x.endswith("\""):
-                return Literal(Str(x[1:-1]))
-
-        return x
-
-    return [classify(x) for x in filtered]
+    return filtered
 
 
 def parse_phrases(pieces):
@@ -302,10 +303,19 @@ def read_file(name):
     return "".join(l)
 
 
+def classify_phrases(phrases):
+    d = {}
+
+    for word in phrases.keys():
+        d[word] = [classify(w) for w in phrases[word]]
+
+    return d
+
+
 def entry_point(argv):
     data = read_file(argv[1])
     pieces = parse_pieces(data)
-    phrases = parse_phrases(pieces)
+    phrases = classify_phrases(parse_phrases(pieces))
 
     for word, phrase in phrases.items():
         print "Word:", word
