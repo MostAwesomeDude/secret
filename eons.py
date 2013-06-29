@@ -218,6 +218,7 @@ class Machine(object):
             if False:
                 pass
             elif i == ARGS:
+                # XXX wrong type
                 stack.push([])
             elif i == CALL:
                 args = stack.pop()
@@ -229,11 +230,12 @@ class Machine(object):
                 args = stack.pop()
                 name = stack.pop()
                 target = stack.pop()
-                # XXX wrong
+                # XXX wrong type
                 stack.push((target, name, args))
             elif i == MAKE_METHOD:
                 name = stack.pop()
                 code = stack.pop()
+                # XXX wrong type
                 stack.push((name, code))
             elif i == DROP:
                 stack.pop()
@@ -242,9 +244,11 @@ class Machine(object):
             elif i == OBJECT:
                 methods = stack.pop()
                 d = dict(methods)
+                # XXX wrong type
                 stack.push(d)
             elif i == TO_ARG:
                 obj = stack.pop()
+                # XXX wrong type
                 l = stack.peek()
                 l.append(obj)
             elif i == PRINT:
