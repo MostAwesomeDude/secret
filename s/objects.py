@@ -16,6 +16,21 @@ class Object(object):
         raise BadMessage()
 
 
+class Bool(Object):
+    """
+    A boxed bool.
+    """
+
+    def __init__(self, b):
+        self._b = b
+
+    def __str__(self):
+        if self._b:
+            return "True"
+        else:
+            return "False"
+
+
 class Int(Object):
     """
     An int.
@@ -39,6 +54,22 @@ class Int(Object):
             raise BadMessage()
 
 
+class List(Object):
+    """
+    A boxed list.
+    """
+
+    def __init__(self, l):
+        self._l = l
+
+    def __str__(self):
+        segments = ["["]
+        for i in self._l:
+            segments.append(str(i))
+        segments.append("]")
+        return "".join(segments)
+
+
 class Str(Object):
     """
     A str.
@@ -49,3 +80,30 @@ class Str(Object):
 
     def __str__(self):
         return repr(self._s)
+
+
+class Void(Object):
+    """
+    A nullary value.
+    """
+
+    def __str__(self):
+        return "<Void>"
+
+
+def eq(x, y):
+    """
+    Unbox two objects, figure out whether they're equal, and return a Bool
+    with that value.
+    """
+
+    if isinstance(x, Bool) and isinstance(y, Bool):
+        rv = x._b == y._b
+    elif isinstance(x, Int) and isinstance(y, Int):
+        rv = x._i == y._i
+    elif isinstance(x, Str) and isinstance(y, Str):
+        rv = x._s == y._s
+    else:
+        rv = x is y
+
+    return Bool(rv)
