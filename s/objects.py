@@ -9,7 +9,7 @@ class Object(object):
     An object.
     """
 
-    def __str__(self):
+    def repr(self):
         return "<Object>"
 
     def call(self, message, args):
@@ -24,7 +24,7 @@ class Bool(Object):
     def __init__(self, b):
         self._b = b
 
-    def __str__(self):
+    def repr(self):
         if self._b:
             return "True"
         else:
@@ -39,10 +39,8 @@ class Int(Object):
     def __init__(self, i):
         self._i = i
 
-    def __str__(self):
+    def repr(self):
         return str(self._i)
-
-    __repr__ = __str__
 
     def call(self, message, args):
         if message == "mul":
@@ -62,10 +60,10 @@ class List(Object):
     def __init__(self, l):
         self._l = l
 
-    def __str__(self):
+    def repr(self):
         segments = ["["]
         for i in self._l:
-            segments.append(str(i))
+            segments.append(i.repr())
         segments.append("]")
         return "".join(segments)
 
@@ -88,8 +86,16 @@ class Str(Object):
     def __init__(self, s):
         self._s = s
 
-    def __str__(self):
-        return repr(self._s)
+    def repr(self):
+        l = []
+        for char in self._s:
+            if char == '"':
+                l.append('\\"')
+            elif char == "\\":
+                l.append("\\\\")
+            else:
+                l.append(char)
+        return '"%s"' % "".join(l)
 
 
 class UserObject(Object):
@@ -109,7 +115,7 @@ class UserObject(Object):
             name, code = l
             self._ms[name] = code
 
-    def __str__(self):
+    def repr(self):
         return "<UserObject>"
 
 
@@ -118,7 +124,7 @@ class Void(Object):
     A nullary value.
     """
 
-    def __str__(self):
+    def repr(self):
         return "<Void>"
 
 

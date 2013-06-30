@@ -104,6 +104,10 @@ class Bytecode(object):
     A bytecode for Eons.
     """
 
+    def repr(self):
+        return "<Blank Bytecode>"
+
+
 class Literal(Bytecode):
     """
     A literal in bytecode.
@@ -112,8 +116,8 @@ class Literal(Bytecode):
     def __init__(self, l):
         self._l = l
 
-    def __str__(self):
-        return "Literal(%s)" % self._l
+    def repr(self):
+        return "Literal(%s)" % self._l.repr()
 
 
 class Instruction(Bytecode):
@@ -124,8 +128,8 @@ class Instruction(Bytecode):
     def __init__(self, i):
         self._i = i
 
-    def __str__(self):
-        return "Instruction(%r)" % bytecode_names[self._i]
+    def repr(self):
+        return "Instruction('%s')" % bytecode_names[self._i]
 
 
 class Reference(Bytecode):
@@ -136,8 +140,8 @@ class Reference(Bytecode):
     def __init__(self, r):
         self._r = r
 
-    def __str__(self):
-        return "Reference(%r)" % self._r
+    def repr(self):
+        return "Reference(%s)" % self._r
 
 
 class Machine(object):
@@ -151,13 +155,14 @@ class Machine(object):
     def pass_message(self, target, message, args):
         assert isinstance(message, Str)
         assert isinstance(args, List)
-        print "~ Passing to %r: %s, %s" % (target, message, args)
+        print "~ Passing to %s: %s, %s" % (target.repr(), message.repr(),
+                args.repr())
         return target.call(message._s, args._l)
 
     def execute(self, token, context):
         stack = self.stack
 
-        print "Executing", token
+        print "Executing", token.repr()
 
         if isinstance(token, Literal):
             stack.push(token._l)
@@ -203,7 +208,7 @@ class Machine(object):
                 else:
                     raise TypeError("Couldn't push into non-List %s" % l)
             elif i == PRINT:
-                print stack.pop()
+                print stack.pop().repr()
             elif i == SWAP:
                 x = stack.pop()
                 y = stack.pop()
@@ -292,7 +297,7 @@ def entry_point(argv):
 
     for word, phrase in phrases.items():
         print "Word:", word
-        print "Tokens:", " ".join([str(w) for w in phrase])
+        print "Tokens:", " ".join([w.repr() for w in phrase])
         print "Stack effect:", infer_stack_effect(phrase)
 
     if "main" in phrases:
