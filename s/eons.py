@@ -1,7 +1,7 @@
 import os
 import sys
 
-from s.objects import Int, List, Str
+from s.objects import Int, List, Str, UserObject
 
 
 # Bytecode numbering.
@@ -179,22 +179,20 @@ class Machine(object):
                 args = stack.pop()
                 name = stack.pop()
                 target = stack.pop()
-                # XXX wrong type
-                stack.push((target, name, args))
+                # XXX still wrong type
+                stack.push(List([target, name, args]))
             elif i == MAKE_METHOD:
                 name = stack.pop()
                 code = stack.pop()
-                # XXX wrong type
-                stack.push((name, code))
+                stack.push(List([name, code]))
             elif i == DROP:
                 stack.pop()
             elif i == DUP:
                 stack.push(stack.peek())
             elif i == OBJECT:
                 methods = stack.pop()
-                d = dict(methods)
-                # XXX wrong type
-                stack.push(d)
+                obj = UserObject(methods)
+                stack.push(obj)
             elif i == TO_ARG:
                 obj = stack.pop()
                 l = stack.peek()

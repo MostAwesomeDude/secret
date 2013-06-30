@@ -92,6 +92,27 @@ class Str(Object):
         return repr(self._s)
 
 
+class UserObject(Object):
+    """
+    A user-defined object.
+    """
+
+    def __init__(self, methods):
+        self._ms = {}
+
+        assert isinstance(methods, List)
+        ms = methods._l
+        for m in ms:
+            assert isinstance(m, List)
+            l = m._l
+            assert len(l) == 2
+            name, code = l
+            self._ms[name] = code
+
+    def __str__(self):
+        return "<UserObject>"
+
+
 class Void(Object):
     """
     A nullary value.
