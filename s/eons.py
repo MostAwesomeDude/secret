@@ -228,7 +228,14 @@ def classify(x):
             pass
 
         if x.startswith("\"") and x.endswith("\""):
-            return Literal(Str(x[1:-1]))
+            if len(x) > 2:
+                # RPython has trouble with this bit of math.
+                end = len(x) - 1
+                assert end > 1
+                return Literal(Str(x[1:end]))
+            else:
+                # Empty string: "" or "
+                return Literal(Str(""))
 
     return Reference(x)
 
