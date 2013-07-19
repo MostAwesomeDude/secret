@@ -1,7 +1,7 @@
 import os
 import sys
 
-from s.objects import Int, List, Promise, Str, UserObject
+from s.objects import Bool, Int, List, Promise, Str, UserObject
 
 
 # Bytecode numbering.
@@ -263,6 +263,11 @@ def classify(x):
             else:
                 # Empty string: "" or "
                 return Literal(Str(""))
+
+        if x == "true":
+            return Literal(Bool(True))
+        if x == "false":
+            return Literal(Bool(False))
 
     return Reference(x)
 
