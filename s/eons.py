@@ -80,6 +80,9 @@ class Stack(object):
     def __init__(self):
         self._storage = []
 
+    def repr(self):
+        return "Stack(%s)" % ", ".join([x.repr() for x in self._storage])
+
     def drop(self):
         self._storage.pop()
 
@@ -149,12 +152,26 @@ class Reference(Bytecode):
         return "Reference(%s)" % self._r
 
 
+class Word(Bytecode):
+    """
+    A phrase being called directly as a word.
+    """
+
+    def __init__(self, w):
+        self._w = w
+
+    def repr(self):
+        return "Word(%s)" % self._w
+
+
 class Machine(object):
     """
     A virtual machine which executes Eons.
     """
 
-    def __init__(self):
+    def __init__(self, phrases):
+        self.phrases = phrases
+
         self.stack = Stack()
         self.promises = []
 
@@ -165,15 +182,20 @@ class Machine(object):
                 args.repr())
         return target.call(message._s, args._l)
 
-    def execute(self, token, context):
+    def execute(self, token):
         stack = self.stack
 
+        print self.stack.repr()
         print "Executing", token.repr()
 
         if isinstance(token, Literal):
             stack.push(token._l)
-        else:
-            assert isinstance(token, Instruction)
+        elif isinstance(token, Reference):
+            # XXX Probably not the best type for this.
+            stack.push(Str(token._r))
+        elif isinstance(token, Word):
+            self.run_phrase(token._w)
+        elif isinstance(token, Instruction):
             i = token._i
 
             if False:
@@ -225,8 +247,10 @@ class Machine(object):
                 stack.push(y)
             else:
                 print "Unknown instruction", i
+        else:
+            print "Can't handle", token
 
-    def run_promise(self, promise, phrases):
+    def run_promise(self, promise):
         print "Running promise", promise.repr()
         result = self.pass_message(promise._target, promise._message,
                                    promise._args)
@@ -235,19 +259,25 @@ class Machine(object):
         # XXX run callbacks here
         print promise.repr()
 
-    def run_phrase(self, name, phrases):
-        # First, run the initial phrase that we were asked to run.
-        phrase = phrases[name]
-        for word in phrase:
-            self.execute(word, phrases)
-
-        # Then, take subsequent turns for each promise that we were asked to
-        # make.
+    def run_promises(self):
         while len(self.promises):
             promises, self.promises = self.promises, []
             for promise in promises:
                 # Pass in the original codebase that spawned the promise.
-                self.run_promise(promise, phrases)
+                self.run_promise(promise)
+
+    def run_phrase(self, name):
+        phrase = self.phrases[name]
+        for word in phrase:
+            self.execute(word)
+
+    def run(self, name):
+        # First, run the initial phrase that we were asked to run.
+        self.run_phrase(name)
+
+        # Then, take subsequent turns for each promise that we were asked to
+        # make.
+        self.run_promises()
 
 
 def classify(x):
@@ -274,7 +304,10 @@ def classify(x):
         if x == "false":
             return Literal(Bool(False))
 
-    return Reference(x)
+        if x.startswith("*") and len(x) > 1:
+            return Reference(x[1:])
+
+    return Word(x)
 
 
 def parse_pieces(data):
@@ -323,6 +356,10 @@ def classify_phrases(phrases):
 
 
 def entry_point(argv):
+    if len(argv) < 2:
+        print "Not given any file to run..."
+        return 1
+
     data = read_file(argv[1])
     pieces = parse_pieces(data)
     phrases = classify_phrases(parse_phrases(pieces))
@@ -333,8 +370,8 @@ def entry_point(argv):
         print "Stack effect:", infer_stack_effect(phrase)
 
     if "main" in phrases:
-        vm = Machine()
-        vm.run_phrase("main", phrases)
+        vm = Machine(phrases)
+        vm.run("main")
 
     return 0
 
