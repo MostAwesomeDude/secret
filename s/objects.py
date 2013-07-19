@@ -12,6 +12,9 @@ class Object(object):
     def repr(self):
         return "<Object>"
 
+    def __eq__(self, other):
+        return False
+
     def call(self, message, args):
         raise BadMessage()
 
@@ -23,6 +26,11 @@ class Bool(Object):
 
     def __init__(self, b):
         self._b = b
+
+    def __eq__(self, other):
+        if not isinstance(other, Bool):
+            return False
+        return self._b == other._b
 
     def repr(self):
         if self._b:
@@ -38,6 +46,11 @@ class Int(Object):
 
     def __init__(self, i):
         self._i = i
+
+    def __eq__(self, other):
+        if not isinstance(other, Int):
+            return False
+        return self._i == other._i
 
     def repr(self):
         return str(self._i)
@@ -59,6 +72,11 @@ class List(Object):
 
     def __init__(self, l):
         self._l = l
+
+    def __eq__(self, other):
+        if not isinstance(other, List):
+            return False
+        return self._l == other._l
 
     def repr(self):
         segments = ["["]
@@ -85,6 +103,11 @@ class Str(Object):
 
     def __init__(self, s):
         self._s = s
+
+    def __eq__(self, other):
+        if not isinstance(other, Str):
+            return False
+        return self._s == other._s
 
     def repr(self):
         l = []

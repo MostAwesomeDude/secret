@@ -116,6 +116,11 @@ class Literal(Bytecode):
     def __init__(self, l):
         self._l = l
 
+    def __eq__(self, other):
+        if not isinstance(other, Literal):
+            return False
+        return self._l == other._l
+
     def repr(self):
         return "Literal(%s)" % self._l.repr()
 
