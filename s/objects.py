@@ -98,6 +98,33 @@ class Str(Object):
         return '"%s"' % "".join(l)
 
 
+class Promise(Object):
+    """
+    A deferred call which eventually resolves into either a reference to an
+    object or a broken reference.
+    """
+
+    _value = None
+
+    def __init__(self, target, message, args):
+        self._target = target
+        self._message = message
+        self._args = args
+
+    def repr(self):
+        if self.resolved():
+            return "Promise(%s)" % self._value.repr()
+        else:
+            return "Promise(%s, %s, %s)" % (self._target.repr(),
+                    self._message.repr(), self._args.repr())
+
+    def resolved(self):
+        return self._value is not None
+
+    def resolve(self, value):
+        self._value = value
+
+
 class UserObject(Object):
     """
     A user-defined object.

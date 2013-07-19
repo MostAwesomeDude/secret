@@ -1,7 +1,7 @@
 import os
 import sys
 
-from s.objects import Int, List, Str, UserObject
+from s.objects import Int, List, Promise, Str, UserObject
 
 
 # Bytecode numbering.
@@ -151,6 +151,7 @@ class Machine(object):
 
     def __init__(self):
         self.stack = Stack()
+        self.promises = []
 
     def pass_message(self, target, message, args):
         assert isinstance(message, Str)
@@ -184,8 +185,11 @@ class Machine(object):
                 args = stack.pop()
                 name = stack.pop()
                 target = stack.pop()
-                # XXX still wrong type
-                stack.push(List([target, name, args]))
+
+                promise = Promise(target, name, args)
+                self.promises.append(promise)
+
+                stack.push(promise)
             elif i == MAKE_METHOD:
                 name = stack.pop()
                 code = stack.pop()
@@ -217,10 +221,28 @@ class Machine(object):
             else:
                 print "Unknown instruction", i
 
+    def run_promise(self, promise, phrases):
+        print "Running promise", promise.repr()
+        result = self.pass_message(promise._target, promise._message,
+                                   promise._args)
+        print "Result is", result.repr()
+        promise.resolve(result)
+        # XXX run callbacks here
+        print promise.repr()
+
     def run_phrase(self, name, phrases):
+        # First, run the initial phrase that we were asked to run.
         phrase = phrases[name]
         for word in phrase:
             self.execute(word, phrases)
+
+        # Then, take subsequent turns for each promise that we were asked to
+        # make.
+        while len(self.promises):
+            promises, self.promises = self.promises, []
+            for promise in promises:
+                # Pass in the original codebase that spawned the promise.
+                self.run_promise(promise, phrases)
 
 
 def classify(x):
