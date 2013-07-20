@@ -79,11 +79,10 @@ class List(Object):
         return self._l == other._l
 
     def repr(self):
-        segments = ["["]
+        segments = []
         for i in self._l:
             segments.append(i.repr())
-        segments.append("]")
-        return "".join(segments)
+        return "[%s]" % ", ".join(segments)
 
     def call(self, message, args):
         if message == "push":
