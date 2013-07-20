@@ -56,7 +56,12 @@ class Int(Object):
         return str(self._i)
 
     def call(self, message, args):
-        if message == "mul":
+        if message == "add":
+            assert len(args) == 1
+            other = args[0]
+            assert isinstance(other, Int)
+            return Int(self._i + other._i)
+        elif message == "mul":
             assert len(args) == 1
             other = args[0]
             assert isinstance(other, Int)
@@ -152,7 +157,8 @@ class UserObject(Object):
     A user-defined object.
     """
 
-    def __init__(self, methods):
+    def __init__(self, vm, methods):
+        self._vm = vm
         self._ms = {}
 
         assert isinstance(methods, List)
@@ -162,10 +168,17 @@ class UserObject(Object):
             l = m._l
             assert len(l) == 2
             name, code = l
-            self._ms[name] = code
+            assert isinstance(name, Str)
+            assert isinstance(code, Str)
+            self._ms[name._s] = code._s
 
     def repr(self):
         return "<UserObject>"
+
+    def call(self, message, args):
+        method = self._ms[message]
+        vm = self._vm
+        return vm.run_method(self, method, args)
 
 
 class Void(Object):

@@ -227,7 +227,9 @@ class Machine(object):
                 stack.push(stack.peek())
             elif i == OBJECT:
                 methods = stack.pop()
-                obj = UserObject(methods)
+
+                obj = UserObject(self, methods)
+
                 stack.push(obj)
             elif i == TO_ARG:
                 obj = stack.pop()
@@ -265,6 +267,15 @@ class Machine(object):
             for promise in promises:
                 # Pass in the original codebase that spawned the promise.
                 self.run_promise(promise)
+
+    def run_method(self, obj, method, args):
+        self.stack.push(obj)
+        for arg in args:
+            self.stack.push(arg)
+
+        self.run_phrase(method)
+
+        return self.stack.pop()
 
     def run_phrase(self, name):
         phrase = self.phrases[name]
