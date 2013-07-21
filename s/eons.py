@@ -1,48 +1,11 @@
 import os
 import sys
 
-from s.objects import Bool, Int, List, Promise, Str, UserObject
-
-
-# Bytecode numbering.
-(
-    DROP, DUP, SWAP,
-    ARGS, TO_ARG,
-    MAKE_METHOD,
-    OBJECT, TO_OBJECT,
-    CALL, SEND,
-    PRINT,
-) = range(11)
-
-
-bytecodes = {
-    "()":     ARGS,
-    ".":      CALL,
-    "<-":     SEND,
-    "<arg":   TO_ARG,
-    "<meth":  MAKE_METHOD,
-    "drop":   DROP,
-    "dup":    DUP,
-    "object": OBJECT,
-    "print":  PRINT,
-    "swap":   SWAP,
-}
-
-bytecode_names = dict([(bytecodes[k], k) for k in bytecodes])
-
-
-builtins = {
-    ARGS:        (0, 1),
-    CALL:        (3, 1),
-    DROP:        (1, 0),
-    DUP:         (1, 2),
-    MAKE_METHOD: (2, 1),
-    OBJECT:      (1, 1),
-    PRINT:       (1, 0),
-    SEND:        (3, 1),
-    SWAP:        (2, 2),
-    TO_ARG:      (2, 1),
-}
+from s.bytecode import (builtins, Instruction, Literal, Reference, Word, DROP,
+                        DUP, SWAP, ARGS, TO_ARG, MAKE_METHOD, OBJECT,
+                        CALL, SEND, PRINT)
+from s.lex import phrases_from_str
+from s.objects import List, Promise, Str, UserObject
 
 
 def combine_stack_effects(fi, fo, si, so):
@@ -100,68 +63,6 @@ class Stack(object):
             return self._storage[-1]
         else:
             raise StackUnderflow()
-
-
-class Bytecode(object):
-    """
-    A bytecode for Eons.
-    """
-
-    def repr(self):
-        return "<Blank Bytecode>"
-
-
-class Literal(Bytecode):
-    """
-    A literal in bytecode.
-    """
-
-    def __init__(self, l):
-        self._l = l
-
-    def __eq__(self, other):
-        if not isinstance(other, Literal):
-            return False
-        return self._l == other._l
-
-    def repr(self):
-        return "Literal(%s)" % self._l.repr()
-
-
-class Instruction(Bytecode):
-    """
-    A bytecode instruction.
-    """
-
-    def __init__(self, i):
-        self._i = i
-
-    def repr(self):
-        return "Instruction('%s')" % bytecode_names[self._i]
-
-
-class Reference(Bytecode):
-    """
-    A reference to a phrase.
-    """
-
-    def __init__(self, r):
-        self._r = r
-
-    def repr(self):
-        return "Reference(%s)" % self._r
-
-
-class Word(Bytecode):
-    """
-    A phrase being called directly as a word.
-    """
-
-    def __init__(self, w):
-        self._w = w
-
-    def repr(self):
-        return "Word(%s)" % self._w
 
 
 class Machine(object):
@@ -291,65 +192,6 @@ class Machine(object):
         self.run_promises()
 
 
-def classify(x):
-    if x in bytecodes:
-        return Instruction(bytecodes[x])
-    else:
-        try:
-            return Literal(Int(int(x)))
-        except ValueError:
-            pass
-
-        if x.startswith("\"") and x.endswith("\""):
-            if len(x) > 2:
-                # RPython has trouble with this bit of math.
-                end = len(x) - 1
-                assert end > 1
-                return Literal(Str(x[1:end]))
-            else:
-                # Empty string: "" or "
-                return Literal(Str(""))
-
-        if x == "true":
-            return Literal(Bool(True))
-        if x == "false":
-            return Literal(Bool(False))
-
-        if x.startswith("*") and len(x) > 1:
-            return Reference(x[1:])
-
-    return Word(x)
-
-
-def parse_pieces(data):
-    lines = data.split("\n")
-    pieces = []
-    for line in lines:
-        pieces.extend(line.split(" "))
-    filtered = [piece for piece in pieces if piece]
-
-    return filtered
-
-
-def parse_phrases(pieces):
-    phrases = {}
-
-    while pieces:
-        try:
-            start = pieces.index(":")
-            end = pieces.index(";")
-        except ValueError:
-            break
-
-        name = pieces[start + 1]
-        phrase = pieces[start + 2:end]
-        phrases[name] = phrase
-
-        pieces = pieces[end + 1:]
-
-    return phrases
-
-
 def read_file(name):
     fd = os.open(name, os.O_RDONLY, 0777)
     l = []
@@ -359,21 +201,13 @@ def read_file(name):
     return "".join(l)
 
 
-def classify_phrases(phrases):
-    d = {}
-    for word in phrases.keys():
-        d[word] = [classify(w) for w in phrases[word]]
-    return d
-
-
 def entry_point(argv):
     if len(argv) < 2:
         print "Not given any file to run..."
         return 1
 
     data = read_file(argv[1])
-    pieces = parse_pieces(data)
-    phrases = classify_phrases(parse_phrases(pieces))
+    phrases = phrases_from_str(data)
 
     for word, phrase in phrases.items():
         print "Word:", word
