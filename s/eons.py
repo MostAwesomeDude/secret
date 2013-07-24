@@ -2,10 +2,10 @@ import os
 import sys
 
 from s.bytecode import (builtins, Instruction, Literal, Reference, Word, DROP,
-                        DUP, SWAP, ARGS, TO_ARG, MAKE_METHOD, OBJECT,
-                        CALL, SEND, PRINT)
+                        DUP, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD, OBJECT,
+                        CALL, SEND, IF, PRINT)
 from s.lex import phrases_from_str
-from s.objects import List, Promise, Str, UserObject
+from s.objects import Bool, List, Promise, Str, UserObject
 
 
 def combine_stack_effects(fi, fo, si, so):
@@ -101,6 +101,20 @@ class Machine(object):
 
             if False:
                 pass
+            elif i == DROP:
+                stack.pop()
+            elif i == DUP:
+                stack.push(stack.peek())
+            elif i == OVER:
+                x = stack.pop()
+                y = stack.peek()
+                stack.push(x)
+                stack.push(y)
+            elif i == SWAP:
+                x = stack.pop()
+                y = stack.pop()
+                stack.push(x)
+                stack.push(y)
             elif i == ARGS:
                 stack.push(List([]))
             elif i == CALL:
@@ -122,10 +136,6 @@ class Machine(object):
                 name = stack.pop()
                 code = stack.pop()
                 stack.push(List([name, code]))
-            elif i == DROP:
-                stack.pop()
-            elif i == DUP:
-                stack.push(stack.peek())
             elif i == OBJECT:
                 methods = stack.pop()
 
@@ -135,19 +145,25 @@ class Machine(object):
             elif i == TO_ARG:
                 obj = stack.pop()
                 l = stack.peek()
-                # Check the type. Don't use an assertion, as it will convince
-                # RPython that the entire stack should be Lists.
+                # Check the type.
                 if isinstance(l, List):
                     l.push(obj)
                 else:
                     raise TypeError("Couldn't push into non-List %s" % l)
+            elif i == IF:
+                otherwise = stack.pop()
+                consequent = stack.pop()
+                whether = stack.pop()
+
+                assert isinstance(whether, Bool)
+                if whether._b:
+                    word = consequent
+                else:
+                    word = otherwise
+
+                self.run_phrase(word._s)
             elif i == PRINT:
                 print stack.pop().repr()
-            elif i == SWAP:
-                x = stack.pop()
-                y = stack.pop()
-                stack.push(x)
-                stack.push(y)
             else:
                 print "Unknown instruction", i
         else:

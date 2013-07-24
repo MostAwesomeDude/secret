@@ -1,12 +1,13 @@
 # Bytecode numbering.
 (
-    DROP, DUP, SWAP,
+    DROP, DUP, OVER, SWAP,
     ARGS, TO_ARG,
     MAKE_METHOD,
     OBJECT,
     CALL, SEND,
+    IF,
     PRINT,
-) = range(10)
+) = range(12)
 
 
 bytecodes = {
@@ -17,7 +18,9 @@ bytecodes = {
     "<meth":  MAKE_METHOD,
     "drop":   DROP,
     "dup":    DUP,
+    "if":     IF,
     "object": OBJECT,
+    "over":   OVER,
     "print":  PRINT,
     "swap":   SWAP,
 }
@@ -30,8 +33,10 @@ builtins = {
     CALL:        (3, 1),
     DROP:        (1, 0),
     DUP:         (1, 2),
+    IF:          (3, 1),
     MAKE_METHOD: (2, 1),
     OBJECT:      (1, 1),
+    OVER:        (2, 3),
     PRINT:       (1, 0),
     SEND:        (3, 1),
     SWAP:        (2, 2),
