@@ -1,32 +1,12 @@
 import os
 import sys
 
-from s.bytecode import (builtins, Instruction, Literal, Reference, Word, DROP,
+from s.bytecode import (Instruction, Literal, Reference, Word, DROP,
                         DUP, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD, OBJECT,
                         CALL, SEND, IF, PRINT)
+from s.infer import infer_phrases
 from s.lex import phrases_from_str
 from s.objects import Bool, List, Promise, Str, UserObject
-
-
-def combine_stack_effects(fi, fo, si, so):
-    if fo > si:
-        so += fo - si
-    elif si > fo:
-        fi += si - fo
-    return fi, so
-
-
-def infer_stack_effect(tokens):
-    i = o = 0
-
-    for token in tokens:
-        if isinstance(token, Instruction):
-            ni, no = builtins[token._i]
-            i, o = combine_stack_effects(i, o, ni, no)
-        else:
-            o += 1
-
-    return i, o
 
 
 class StackUnderflow(Exception):
@@ -225,10 +205,7 @@ def entry_point(argv):
     data = read_file(argv[1])
     phrases = phrases_from_str(data)
 
-    for word, phrase in phrases.items():
-        print "Word:", word
-        print "Tokens:", " ".join([w.repr() for w in phrase])
-        print "Stack effect:", infer_stack_effect(phrase)
+    infer_phrases(phrases)
 
     if "main" in phrases:
         vm = Machine(phrases)
