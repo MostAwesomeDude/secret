@@ -57,18 +57,44 @@ def infer_stack_effect(tokens, library):
     return current
 
 
+def dependent_words(phrase):
+    l = []
+    for token in phrase:
+        if isinstance(token, Word):
+            l.append(token._w)
+    return l
+
+
+def topological_sort(phrases):
+    l = []
+    s = set([w for w in phrases if not dependent_words(phrases[w])])
+    ws = set(phrases.keys()) - s
+
+    while s:
+        ws -= s
+        word = s.pop()
+        l.append(word)
+        for dependent in ws:
+            parents = dependent_words(phrases[dependent])
+            if len(parents) == 1 and parents[0] == word:
+                s.add(dependent)
+
+    if ws:
+        raise Exception("Cyclic words can't be handled yet!")
+
+    return l
+
+
 def infer_phrases(phrases):
     inferred = {}
     to_infer = phrases.items()
 
-    # Ugh, what a cruddy algorithm. Ideally, we'd do this with a topological
-    # sort.
-    while to_infer:
-        word, phrase = to_infer.pop()
+    to_infer = topological_sort(phrases)
+    for word in to_infer:
+        phrase = phrases[word]
         effect = infer_stack_effect(phrase, inferred)
-        if effect is None and len(to_infer):
-            to_infer.insert(0, (word, phrase))
-            continue
+        if effect is None:
+            raise Exception("Inconcievable!")
 
         inferred[word] = effect
         print "Word:", word
