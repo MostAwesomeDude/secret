@@ -6,6 +6,10 @@ class Effect(object):
         self.i = i
         self.o = o
 
+    def __eq__(self, other):
+        assert isinstance(other, Effect)
+        return self.i == other.i and self.o == other.o
+
     def repr(self):
         return "Effect(%s, %s)" % (str(self.i), str(self.o))
 

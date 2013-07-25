@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from s.eons import classify, Literal
+from s.bytecode import Literal
+from s.lex import classify
 from s.objects import Bool
 
 
