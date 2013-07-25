@@ -48,11 +48,14 @@ def infer_stack_effect(tokens, library):
             i, o = builtins[token._i]
             effect = Effect(["*"] * i, ["*"] * o)
         elif isinstance(token, Word):
+            if token._w not in library:
+                return None
             effect = library[token._w]
 
         current = current.fuse(effect)
 
-    return effect
+    return current
+
 
 def infer_phrases(phrases):
     inferred = {}
@@ -62,13 +65,14 @@ def infer_phrases(phrases):
     # sort.
     while to_infer:
         word, phrase = to_infer.pop()
-        try:
-            effect = infer_stack_effect(phrase, inferred)
-            inferred[word] = effect
-            print "Word:", word
-            print "Tokens:", " ".join([w.repr() for w in phrase])
-            print "Stack effect:", effect.repr()
-        except KeyError:
+        effect = infer_stack_effect(phrase, inferred)
+        if effect is None and len(to_infer):
             to_infer.insert(0, (word, phrase))
+            continue
+
+        inferred[word] = effect
+        print "Word:", word
+        print "Tokens:", " ".join([w.repr() for w in phrase])
+        print "Stack effect:", effect.repr()
 
     return inferred

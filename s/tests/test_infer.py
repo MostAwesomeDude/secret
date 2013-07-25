@@ -15,3 +15,9 @@ class TestEffect(TestCase):
         second = Effect(["*", "*"], ["*"])
         result = Effect(["*"], ["*"])
         self.assertEqual(first.fuse(second), result)
+
+    def test_fuse_single_swap(self):
+        first = Effect([], ["*"])
+        second = Effect(["*", "*"], ["*", "*"])
+        result = Effect(["*"], ["*", "*"])
+        self.assertEqual(first.fuse(second), result)
