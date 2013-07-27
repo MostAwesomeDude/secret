@@ -1,6 +1,44 @@
 from s.bytecode import builtins, Instruction, Literal, Reference, Word
 
 
+class CantUnify(Exception):
+    """
+    Something couldn't be unified with something else.
+    """
+
+
+def unify_var(x, y):
+    if x == "*":
+        return y, None
+    elif y == "*":
+        return x, None
+    elif not x.islower() and y.islower():
+        return x, (y, x)
+    elif x.islower() and not y.islower():
+        return y, (x, y)
+    elif x == y:
+        return x, None
+    else:
+        raise CantUnify("Can't unify %s and %s" % (x, y))
+
+
+def substitute(d, xs):
+    return [d[i] if i in d else i for i in xs]
+
+
+def unify_list(first, second):
+    if len(first) != len(second):
+        raise CantUnify("Lengths of %s and %s differ" % (first, second))
+    l = []
+    d = {}
+    for x, y in zip(first, second):
+        result, sub = unify_var(x, y)
+        if sub is not None:
+            d[sub[0]] = sub[1]
+        l.append(result)
+    return l, d
+
+
 class Effect(object):
     def __init__(self, i, o):
         self.i = i
@@ -23,9 +61,16 @@ class Effect(object):
         return Effect(i, o)
 
     def unify(self, other):
-        # XXX
         if self.diff() != other.diff():
-            pass
+            raise Exception("Couldn't unify")
+        d = len(other.i) - len(self.i)
+        if d > 0:
+            self = self.promote(d)
+        elif d < 0:
+            other = other.promote(-d)
+        i, _ = unify_list(self.i, other.i)
+        o, _ = unify_list(self.o, other.o)
+        return Effect(i, o)
 
     def fuse(self, other):
         d = len(other.i) - len(self.o)
@@ -33,8 +78,9 @@ class Effect(object):
             self = self.promote(d)
         elif d < 0:
             other = other.promote(-d)
-        i = self.i
-        o = other.o
+        unified, names = unify_list(self.o, other.i)
+        i = substitute(names, self.i)
+        o = substitute(names, other.o)
         return Effect(i, o)
 
 
