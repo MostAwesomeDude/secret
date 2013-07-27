@@ -92,7 +92,7 @@ def infer_stack_effect(tokens, library):
             effect = Effect([], ["*"])
         elif isinstance(token, Instruction):
             i, o = builtins[token._i]
-            effect = Effect(["*"] * i, ["*"] * o)
+            effect = Effect(i, o)
         elif isinstance(token, Word):
             if token._w not in library:
                 return None

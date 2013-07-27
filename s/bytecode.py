@@ -29,18 +29,18 @@ bytecode_names = dict([(bytecodes[k], k) for k in bytecodes])
 
 
 builtins = {
-    ARGS:        (0, 1),
-    CALL:        (3, 1),
-    DROP:        (1, 0),
-    DUP:         (1, 2),
-    IF:          (3, 1),
-    MAKE_METHOD: (2, 1),
-    OBJECT:      (1, 1),
-    OVER:        (2, 3),
-    PRINT:       (1, 0),
-    SEND:        (3, 1),
-    SWAP:        (2, 2),
-    TO_ARG:      (2, 1),
+    ARGS:        ([], ["List"]),
+    CALL:        (["*", "Str", "List"], ["*"]),
+    DROP:        (["*"], []),
+    DUP:         (["a"], ["a", "a"]),
+    IF:          (["Bool", "a", "a"], ["*"]),
+    MAKE_METHOD: (["*", "Str"], ["List"]),
+    OBJECT:      (["List"], ["UserObject"]),
+    OVER:        (["a", "b"], ["a", "b", "a"]),
+    PRINT:       (["*"], []),
+    SEND:        (["*", "Str", "List"], ["Promise"]),
+    SWAP:        (["a", "b"], ["b", "a"]),
+    TO_ARG:      (["List", "*"], ["List"]),
 }
 
 
