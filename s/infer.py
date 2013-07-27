@@ -1,4 +1,5 @@
 from s.bytecode import builtins, Instruction, Literal, Reference, Word
+from s.objects import name_for_object
 
 
 class CantUnify(Exception):
@@ -62,7 +63,8 @@ class Effect(object):
 
     def unify(self, other):
         if self.diff() != other.diff():
-            raise Exception("Couldn't unify")
+            raise CantUnify("%s and %s are too different" % (self.repr(),
+                other.repr()))
         d = len(other.i) - len(self.i)
         if d > 0:
             self = self.promote(d)
@@ -88,8 +90,10 @@ def infer_stack_effect(tokens, library):
     current = Effect([], [])
 
     for token in tokens:
-        if isinstance(token, Literal) or isinstance(token, Reference):
+        if isinstance(token, Reference):
             effect = Effect([], ["*"])
+        elif isinstance(token, Literal):
+            effect = Effect([], [name_for_object(token._l)])
         elif isinstance(token, Instruction):
             i, o = builtins[token._i]
             effect = Effect(i, o)

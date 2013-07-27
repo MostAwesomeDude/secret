@@ -190,6 +190,29 @@ class Void(Object):
         return "<Void>"
 
 
+def name_for_object(obj):
+    """
+    Given an object, return the name for that object.
+    """
+
+    if isinstance(obj, Bool):
+        return "Bool"
+    elif isinstance(obj, Int):
+        return "Int"
+    elif isinstance(obj, List):
+        return "List"
+    elif isinstance(obj, Promise):
+        return "Promise"
+    elif isinstance(obj, Str):
+        return "Str"
+    elif isinstance(obj, UserObject):
+        return "UserObject"
+    elif isinstance(obj, Void):
+        return "Void"
+    else:
+        return "*"
+
+
 def eq(x, y):
     """
     Unbox two objects, figure out whether they're equal, and return a Bool

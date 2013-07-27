@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from s.infer import Effect, unify_var
+from s.infer import CantUnify, Effect, unify_var
 
 
 class TestUnifyVar(TestCase):
@@ -22,6 +22,11 @@ class TestUnifyVar(TestCase):
         y = "a"
         result = "Test", ("a", "Test")
         self.assertEqual(unify_var(x, y), result)
+
+    def test_unify_concrete_fail(self):
+        x = "Test"
+        y = "Example"
+        self.assertRaises(CantUnify, unify_var, x, y)
 
 
 class TestEffect(TestCase):
