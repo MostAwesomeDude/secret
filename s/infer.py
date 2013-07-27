@@ -10,15 +10,15 @@ class CantUnify(Exception):
 
 def unify_var(x, y):
     if x == "*":
-        return y, None
+        return y, (None, None)
     elif y == "*":
-        return x, None
-    elif not x.islower() and y.islower():
+        return x, (None, None)
+    elif not x[0].islower() and y[0].islower():
         return x, (y, x)
-    elif x.islower() and not y.islower():
+    elif x[0].islower() and not y[0].islower():
         return y, (x, y)
     elif x == y:
-        return x, None
+        return x, (None, None)
     else:
         raise CantUnify("Can't unify %s and %s" % (x, y))
 
@@ -32,9 +32,12 @@ def unify_list(first, second):
         raise CantUnify("Lengths of %s and %s differ" % (first, second))
     l = []
     d = {}
-    for x, y in zip(first, second):
+    # Aw man, there's not a zip()? :c
+    for i in range(len(first)):
+        x = first[i]
+        y = second[i]
         result, sub = unify_var(x, y)
-        if sub is not None:
+        if sub[0] is not None:
             d[sub[0]] = sub[1]
         l.append(result)
     return l, d

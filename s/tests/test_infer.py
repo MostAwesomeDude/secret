@@ -8,13 +8,13 @@ class TestUnifyVar(TestCase):
     def test_unify_anything(self):
         x = "*"
         y = "*"
-        result = "*", None
+        result = "*", (None, None)
         self.assertEqual(unify_var(x, y), result)
 
     def test_unify_concrete_anything(self):
         x = "Test"
         y = "*"
-        result = "Test", None
+        result = "Test", (None, None)
         self.assertEqual(unify_var(x, y), result)
 
     def test_unify_concrete_type(self):
