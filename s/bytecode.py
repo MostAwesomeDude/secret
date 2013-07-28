@@ -1,6 +1,6 @@
 # Bytecode numbering.
 (
-    DROP, DUP, OVER, SWAP,
+    DROP, DUP, OVER, SWAP, ROT,
     ARGS, TO_ARG,
     MAKE_METHOD,
     OBJECT,
@@ -8,7 +8,7 @@
     ESCAPE, EJECT,
     IF,
     PRINT,
-) = range(14)
+) = range(15)
 
 
 bytecodes = {
@@ -25,6 +25,7 @@ bytecodes = {
     "object": OBJECT,
     "over":   OVER,
     "print":  PRINT,
+    "rot":    ROT,
     "swap":   SWAP,
 }
 
@@ -43,6 +44,7 @@ builtins = {
     OBJECT:      (["List"], ["UserObject"]),
     OVER:        (["a", "b"], ["a", "b", "a"]),
     PRINT:       (["*"], []),
+    ROT:         (["a", "b", "c"], ["b", "c", "a"]),
     SEND:        (["*", "Str", "List"], ["Promise"]),
     SWAP:        (["a", "b"], ["b", "a"]),
     TO_ARG:      (["List", "*"], ["List"]),

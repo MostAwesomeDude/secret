@@ -3,7 +3,7 @@ import sys
 
 from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
                         EJECT, ESCAPE, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD,
-                        OBJECT, CALL, SEND, IF, PRINT)
+                        OBJECT, CALL, SEND, IF, PRINT, ROT)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
 from s.objects import Bool, Ejector, List, Promise, Str, UserObject
@@ -95,6 +95,13 @@ class Machine(object):
                 y = stack.pop()
                 stack.push(x)
                 stack.push(y)
+            elif i == ROT:
+                z = stack.pop()
+                y = stack.pop()
+                x = stack.pop()
+                stack.push(y)
+                stack.push(z)
+                stack.push(x)
             elif i == ARGS:
                 stack.push(List([]))
             elif i == CALL:
