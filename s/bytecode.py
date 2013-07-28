@@ -7,8 +7,8 @@
     CALL, SEND,
     ESCAPE, EJECT,
     IF,
-    PRINT,
-) = range(15)
+    PRINT, STACK,
+) = range(16)
 
 
 bytecodes = {
@@ -26,6 +26,7 @@ bytecodes = {
     "over":   OVER,
     "print":  PRINT,
     "rot":    ROT,
+    "stack":  STACK,
     "swap":   SWAP,
 }
 
@@ -46,6 +47,7 @@ builtins = {
     PRINT:       (["*"], []),
     ROT:         (["a", "b", "c"], ["b", "c", "a"]),
     SEND:        (["*", "Str", "List"], ["Promise"]),
+    STACK:       ([], []),
     SWAP:        (["a", "b"], ["b", "a"]),
     TO_ARG:      (["List", "*"], ["List"]),
 }

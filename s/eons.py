@@ -3,7 +3,7 @@ import sys
 
 from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
                         EJECT, ESCAPE, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD,
-                        OBJECT, CALL, SEND, IF, PRINT, ROT)
+                        OBJECT, CALL, SEND, IF, PRINT, ROT, STACK)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
 from s.objects import Bool, Ejector, List, Promise, Str, UserObject
@@ -65,9 +65,6 @@ class Machine(object):
 
     def execute(self, token):
         stack = self.stack
-
-        print self.stack.repr()
-        print "Executing", token.repr()
 
         if isinstance(token, Literal):
             stack.push(token._l)
@@ -164,6 +161,8 @@ class Machine(object):
                 self.run_phrase(word._s)
             elif i == PRINT:
                 print stack.pop().repr()
+            elif i == STACK:
+                print "Stack:", stack.repr()
             else:
                 print "Unknown instruction", i
         else:
