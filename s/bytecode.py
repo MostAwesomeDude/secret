@@ -5,9 +5,10 @@
     MAKE_METHOD,
     OBJECT,
     CALL, SEND,
+    ESCAPE, EJECT,
     IF,
     PRINT,
-) = range(12)
+) = range(14)
 
 
 bytecodes = {
@@ -18,6 +19,8 @@ bytecodes = {
     "<meth":  MAKE_METHOD,
     "drop":   DROP,
     "dup":    DUP,
+    "eject":  EJECT,
+    "escape": ESCAPE,
     "if":     IF,
     "object": OBJECT,
     "over":   OVER,
@@ -33,6 +36,8 @@ builtins = {
     CALL:        (["*", "Str", "List"], ["*"]),
     DROP:        (["*"], []),
     DUP:         (["a"], ["a", "a"]),
+    EJECT:       (["Ejector", "*"], ["*"]),
+    ESCAPE:      (["*"], ["*"]),
     IF:          (["Bool", "a", "a"], ["*"]),
     MAKE_METHOD: (["*", "Str"], ["List"]),
     OBJECT:      (["List"], ["UserObject"]),

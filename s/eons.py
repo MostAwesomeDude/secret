@@ -1,12 +1,12 @@
 import os
 import sys
 
-from s.bytecode import (Instruction, Literal, Reference, Word, DROP,
-                        DUP, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD, OBJECT,
-                        CALL, SEND, IF, PRINT)
+from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
+                        EJECT, ESCAPE, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD,
+                        OBJECT, CALL, SEND, IF, PRINT)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
-from s.objects import Bool, List, Promise, Str, UserObject
+from s.objects import Bool, Ejector, List, Promise, Str, UserObject
 
 
 class StackUnderflow(Exception):
@@ -112,6 +112,19 @@ class Machine(object):
                 self.promises.append(promise)
 
                 stack.push(promise)
+            elif i == ESCAPE:
+                target = stack.pop()
+                ejector = Ejector(self)
+                stack.push(ejector)
+                assert isinstance(target, Str)
+                with ejector:
+                    self.run_phrase(target._s)
+            elif i == EJECT:
+                value = stack.pop()
+                ejector = stack.pop()
+
+                # Raise an exception to unwind the stack.
+                ejector.eject(value)
             elif i == MAKE_METHOD:
                 name = stack.pop()
                 code = stack.pop()

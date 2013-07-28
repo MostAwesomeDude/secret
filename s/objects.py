@@ -39,6 +39,52 @@ class Bool(Object):
             return "False"
 
 
+class Ejecting(Exception):
+    """
+    The stack is being unwound by an ejector.
+    """
+
+
+class Ejector(Object):
+    """
+    An ejector.
+
+    Ejectors can be fired once, and only once, to perform a non-local exit.
+    """
+
+    _fired = False
+
+    def __init__(self, vm):
+        self._vm = vm
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Rationale is as follows.
+        # Even if the exception is *not* triggering this ejector, it's
+        # certainly unwinding the stack past where this ejector was created.
+        # As a result, the ejector must surely be invalidated at this point.
+        self._fired = True
+
+        if exc_type is Ejecting:
+            ejector, value = exc_value.args
+            if ejector is self:
+                # Seems legit.
+                self._vm.stack.push(value)
+                # Return True to stop the exception from propagating.
+                return True
+
+    def eject(self, value):
+        if self._fired:
+            raise Exception("Fired already-fired ejector!")
+
+        raise Ejecting(self, value)
+
+    def repr(self):
+        return "Ejector(%s)" % ("fired" if self._fired else "fresh")
+
+
 class Int(Object):
     """
     An int.
