@@ -114,7 +114,7 @@ class Machine(object):
                 stack.push(promise)
             elif i == ESCAPE:
                 target = stack.pop()
-                ejector = Ejector(self)
+                ejector = Ejector(stack)
                 stack.push(ejector)
                 assert isinstance(target, Str)
                 with ejector:

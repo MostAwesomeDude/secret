@@ -44,6 +44,10 @@ class Ejecting(Exception):
     The stack is being unwound by an ejector.
     """
 
+    def __init__(self, ejector, value):
+        self._ejector = ejector
+        self._value = value
+
 
 class Ejector(Object):
     """
@@ -54,8 +58,8 @@ class Ejector(Object):
 
     _fired = False
 
-    def __init__(self, vm):
-        self._vm = vm
+    def __init__(self, stack):
+        self._stack = stack
 
     def __enter__(self):
         pass
@@ -67,13 +71,15 @@ class Ejector(Object):
         # As a result, the ejector must surely be invalidated at this point.
         self._fired = True
 
-        if exc_type is Ejecting:
-            ejector, value = exc_value.args
-            if ejector is self:
+        if isinstance(exc_value, Ejecting):
+            if exc_value._ejector is self:
                 # Seems legit.
-                self._vm.stack.push(value)
+                self._stack.push(exc_value._value)
                 # Return True to stop the exception from propagating.
                 return True
+
+        # Resume exception handling.
+        return False
 
     def eject(self, value):
         if self._fired:
