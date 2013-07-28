@@ -210,14 +210,23 @@ def read_file(name):
     return "".join(l)
 
 
+def phrases_from_file(path):
+    data = read_file(path)
+    return phrases_from_str(data)
+
+
 def entry_point(argv):
+    print argv
+
     if len(argv) < 2:
         print "Not given any file to run..."
         return 1
 
-    data = read_file(argv[1])
-    phrases = phrases_from_str(data)
+    prelude = phrases_from_file("prelude.secret")
+    infer_phrases(prelude)
 
+    phrases = phrases_from_file(argv[1])
+    phrases.update(prelude)
     infer_phrases(phrases)
 
     if "main" in phrases:
