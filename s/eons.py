@@ -1,12 +1,22 @@
 import os
 import sys
 
+from rpython.rlib.jit import JitDriver
+
 from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
                         EJECT, ESCAPE, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD,
                         OBJECT, CALL, SEND, IF, PRINT, ROT, STACK)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
 from s.objects import Bool, Ejector, List, Promise, Str, UserObject
+
+
+jitdriver = JitDriver(greens=["phrases", "token"], reds=["vm"])
+
+
+def jitpolicy(driver):
+    from rpython.jit.codewriter.policy import JitPolicy
+    return JitPolicy()
 
 
 class StackUnderflow(Exception):
@@ -64,6 +74,8 @@ class Machine(object):
         return target.call(message._s, args._l)
 
     def execute(self, token):
+        jitdriver.jit_merge_point(phrases=self.phrases, token=token, vm=self)
+
         stack = self.stack
 
         if isinstance(token, Literal):
@@ -231,7 +243,7 @@ def entry_point(argv):
     prelude = phrases_from_file("prelude.secret")
     phrases = phrases_from_file(argv[1])
     phrases.update(prelude)
-    infer_phrases(phrases)
+    # infer_phrases(phrases)
 
     if "main" in phrases:
         vm = Machine(phrases)
