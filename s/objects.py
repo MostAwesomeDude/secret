@@ -113,11 +113,21 @@ class Int(Object):
             other = args[0]
             assert isinstance(other, Int)
             return Int(self._i + other._i)
+        elif message == "eq":
+            assert len(args) == 1
+            other = args[0]
+            assert isinstance(other, Int)
+            return Bool(self._i == other._i)
         elif message == "mul":
             assert len(args) == 1
             other = args[0]
             assert isinstance(other, Int)
             return Int(self._i * other._i)
+        elif message == "sub":
+            assert len(args) == 1
+            other = args[0]
+            assert isinstance(other, Int)
+            return Int(self._i - other._i)
         else:
             raise BadMessage()
 
