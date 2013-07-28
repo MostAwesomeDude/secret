@@ -1,5 +1,6 @@
 from s.bytecode import builtins, Instruction, Literal, Reference, Word
 from s.objects import name_for_object
+from s.utils import all
 
 
 class CantUnify(Exception):
@@ -132,11 +133,11 @@ def topological_sort(phrases):
         l.append(word)
         for dependent in ws:
             parents = dependent_words(phrases[dependent])
-            if len(parents) == 1 and parents[0] == word:
-                s.insert(0, dependent)
+            if all([parent in l for parent in parents]):
+                s.append(dependent)
 
     if ws:
-        raise Exception("Cyclic words can't be handled yet!")
+        raise Exception("Phrases are interdependent: %s" % ", ".join(ws))
 
     return l
 

@@ -230,8 +230,6 @@ def entry_point(argv):
         return 1
 
     prelude = phrases_from_file("prelude.secret")
-    infer_phrases(prelude)
-
     phrases = phrases_from_file(argv[1])
     phrases.update(prelude)
     infer_phrases(phrases)
