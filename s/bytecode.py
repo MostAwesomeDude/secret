@@ -2,7 +2,7 @@
 (
     NEWE,
     DROP, DUP, OVER, SWAP, ROT,
-    ARGS, TO_ARG,
+    LIST, APPEND,
     MAKE_METHOD,
     OBJECT,
     CALL, SEND,
@@ -13,10 +13,10 @@
 
 
 bytecodes = {
-    "()":     ARGS,
+    "[]":     LIST,
     ".":      CALL,
     "<-":     SEND,
-    "<arg":   TO_ARG,
+    "append": APPEND,
     "<meth":  MAKE_METHOD,
     "drop":   DROP,
     "dup":    DUP,
@@ -36,13 +36,14 @@ bytecode_names = dict([(bytecodes[k], k) for k in bytecodes])
 
 
 builtins = {
-    ARGS:        ([], ["List"]),
+    APPEND:      (["List", "*"], ["List"]),
     CALL:        (["*", "Str", "List"], ["*"]),
     DROP:        (["*"], []),
     DUP:         (["a"], ["a", "a"]),
     EJECT:       (["Ejector", "*"], ["*"]),
     ESCAPE:      (["*"], ["*"]),
     IF:          (["Bool", "a", "a"], ["*"]),
+    LIST:        ([], ["List"]),
     MAKE_METHOD: (["*", "Str"], ["List"]),
     NEWE:        ([], ["E"]),
     OBJECT:      (["List"], ["UserObject"]),
@@ -52,7 +53,6 @@ builtins = {
     SEND:        (["*", "Str", "List"], ["Promise"]),
     STACK:       ([], []),
     SWAP:        (["a", "b"], ["b", "a"]),
-    TO_ARG:      (["List", "*"], ["List"]),
 }
 
 

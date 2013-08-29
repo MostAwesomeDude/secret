@@ -3,8 +3,8 @@ import sys
 
 from rpython.rlib.jit import JitDriver
 
-from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
-                        EJECT, ESCAPE, NEWE, OVER, SWAP, ARGS, TO_ARG,
+from s.bytecode import (Instruction, Literal, Reference, Word, APPEND, DROP,
+                        DUP, EJECT, ESCAPE, LIST, NEWE, OVER, SWAP,
                         MAKE_METHOD, OBJECT, CALL, SEND, IF, PRINT, ROT,
                         STACK)
 from s.infer import infer_phrases
@@ -114,7 +114,7 @@ class Machine(object):
                 stack.push(y)
                 stack.push(z)
                 stack.push(x)
-            elif i == ARGS:
+            elif i == LIST:
                 stack.push(List([]))
             elif i == CALL:
                 args = stack.pop()
@@ -154,7 +154,7 @@ class Machine(object):
                 obj = UserObject(self, methods)
 
                 stack.push(obj)
-            elif i == TO_ARG:
+            elif i == APPEND:
                 obj = stack.pop()
                 l = stack.peek()
                 # Check the type.
