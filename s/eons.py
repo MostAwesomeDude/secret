@@ -4,11 +4,12 @@ import sys
 from rpython.rlib.jit import JitDriver
 
 from s.bytecode import (Instruction, Literal, Reference, Word, DROP, DUP,
-                        EJECT, ESCAPE, OVER, SWAP, ARGS, TO_ARG, MAKE_METHOD,
-                        OBJECT, CALL, SEND, IF, PRINT, ROT, STACK)
+                        EJECT, ESCAPE, NEWE, OVER, SWAP, ARGS, TO_ARG,
+                        MAKE_METHOD, OBJECT, CALL, SEND, IF, PRINT, ROT,
+                        STACK)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
-from s.objects import Bool, Ejector, List, Promise, Str, UserObject
+from s.objects import Bool, E, Ejector, List, Promise, Str, UserObject
 
 
 jitdriver = JitDriver(greens=["phrases", "token"], reds=["vm"])
@@ -90,6 +91,8 @@ class Machine(object):
 
             if False:
                 pass
+            elif i == NEWE:
+                stack.push(E(self))
             elif i == DROP:
                 stack.pop()
             elif i == DUP:

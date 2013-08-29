@@ -39,6 +39,21 @@ class Bool(Object):
             return "False"
 
 
+class E(Object):
+    """
+    The runtime call reifier.
+    """
+
+    def __init__(self, machine):
+        self._m = machine
+
+    def repr(self):
+        return "E"
+
+    def call(self, message, args):
+        raise BadMessage()
+
+
 class Ejecting(Exception):
     """
     The stack is being unwound by an ejector.

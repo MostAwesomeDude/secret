@@ -1,5 +1,6 @@
 # Bytecode numbering.
 (
+    NEWE,
     DROP, DUP, OVER, SWAP, ROT,
     ARGS, TO_ARG,
     MAKE_METHOD,
@@ -8,7 +9,7 @@
     ESCAPE, EJECT,
     IF,
     PRINT, STACK,
-) = range(16)
+) = range(17)
 
 
 bytecodes = {
@@ -19,6 +20,7 @@ bytecodes = {
     "<meth":  MAKE_METHOD,
     "drop":   DROP,
     "dup":    DUP,
+    "e":      NEWE,
     "eject":  EJECT,
     "escape": ESCAPE,
     "if":     IF,
@@ -42,6 +44,7 @@ builtins = {
     ESCAPE:      (["*"], ["*"]),
     IF:          (["Bool", "a", "a"], ["*"]),
     MAKE_METHOD: (["*", "Str"], ["List"]),
+    NEWE:        ([], ["E"]),
     OBJECT:      (["List"], ["UserObject"]),
     OVER:        (["a", "b"], ["a", "b", "a"]),
     PRINT:       (["*"], []),
