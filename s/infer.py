@@ -1,5 +1,4 @@
 from s.bytecode import builtins, Instruction, Literal, Reference, Word
-from s.objects import name_for_object
 from s.utils import all
 
 
@@ -97,7 +96,7 @@ def infer_stack_effect(tokens, library):
         if isinstance(token, Reference):
             effect = Effect([], ["*"])
         elif isinstance(token, Literal):
-            effect = Effect([], [name_for_object(token._l)])
+            effect = Effect([], [token._l.name])
         elif isinstance(token, Instruction):
             i, o = builtins[token._i]
             effect = Effect(i, o)

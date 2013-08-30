@@ -9,6 +9,8 @@ class Object(object):
     An object.
     """
 
+    name = "*"
+
     def repr(self):
         return "<Object>"
 
@@ -23,6 +25,8 @@ class Bool(Object):
     """
     A boxed bool.
     """
+
+    name = "Bool"
 
     def __init__(self, b):
         self._b = b
@@ -43,6 +47,8 @@ class E(Object):
     """
     The runtime call reifier.
     """
+
+    name = "E"
 
     def __init__(self, machine):
         self._m = machine
@@ -71,6 +77,7 @@ class Ejector(Object):
     Ejectors can be fired once, and only once, to perform a non-local exit.
     """
 
+    name = "Ejector"
     _fired = False
 
     def __init__(self, stack):
@@ -110,6 +117,8 @@ class Int(Object):
     """
     An int.
     """
+
+    name = "Int"
 
     def __init__(self, i):
         self._i = i
@@ -152,6 +161,8 @@ class List(Object):
     A boxed list.
     """
 
+    name = "List"
+
     def __init__(self, l):
         self._l = l
 
@@ -182,6 +193,8 @@ class Str(Object):
     A str.
     """
 
+    name = "Str"
+
     def __init__(self, s):
         self._s = s
 
@@ -208,6 +221,7 @@ class Promise(Object):
     object or a broken reference.
     """
 
+    name = "Promise"
     _value = None
 
     def __init__(self, target, message, args):
@@ -233,6 +247,8 @@ class UserObject(Object):
     """
     A user-defined object.
     """
+
+    name = "UserObject"
 
     def __init__(self, vm, methods):
         self._vm = vm
@@ -263,6 +279,8 @@ class Void(Object):
     A nullary value.
     """
 
+    name = "Void"
+
     def repr(self):
         return "<Void>"
 
@@ -283,29 +301,6 @@ def unwrap_str(obj):
     if not isinstance(obj, Str):
         raise TypeError("%s is not a Str" % obj.repr())
     return obj._s
-
-
-def name_for_object(obj):
-    """
-    Given an object, return the name for that object.
-    """
-
-    if isinstance(obj, Bool):
-        return "Bool"
-    elif isinstance(obj, Int):
-        return "Int"
-    elif isinstance(obj, List):
-        return "List"
-    elif isinstance(obj, Promise):
-        return "Promise"
-    elif isinstance(obj, Str):
-        return "Str"
-    elif isinstance(obj, UserObject):
-        return "UserObject"
-    elif isinstance(obj, Void):
-        return "Void"
-    else:
-        return "*"
 
 
 def eq(x, y):
