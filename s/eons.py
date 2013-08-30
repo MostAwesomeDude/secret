@@ -247,7 +247,7 @@ def entry_point(argv):
     prelude = phrases_from_file("prelude.secret")
     phrases = phrases_from_file(argv[1])
     phrases.update(prelude)
-    # infer_phrases(phrases)
+    infer_phrases(phrases)
 
     if "main" in phrases:
         vm = Machine(phrases)
