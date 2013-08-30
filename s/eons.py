@@ -9,7 +9,8 @@ from s.bytecode import (Instruction, Literal, Reference, Word, APPEND, DROP,
                         STACK)
 from s.infer import infer_phrases
 from s.lex import phrases_from_str
-from s.objects import Bool, E, Ejector, List, Promise, Str, UserObject
+from s.objects import (E, Ejector, List, Promise, Str, UserObject,
+                       unwrap_bool, unwrap_list, unwrap_str)
 
 
 jitdriver = JitDriver(greens=["phrases", "token"], reds=["vm"])
@@ -68,11 +69,11 @@ class Machine(object):
         self.promises = []
 
     def pass_message(self, target, message, args):
-        assert isinstance(message, Str)
-        assert isinstance(args, List)
+        m = unwrap_str(message)
+        a = unwrap_list(args)
         print "~ Passing to %s: %s, %s" % (target.repr(), message.repr(),
                 args.repr())
-        return target.call(message._s, args._l)
+        return target.call(m, a)
 
     def execute(self, token):
         jitdriver.jit_merge_point(phrases=self.phrases, token=token, vm=self)
@@ -135,9 +136,10 @@ class Machine(object):
                 target = stack.pop()
                 ejector = Ejector(stack)
                 stack.push(ejector)
-                assert isinstance(target, Str)
+
+                t = unwrap_str(target)
                 with ejector:
-                    self.run_phrase(target._s)
+                    self.run_phrase(t)
             elif i == EJECT:
                 value = stack.pop()
                 ejector = stack.pop()
@@ -165,10 +167,9 @@ class Machine(object):
             elif i == IF:
                 otherwise = stack.pop()
                 consequent = stack.pop()
-                whether = stack.pop()
+                whether = unwrap_bool(stack.pop())
 
-                assert isinstance(whether, Bool)
-                if whether._b:
+                if whether:
                     word = consequent
                 else:
                     word = otherwise

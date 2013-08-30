@@ -267,6 +267,24 @@ class Void(Object):
         return "<Void>"
 
 
+def unwrap_bool(obj):
+    if not isinstance(obj, Bool):
+        raise TypeError("%s is not a Bool" % obj.repr())
+    return obj._b
+
+
+def unwrap_list(obj):
+    if not isinstance(obj, List):
+        raise TypeError("%s is not a List" % obj.repr())
+    return obj._l
+
+
+def unwrap_str(obj):
+    if not isinstance(obj, Str):
+        raise TypeError("%s is not a Str" % obj.repr())
+    return obj._s
+
+
 def name_for_object(obj):
     """
     Given an object, return the name for that object.
