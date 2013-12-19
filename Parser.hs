@@ -1,4 +1,4 @@
-module Derp where
+module Parser where
 
 import Control.Applicative
 import Control.Monad
