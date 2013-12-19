@@ -100,7 +100,7 @@ pListAnd = PListAnd <$> brackets (sepBy pattern comma) <* symbol "+" <*> pattern
 
 namer :: (Monad m, TokenParsing m) => m Pattern
 namer = choice
-    [ Namer <$> noun <* symbol ":" <*> expr
+    [ try $ Namer <$> noun <* symbol ":" <*> expr
     , flip Namer (NounExpr (Noun "settable")) <$> noun
     ]
 
@@ -111,6 +111,13 @@ pattern = choice
     , ExactMatch <$> (symbol "==" *> expr)
     , namer
     ]
+
+formatPattern :: Pattern -> String
+formatPattern (SuchThat p e) = formatPattern p ++ " ? " ++ formatExpr e
+formatPattern (PList ps) = "[" ++ intercalate ", " (map formatPattern ps) ++ "]"
+formatPattern (PListAnd ps p) = "[" ++ intercalate ", " (map formatPattern ps) ++ "] + " ++ formatPattern p
+formatPattern (ExactMatch e) = "==" ++ formatExpr e
+formatPattern (Namer n e) = formatNoun n ++ " :" ++ formatExpr e
 
 data Expr = LitExpr Literal
           | NounExpr Noun
@@ -127,9 +134,9 @@ data Expr = LitExpr Literal
           | Assign Expr Expr
           | Define Expr Expr
           | If Expr Expr Expr
-          | Switch Expr [(Expr, Expr)]
-          | Try Expr [(Expr, Expr)]
-          | TryFinally Expr [(Expr, Expr)] Expr
+          | Switch Expr [(Pattern, Expr)]
+          | Try Expr [(Pattern, Expr)]
+          | TryFinally Expr [(Pattern, Expr)] Expr
           | Escape Expr Expr
           | While Expr Expr
           | For Expr Expr Expr Expr
@@ -172,9 +179,9 @@ switchExpr = do
     switch <- parens expr
     cases <- many $ do
         void $ symbol "match"
-        k <- expr
-        v <- braces expr
-        return (k, v)
+        p <- pattern
+        clause <- braces expr
+        return (p, clause)
     return $ Switch switch cases
 
 tryExpr :: (Monad m, TokenParsing m) => m Expr
@@ -183,9 +190,9 @@ tryExpr = do
     action <- braces expr
     catches <- many $ do
         void $ symbol "catch"
-        pattern <- expr
+        p <- pattern
         clause <- braces expr
-        return (pattern, clause)
+        return (p, clause)
     mfinally <- optional $ symbol "finally" *> braces expr
     return $ case mfinally of
         Nothing      -> Try action catches
@@ -263,11 +270,11 @@ expr = buildExpressionParser table term <|> term
 formatPair :: (Expr, Expr) -> String
 formatPair (f, s) = formatExpr f ++ "=>" ++ formatExpr s
 
-formatMatch :: (Expr, Expr) -> String
-formatMatch (p, e) = "match " ++ formatExpr p ++ "{" ++ formatExpr e ++ "}"
+formatMatch :: (Pattern, Expr) -> String
+formatMatch (p, e) = "match " ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
 
-formatCatch :: (Expr, Expr) -> String
-formatCatch (p, e) = "catch (" ++ formatExpr p ++ "{" ++ formatExpr e ++ "}"
+formatCatch :: (Pattern, Expr) -> String
+formatCatch (p, e) = "catch (" ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
 
 formatExpr :: Expr -> String
 formatExpr (LitExpr l) = formatLiteral l
