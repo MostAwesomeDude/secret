@@ -132,7 +132,8 @@ data Expr = LitExpr Literal
           | Sequence Expr Expr
           | Augmented BOp Expr Expr
           | Assign Expr Expr
-          | Define Expr Expr
+          | Define Noun [Pattern] Expr
+          | Function Noun [Pattern] Expr Expr
           | If Expr Expr Expr
           | Switch Expr [(Pattern, Expr)]
           | Try Expr [(Pattern, Expr)]
@@ -211,7 +212,16 @@ identifier :: (Monad m, TokenParsing m) => m String
 identifier = highlight Identifier (some letter) <?> "identifier"
 
 defineExpr :: (Monad m, TokenParsing m) => m Expr
-defineExpr = symbol "def" *> pure Define <*> expr <* symbol ":=" <*> expr
+defineExpr = do
+    void $ symbol "def"
+    name <- noun
+    ps <- parens (sepBy pattern comma) <|> pure []
+    -- Don't parse an entire pattern; return values are weird.
+    mrv <- optional $ symbol ":" *> expr
+    body <- expr
+    return $ case mrv of
+        Just rv -> Function name ps rv body
+        Nothing -> Define name ps body
 
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
@@ -290,7 +300,8 @@ formatExpr (Scope e) = "{" ++ formatExpr e ++ "}"
 formatExpr (Sequence e e') = formatExpr e ++ "\n" ++ formatExpr e'
 formatExpr (Augmented op e e') = formatExpr e ++ formatBOp op ++ "=" ++ formatExpr e'
 formatExpr (Assign e e') = formatExpr e ++ ":=" ++ formatExpr e'
-formatExpr (Define e e') = "def " ++ formatExpr e ++ ":=" ++ formatExpr e'
+formatExpr (Define n ps e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ formatExpr e
+formatExpr (Function n ps rv e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ " :" ++ formatExpr rv ++ formatExpr e
 formatExpr (If c t e) = "if (" ++ formatExpr c ++ "){" ++ formatExpr t ++ "} else {" ++ formatExpr e ++ "}"
 formatExpr (Switch c ts) = "switch (" ++ formatExpr c ++ ") {" ++ concatMap formatMatch ts ++ "}"
 formatExpr (Try b cs) = "try {" ++ formatExpr b ++ "}" ++ concatMap formatCatch cs
