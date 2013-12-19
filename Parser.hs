@@ -43,7 +43,8 @@ noun :: TokenParsing m => m Noun
 noun = highlight Identifier $ Noun <$> token (some (oneOf cs))
    <|> QLHole <$> (char '$' *> braces natural)
    <|> QPHole <$> (char '@' *> braces natural)
-   where cs = "_" ++ ['a'..'z'] ++ ['A'..'Z']
+   where
+    cs = "_" ++ ['a'..'z'] ++ ['A'..'Z']
 
 formatNoun :: Noun -> String
 formatNoun (Noun s) = s
@@ -87,6 +88,30 @@ formatInterval :: Interval -> String
 formatInterval Through = ".."
 formatInterval Till = "..!"
 
+data Pattern = SuchThat Pattern Expr
+             | PList [Pattern]
+             | PListAnd [Pattern] Pattern
+             | ExactMatch Expr
+             | Namer Noun Expr
+    deriving (Show)
+
+pListAnd :: (Monad m, TokenParsing m) => m Pattern
+pListAnd = PListAnd <$> brackets (sepBy pattern comma) <* symbol "+" <*> pattern
+
+namer :: (Monad m, TokenParsing m) => m Pattern
+namer = choice
+    [ Namer <$> noun <* symbol ":" <*> expr
+    , flip Namer (NounExpr (Noun "settable")) <$> noun
+    ]
+
+pattern :: (Monad m, TokenParsing m) => m Pattern
+pattern = choice
+    [ try $ pListAnd
+    , PList <$> brackets (sepBy pattern comma)
+    , ExactMatch <$> (symbol "==" *> expr)
+    , namer
+    ]
+
 data Expr = LitExpr Literal
           | NounExpr Noun
           | Unary UOp Expr
@@ -100,6 +125,7 @@ data Expr = LitExpr Literal
           | Sequence Expr Expr
           | Augmented BOp Expr Expr
           | Assign Expr Expr
+          | Define Expr Expr
           | If Expr Expr Expr
           | Switch Expr [(Expr, Expr)]
           | Try Expr [(Expr, Expr)]
@@ -177,6 +203,9 @@ forExpr = do
 identifier :: (Monad m, TokenParsing m) => m String
 identifier = highlight Identifier (some letter) <?> "identifier"
 
+defineExpr :: (Monad m, TokenParsing m) => m Expr
+defineExpr = symbol "def" *> pure Define <*> expr <* symbol ":=" <*> expr
+
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
     [ LitExpr <$> literal
@@ -190,6 +219,7 @@ term = choice
     , forExpr
     , Escape <$> (symbol "escape" *> expr) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
+    , defineExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> identifier <*> token quasi
     , NounExpr <$> noun ]
@@ -228,7 +258,7 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
         ]
  
 expr :: (Monad m, TokenParsing m) => m Expr
-expr = buildExpressionParser table term
+expr = buildExpressionParser table term <|> term
 
 formatPair :: (Expr, Expr) -> String
 formatPair (f, s) = formatExpr f ++ "=>" ++ formatExpr s
@@ -253,6 +283,7 @@ formatExpr (Scope e) = "{" ++ formatExpr e ++ "}"
 formatExpr (Sequence e e') = formatExpr e ++ "\n" ++ formatExpr e'
 formatExpr (Augmented op e e') = formatExpr e ++ formatBOp op ++ "=" ++ formatExpr e'
 formatExpr (Assign e e') = formatExpr e ++ ":=" ++ formatExpr e'
+formatExpr (Define e e') = "def " ++ formatExpr e ++ ":=" ++ formatExpr e'
 formatExpr (If c t e) = "if (" ++ formatExpr c ++ "){" ++ formatExpr t ++ "} else {" ++ formatExpr e ++ "}"
 formatExpr (Switch c ts) = "switch (" ++ formatExpr c ++ ") {" ++ concatMap formatMatch ts ++ "}"
 formatExpr (Try b cs) = "try {" ++ formatExpr b ++ "}" ++ concatMap formatCatch cs
