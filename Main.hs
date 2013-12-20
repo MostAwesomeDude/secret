@@ -1,9 +1,11 @@
 module Main where
 
 import System.Environment
+import Text.PrettyPrint.ANSI.Leijen
 import Text.Trifecta.Parser
 
 import Parser
+import Printer
 
 main = do
     [filename] <- getArgs
@@ -14,8 +16,8 @@ main = do
             putStrLn "Parsed:"
             print ast
             putStrLn "Formatted:"
-            putStrLn $ formatExpr ast
+            print $ pretty ast
             putStrLn "Expanded:"
-            putStrLn $ formatExpr ast
+            print $ pretty ast
             putStrLn "Simplified:"
-            putStrLn $ formatExpr ast
+            print $ pretty ast

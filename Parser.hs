@@ -26,14 +26,6 @@ literal = choice [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
                  , either EInteger EFloat <$> naturalOrDouble
                  , symbol "null" *> pure Null ]
 
-formatLiteral :: Literal -> String
-formatLiteral Null = "null"
-formatLiteral (EInteger i) = show i
-formatLiteral (EFloat f) = show f
-formatLiteral (EChar c) = show c
-formatLiteral (EString s) = show s
-formatLiteral (EURI u) = '<' : u ++ ">"
-
 data Noun = Noun String
           | QLHole Integer
           | QPHole Integer
@@ -46,18 +38,8 @@ noun = highlight Identifier $ Noun <$> token (some (oneOf cs))
    where
     cs = "_" ++ ['a'..'z'] ++ ['A'..'Z']
 
-formatNoun :: Noun -> String
-formatNoun (Noun s) = s
-formatNoun (QLHole i) = "${" ++ show i ++ "}"
-formatNoun (QPHole i) = "@{" ++ show i ++ "}"
-
 data UOp = Complement | Negate | Not
     deriving (Enum, Eq, Ord, Show)
-
-formatUOp :: UOp -> String
-formatUOp Complement = "~"
-formatUOp Negate = "-"
-formatUOp Not = "!"
 
 data BOp = Add | BitAnd | BitOr | BitXor | Divide | FloorDivide | Modulus
          | Multiply | Power | Remainder | ShiftLeft | ShiftRight | Subtract
@@ -74,23 +56,9 @@ bop = choice $ map (\(op, s) -> symbol s *> pure op) bops
 augOp :: TokenParsing m => m BOp
 augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 
-formatBOp :: BOp -> String
-formatBOp op = maybe "???" id (lookup op bops)
-
 data COp = Different | Equal | GTEQ | GreaterThan | LTEQ | LessThan
          | Magnitude | Match | NoMatch
     deriving (Enum, Eq, Ord, Show)
-
-formatCOp :: COp -> String
-formatCOp Different = "!="
-formatCOp Equal = "=="
-formatCOp GTEQ = ">="
-formatCOp GreaterThan = ">"
-formatCOp LTEQ = "<="
-formatCOp LessThan = "<"
-formatCOp Magnitude = "<=>"
-formatCOp Match = "=~"
-formatCOp NoMatch = "!~"
 
 data Interval = Through | Till
     deriving (Enum, Eq, Ord, Show)
@@ -98,9 +66,15 @@ data Interval = Through | Till
 interval :: TokenParsing m => m Interval
 interval = symbol ".." *> pure Through <|> symbol "..!" *> pure Till
 
-formatInterval :: Interval -> String
-formatInterval Through = ".."
-formatInterval Till = "..!"
+data Exit = Break | Continue | Return
+    deriving (Enum, Eq, Ord, Show)
+
+exit :: TokenParsing m => m Exit
+exit = choice
+    [ symbol "break" *> pure Break
+    , symbol "continue" *> pure Continue
+    , symbol "return" *> pure Return
+    ]
 
 data Pattern = SuchThat Pattern Expr
              | PList [Pattern]
@@ -125,28 +99,6 @@ pattern = choice
     , ExactMatch <$> (symbol "==" *> expr)
     , namer
     ]
-
-formatPattern :: Pattern -> String
-formatPattern (SuchThat p e) = formatPattern p ++ " ? " ++ formatExpr e
-formatPattern (PList ps) = "[" ++ intercalate ", " (map formatPattern ps) ++ "]"
-formatPattern (PListAnd ps p) = "[" ++ intercalate ", " (map formatPattern ps) ++ "] + " ++ formatPattern p
-formatPattern (ExactMatch e) = "==" ++ formatExpr e
-formatPattern (Namer n e) = formatNoun n ++ " :" ++ formatExpr e
-
-data Exit = Break | Continue | Return
-    deriving (Enum, Eq, Ord, Show)
-
-exit :: TokenParsing m => m Exit
-exit = choice
-    [ symbol "break" *> pure Break
-    , symbol "continue" *> pure Continue
-    , symbol "return" *> pure Return
-    ]
-
-formatExit :: Exit -> String
-formatExit Break = "break"
-formatExit Continue = "continue"
-formatExit Return = "return"
 
 data Expr = LitExpr Literal
           | NounExpr Noun
@@ -326,47 +278,3 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
  
 expr :: (Monad m, TokenParsing m) => m Expr
 expr = buildExpressionParser table term <|> term
-
-formatPair :: (Expr, Expr) -> String
-formatPair (f, s) = formatExpr f ++ "=>" ++ formatExpr s
-
-formatMatch :: (Pattern, Expr) -> String
-formatMatch (p, e) = "match " ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
-
-formatCatch :: (Pattern, Expr) -> String
-formatCatch (p, e) = "catch (" ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
-
-formatBraces :: Expr -> String
-formatBraces e = "{\n" ++ formatExpr e ++ "\n}"
-
-formatExpr :: Expr -> String
-formatExpr (LitExpr l) = formatLiteral l
-formatExpr (NounExpr n) = formatNoun n
-formatExpr (Unary op e) = formatUOp op ++ formatExpr e
-formatExpr (Binary op e e') = formatExpr e ++ formatBOp op ++ formatExpr e'
-formatExpr (Comparison op e e') = formatExpr e ++ formatCOp op ++ formatExpr e'
-formatExpr (Range i e e') = formatExpr e ++ formatInterval i ++ formatExpr e'
-formatExpr (Or e e') = formatExpr e ++ "||" ++ formatExpr e'
-formatExpr (And e e') = formatExpr e ++ "&&" ++ formatExpr e'
-formatExpr (Quasi s q) = s ++ "`" ++ q ++ "`"
-formatExpr (EList es) = "[" ++ intercalate "," (map formatExpr es) ++ "]"
-formatExpr (EMap ts) = "[" ++ intercalate "," (map formatPair ts) ++ "]"
-formatExpr (Scope e) = formatBraces e
-formatExpr (Sequence e e') = formatExpr e ++ "\n" ++ formatExpr e'
-formatExpr (Augmented op e e') = formatExpr e ++ formatBOp op ++ "=" ++ formatExpr e'
-formatExpr (Assign e e') = formatExpr e ++ ":=" ++ formatExpr e'
-formatExpr (Define n ps e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ formatExpr e
-formatExpr (Function n ps rv e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ " :" ++ formatExpr rv ++ formatExpr e
-formatExpr (If c t e) = "if (" ++ formatExpr c ++ ")" ++ formatBraces t ++ " else " ++ formatBraces e
-formatExpr (Switch c ts) = "switch (" ++ formatExpr c ++ ") {" ++ concatMap formatMatch ts ++ "}"
-formatExpr (Try b cs) = "try {" ++ formatExpr b ++ "}" ++ concatMap formatCatch cs
-formatExpr (TryFinally b cs f) = "try " ++ formatBraces b ++ concatMap formatCatch cs ++ "finally " ++ formatBraces f
-formatExpr (Escape e b) = "escape " ++ formatExpr e ++ " " ++ formatBraces b
-formatExpr (While c b) = "while (" ++ formatExpr c ++ ") " ++ formatBraces b
-formatExpr (For k v c b) = "for " ++ formatPair (k, v) ++ " in " ++ formatExpr c ++ " " ++ formatBraces b
-formatExpr (Arguments e es) = formatExpr e ++ "(" ++ intercalate "," (map formatExpr es) ++ ")"
-formatExpr (Index e es) = formatExpr e ++ "[" ++ intercalate "," (map formatExpr es) ++ "]"
-formatExpr (Property e p) = formatExpr e ++ "::" ++ formatExpr p
-formatExpr (Call e m) = formatExpr e ++ "." ++ formatExpr m
-formatExpr (Send e m) = formatExpr e ++ "<-" ++ formatExpr m
-formatExpr (EjectExit e e') = formatExit e ++ " " ++ formatExpr e'
