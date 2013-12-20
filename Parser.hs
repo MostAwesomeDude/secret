@@ -78,6 +78,21 @@ augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 formatBOp :: BOp -> String
 formatBOp op = maybe "???" id (lookup op bops)
 
+data COp = Different | Equal | GTEQ | GreaterThan | LTEQ | LessThan
+         | Magnitude | Match | NoMatch
+    deriving (Enum, Eq, Ord, Show)
+
+formatCOp :: COp -> String
+formatCOp Different = "!="
+formatCOp Equal = "=="
+formatCOp GTEQ = ">="
+formatCOp GreaterThan = ">"
+formatCOp LTEQ = "<="
+formatCOp LessThan = "<"
+formatCOp Magnitude = "<=>"
+formatCOp Match = "=~"
+formatCOp NoMatch = "!~"
+
 data Interval = Through | Till
     deriving (Enum, Eq, Ord, Show)
 
@@ -138,6 +153,7 @@ data Expr = LitExpr Literal
           | NounExpr Noun
           | Unary UOp Expr
           | Binary BOp Expr Expr
+          | Comparison COp Expr Expr
           | Range Interval Expr Expr
           | Equals Expr Expr
           | Quasi String String
@@ -268,6 +284,9 @@ bin cons sym = Infix (pure cons <* symbol sym)
 binary :: TokenParsing m => BOp -> String -> Operator m Expr
 binary op sym = bin (Binary op) sym AssocLeft
 
+comparison :: TokenParsing m => COp -> String -> Operator m Expr
+comparison op sym = bin (Comparison op) sym AssocNone
+
 pre :: TokenParsing m => String -> UOp -> Operator m Expr
 pre s op = Prefix (symbol s *> pure (Unary op))
 
@@ -286,7 +305,15 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
           , binary Remainder "%" ]
         , [ binary Add "+", binary Subtract "-" ]
         , [ binary ShiftLeft "<<", binary ShiftRight ">>" ]
-        , [ bin Equals "==" AssocNone ]
+        , [ comparison GTEQ ">="
+          , comparison GreaterThan ">"
+          , comparison Magnitude "<=>"
+          , comparison LTEQ "<="
+          , comparison LessThan "<" ]
+        , [ comparison Equal "=="
+          , comparison Different "!="
+          , comparison Match "=~"
+          , comparison NoMatch "!~" ]
         , [ binary BinaryAnd "&&" ]
         , [ binary BinaryOr "||" ]
         , [ bin Assign ":=" AssocRight ]
@@ -311,6 +338,7 @@ formatExpr (LitExpr l) = formatLiteral l
 formatExpr (NounExpr n) = formatNoun n
 formatExpr (Unary op e) = formatUOp op ++ formatExpr e
 formatExpr (Binary op e e') = formatExpr e ++ formatBOp op ++ formatExpr e'
+formatExpr (Comparison op e e') = formatExpr e ++ formatCOp op ++ formatExpr e'
 formatExpr (Range i e e') = formatExpr e ++ formatInterval i ++ formatExpr e'
 formatExpr (Equals e e') = formatExpr e ++ "==" ++ formatExpr e'
 formatExpr (Quasi s q) = s ++ "`" ++ q ++ "`"
