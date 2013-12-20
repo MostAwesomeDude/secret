@@ -336,6 +336,9 @@ formatMatch (p, e) = "match " ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
 formatCatch :: (Pattern, Expr) -> String
 formatCatch (p, e) = "catch (" ++ formatPattern p ++ "{" ++ formatExpr e ++ "}"
 
+formatBraces :: Expr -> String
+formatBraces e = "{\n" ++ formatExpr e ++ "\n}"
+
 formatExpr :: Expr -> String
 formatExpr (LitExpr l) = formatLiteral l
 formatExpr (NounExpr n) = formatNoun n
@@ -348,19 +351,19 @@ formatExpr (And e e') = formatExpr e ++ "&&" ++ formatExpr e'
 formatExpr (Quasi s q) = s ++ "`" ++ q ++ "`"
 formatExpr (EList es) = "[" ++ intercalate "," (map formatExpr es) ++ "]"
 formatExpr (EMap ts) = "[" ++ intercalate "," (map formatPair ts) ++ "]"
-formatExpr (Scope e) = "{" ++ formatExpr e ++ "}"
+formatExpr (Scope e) = formatBraces e
 formatExpr (Sequence e e') = formatExpr e ++ "\n" ++ formatExpr e'
 formatExpr (Augmented op e e') = formatExpr e ++ formatBOp op ++ "=" ++ formatExpr e'
 formatExpr (Assign e e') = formatExpr e ++ ":=" ++ formatExpr e'
 formatExpr (Define n ps e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ formatExpr e
 formatExpr (Function n ps rv e) = "def " ++ formatNoun n ++ "(" ++ intercalate ", " (map formatPattern ps) ++ ")" ++ " :" ++ formatExpr rv ++ formatExpr e
-formatExpr (If c t e) = "if (" ++ formatExpr c ++ "){" ++ formatExpr t ++ "} else {" ++ formatExpr e ++ "}"
+formatExpr (If c t e) = "if (" ++ formatExpr c ++ ")" ++ formatBraces t ++ " else " ++ formatBraces e
 formatExpr (Switch c ts) = "switch (" ++ formatExpr c ++ ") {" ++ concatMap formatMatch ts ++ "}"
 formatExpr (Try b cs) = "try {" ++ formatExpr b ++ "}" ++ concatMap formatCatch cs
-formatExpr (TryFinally b cs f) = "try {" ++ formatExpr b ++ "}" ++ concatMap formatCatch cs ++ "finally {" ++ formatExpr f ++ "}"
-formatExpr (Escape e b) = "escape " ++ formatExpr e ++ " {" ++ formatExpr b ++ "}"
-formatExpr (While c b) = "while (" ++ formatExpr c ++ ") {" ++ formatExpr b ++ "}"
-formatExpr (For k v c b) = "for " ++ formatPair (k, v) ++ " in " ++ formatExpr c ++ " {" ++ formatExpr b ++ "}"
+formatExpr (TryFinally b cs f) = "try " ++ formatBraces b ++ concatMap formatCatch cs ++ "finally " ++ formatBraces f
+formatExpr (Escape e b) = "escape " ++ formatExpr e ++ " " ++ formatBraces b
+formatExpr (While c b) = "while (" ++ formatExpr c ++ ") " ++ formatBraces b
+formatExpr (For k v c b) = "for " ++ formatPair (k, v) ++ " in " ++ formatExpr c ++ " " ++ formatBraces b
 formatExpr (Arguments e es) = formatExpr e ++ "(" ++ intercalate "," (map formatExpr es) ++ ")"
 formatExpr (Index e es) = formatExpr e ++ "[" ++ intercalate "," (map formatExpr es) ++ "]"
 formatExpr (Property e p) = formatExpr e ++ "::" ++ formatExpr p
