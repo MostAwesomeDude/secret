@@ -119,6 +119,21 @@ formatPattern (PListAnd ps p) = "[" ++ intercalate ", " (map formatPattern ps) +
 formatPattern (ExactMatch e) = "==" ++ formatExpr e
 formatPattern (Namer n e) = formatNoun n ++ " :" ++ formatExpr e
 
+data Exit = Break | Continue | Return
+    deriving (Enum, Eq, Ord, Show)
+
+exit :: TokenParsing m => m Exit
+exit = choice
+    [ symbol "break" *> pure Break
+    , symbol "continue" *> pure Continue
+    , symbol "return" *> pure Return
+    ]
+
+formatExit :: Exit -> String
+formatExit Break = "break"
+formatExit Continue = "continue"
+formatExit Return = "return"
+
 data Expr = LitExpr Literal
           | NounExpr Noun
           | Unary UOp Expr
@@ -146,6 +161,7 @@ data Expr = LitExpr Literal
           | Property Expr Expr
           | Call Expr Expr
           | Send Expr Expr
+          | EjectExit Exit Expr
     deriving (Show)
 
 quasi :: (Monad m, TokenParsing m) => m String
@@ -223,6 +239,9 @@ defineExpr = do
         Just rv -> Function name ps rv body
         Nothing -> Define name ps body
 
+exitExpr :: (Monad m, TokenParsing m) => m Expr
+exitExpr = EjectExit <$> exit <*> expr
+
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
     [ LitExpr <$> literal
@@ -234,6 +253,7 @@ term = choice
     , switchExpr
     , tryExpr
     , forExpr
+    , exitExpr
     , Escape <$> (symbol "escape" *> expr) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
     , defineExpr
@@ -314,3 +334,4 @@ formatExpr (Index e es) = formatExpr e ++ "[" ++ intercalate "," (map formatExpr
 formatExpr (Property e p) = formatExpr e ++ "::" ++ formatExpr p
 formatExpr (Call e m) = formatExpr e ++ "." ++ formatExpr m
 formatExpr (Send e m) = formatExpr e ++ "<-" ++ formatExpr m
+formatExpr (EjectExit e e') = formatExit e ++ " " ++ formatExpr e'
