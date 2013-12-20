@@ -59,9 +59,8 @@ formatUOp Complement = "~"
 formatUOp Negate = "-"
 formatUOp Not = "!"
 
-data BOp = Add | BinaryAnd | BinaryOr | BinaryXor | Divide | FloorDivide
-         | Modulus | Multiply | Power | Remainder | ShiftLeft | ShiftRight
-         | Subtract
+data BOp = Add | BitAnd | BitOr | BitXor | Divide | FloorDivide | Modulus
+         | Multiply | Power | Remainder | ShiftLeft | ShiftRight | Subtract
     deriving (Enum, Eq, Ord, Show)
 
 bops :: [(BOp, String)]
@@ -155,7 +154,8 @@ data Expr = LitExpr Literal
           | Binary BOp Expr Expr
           | Comparison COp Expr Expr
           | Range Interval Expr Expr
-          | Equals Expr Expr
+          | Or Expr Expr
+          | And Expr Expr
           | Quasi String String
           | EList [Expr]
           | EMap [(Expr, Expr)]
@@ -312,10 +312,13 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
           , comparison LessThan "<" ]
         , [ comparison Equal "=="
           , comparison Different "!="
+          , bin (Binary BitAnd) "&" AssocNone
+          , bin (Binary BitOr) "|" AssocNone
+          , bin (Binary BitXor) "^" AssocNone
           , comparison Match "=~"
           , comparison NoMatch "!~" ]
-        , [ binary BinaryAnd "&&" ]
-        , [ binary BinaryOr "||" ]
+        , [ bin And "&&" AssocLeft ]
+        , [ bin Or "||" AssocLeft ]
         , [ bin Assign ":=" AssocRight ]
         , [ Infix (Augmented <$> augOp) AssocLeft ]
         , [ bin Sequence ";" AssocLeft ]
@@ -340,7 +343,8 @@ formatExpr (Unary op e) = formatUOp op ++ formatExpr e
 formatExpr (Binary op e e') = formatExpr e ++ formatBOp op ++ formatExpr e'
 formatExpr (Comparison op e e') = formatExpr e ++ formatCOp op ++ formatExpr e'
 formatExpr (Range i e e') = formatExpr e ++ formatInterval i ++ formatExpr e'
-formatExpr (Equals e e') = formatExpr e ++ "==" ++ formatExpr e'
+formatExpr (Or e e') = formatExpr e ++ "||" ++ formatExpr e'
+formatExpr (And e e') = formatExpr e ++ "&&" ++ formatExpr e'
 formatExpr (Quasi s q) = s ++ "`" ++ q ++ "`"
 formatExpr (EList es) = "[" ++ intercalate "," (map formatExpr es) ++ "]"
 formatExpr (EMap ts) = "[" ++ intercalate "," (map formatPair ts) ++ "]"
