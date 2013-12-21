@@ -2,7 +2,7 @@ module Printer where
 
 import Text.PrettyPrint.ANSI.Leijen
 
-import Parser
+import Expression
 
 instance Pretty Literal where
     pretty Null = string "null"
@@ -99,7 +99,7 @@ instance Pretty Expr where
     pretty (Augmented op e e') = pretty e <+> pretty op <> char '=' <+> pretty e'
     pretty (Assign e e') = pretty e <+> string ":=" <+> pretty e'
     pretty (Define n ps e) = string "def" <+> pretty n <+> paren ps <+> pretty e
-    pretty (Function n ps rv e) = string "def" <+> pretty n <+> paren ps <+> pretty rv <+> pretty e
+    pretty (Function n ps rv e) = string "def" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
     pretty (If c t e) = string "if" <+> parens (pretty c) <+> brace (pretty t) <+> string "else" <+> brace (pretty e)
     pretty (Switch c ts) = string "switch" <+> parens (pretty c) <+> (cat (map formatMatch ts))
     pretty (Try b cs) = string "try" <+> brace (pretty b) <+> brace (cat (map formatCatch cs))

@@ -4,9 +4,11 @@ import System.Environment
 import Text.PrettyPrint.ANSI.Leijen
 import Text.Trifecta.Parser
 
+import Expander
 import Parser
 import Printer
 
+main :: IO ()
 main = do
     [filename] <- getArgs
     result <- parseFromFile expr filename
@@ -17,7 +19,8 @@ main = do
             print ast
             putStrLn "Formatted:"
             print $ pretty ast
+            let expanded = expand ast
             putStrLn "Expanded:"
-            print $ pretty ast
+            print $ pretty expanded
             putStrLn "Simplified:"
-            print $ pretty ast
+            print $ pretty expanded

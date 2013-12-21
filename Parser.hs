@@ -11,13 +11,7 @@ import Text.Parser.Token
 import Text.Parser.Token.Highlight
 import Text.Trifecta.Parser
 
-data Literal = Null
-             | EInteger Integer
-             | EFloat Double
-             | EChar Char
-             | EString String
-             | EURI String
-    deriving (Eq, Show)
+import Expression
 
 literal :: TokenParsing m => m Literal
 literal = choice [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
@@ -26,24 +20,12 @@ literal = choice [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
                  , either EInteger EFloat <$> naturalOrDouble
                  , symbol "null" *> pure Null ]
 
-data Noun = Noun String
-          | QLHole Integer
-          | QPHole Integer
-    deriving (Eq, Show)
-
 noun :: TokenParsing m => m Noun
 noun = highlight Identifier $ Noun <$> token (some (oneOf cs))
    <|> QLHole <$> (char '$' *> braces natural)
    <|> QPHole <$> (char '@' *> braces natural)
    where
     cs = "_" ++ ['a'..'z'] ++ ['A'..'Z']
-
-data UOp = Complement | Negate | Not
-    deriving (Enum, Eq, Ord, Show)
-
-data BOp = Add | BitAnd | BitOr | BitXor | Divide | FloorDivide | Modulus
-         | Multiply | Power | Remainder | ShiftLeft | ShiftRight | Subtract
-    deriving (Enum, Eq, Ord, Show)
 
 bops :: [(BOp, String)]
 bops = zip (enumFrom Add) l
@@ -56,18 +38,8 @@ bop = choice $ map (\(op, s) -> symbol s *> pure op) bops
 augOp :: TokenParsing m => m BOp
 augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 
-data COp = Different | Equal | GTEQ | GreaterThan | LTEQ | LessThan
-         | Magnitude | Match | NoMatch
-    deriving (Enum, Eq, Ord, Show)
-
-data Interval = Through | Till
-    deriving (Enum, Eq, Ord, Show)
-
 interval :: TokenParsing m => m Interval
 interval = symbol ".." *> pure Through <|> symbol "..!" *> pure Till
-
-data Exit = Break | Continue | Return
-    deriving (Enum, Eq, Ord, Show)
 
 exit :: TokenParsing m => m Exit
 exit = choice
@@ -75,13 +47,6 @@ exit = choice
     , symbol "continue" *> pure Continue
     , symbol "return" *> pure Return
     ]
-
-data Pattern = SuchThat Pattern Expr
-             | PList [Pattern]
-             | PListAnd [Pattern] Pattern
-             | ExactMatch Expr
-             | Namer Noun Expr
-    deriving (Show)
 
 pListAnd :: (Monad m, TokenParsing m) => m Pattern
 pListAnd = PListAnd <$> brackets (sepBy pattern comma) <* symbol "+" <*> pattern
@@ -99,38 +64,6 @@ pattern = choice
     , ExactMatch <$> (symbol "==" *> expr)
     , namer
     ]
-
-data Expr = LitExpr Literal
-          | NounExpr Noun
-          | Unary UOp Expr
-          | Binary BOp Expr Expr
-          | Comparison COp Expr Expr
-          | Range Interval Expr Expr
-          | Or Expr Expr
-          | And Expr Expr
-          | Quasi String String
-          | EList [Expr]
-          | EMap [(Expr, Expr)]
-          | Scope Expr
-          | Sequence Expr Expr
-          | Augmented BOp Expr Expr
-          | Assign Expr Expr
-          | Define Noun [Pattern] Expr
-          | Function Noun [Pattern] Expr Expr
-          | If Expr Expr Expr
-          | Switch Expr [(Pattern, Expr)]
-          | Try Expr [(Pattern, Expr)]
-          | TryFinally Expr [(Pattern, Expr)] Expr
-          | Escape Expr Expr
-          | While Expr Expr
-          | For Expr Expr Expr Expr
-          | Arguments Expr [Expr]
-          | Index Expr [Expr]
-          | Property Expr Expr
-          | Call Expr Expr
-          | Send Expr Expr
-          | EjectExit Exit Expr
-    deriving (Show)
 
 quasi :: (Monad m, TokenParsing m) => m String
 quasi = highlight StringLiteral $ do
