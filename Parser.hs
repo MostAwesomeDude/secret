@@ -63,6 +63,7 @@ pattern = choice
     , PList <$> brackets (sepBy pattern comma)
     , ExactMatch <$> (symbol "==" *> expr)
     , namer
+    , Final <$> noun
     ]
 
 quasi :: (Monad m, TokenParsing m) => m String
