@@ -37,6 +37,29 @@ elimUnary = transform $ \expr -> case expr of
     method Negate = "negate"    
     method Not = "not"
 
+elimRange :: Expr -> Expr
+elimRange = transform $ \expr -> case expr of
+    (Range i l r) ->
+        makeCall (NounExpr (Noun "__makeOrderedSpace")) (method i) [l, r]
+    e -> e
+    where
+    method Through = "op__thru"
+    method Till = "op__till"
+
+elimCmp :: Expr -> Expr
+elimCmp = transform $ \expr -> case expr of
+    (Comparison GTEQ obj other) ->
+        makeCall (makeCall obj "compareTo" [other]) "atLeastZero" []
+    (Comparison GreaterThan obj other) ->
+        makeCall (makeCall obj "compareTo" [other]) "aboveZero" []
+    (Comparison LTEQ obj other) ->
+        makeCall (makeCall obj "compareTo" [other]) "atMostZero" []
+    (Comparison LessThan obj other) ->
+        makeCall (makeCall obj "compareTo" [other]) "belowZero" []
+    (Comparison Magnitude obj other) ->
+        makeCall (makeCall obj "compareTo" [other]) "isZero" []
+    e -> e
+
 elimEq :: Expr -> Expr
 elimEq = transform $ \expr -> case expr of
     (Comparison Equal obj other) ->
@@ -69,5 +92,7 @@ expand = foldl (.) id
     , flipCompares
     , elimShiftRight
     , elimUnary
+    , elimRange
+    , elimCmp
     , elimEq
     , elimBinary ]
