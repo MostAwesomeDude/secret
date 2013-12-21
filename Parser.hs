@@ -164,8 +164,8 @@ term = choice
     , exitExpr
     , Escape <$> (symbol "escape" *> noun) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
-    , try functionExpr
-    , defineExpr
+    , try defineExpr
+    , functionExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> identifier <*> token quasi
     , NounExpr <$> noun ]
