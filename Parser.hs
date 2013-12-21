@@ -155,7 +155,7 @@ term = choice
     , tryExpr
     , forExpr
     , exitExpr
-    , Escape <$> (symbol "escape" *> expr) <*> braces expr
+    , Escape <$> (symbol "escape" *> noun) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
     , defineExpr
     , Quasi "simple" <$> token quasi

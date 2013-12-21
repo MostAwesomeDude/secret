@@ -78,7 +78,7 @@ data Expr = LitExpr Literal
           | Switch Expr [(Pattern, Expr)]
           | Try Expr [(Pattern, Expr)]
           | TryFinally Expr [(Pattern, Expr)] Expr
-          | Escape Expr Expr
+          | Escape Noun Expr
           | While Expr Expr
           | For Expr Expr Expr Expr
           | Arguments Expr [Expr]
