@@ -73,7 +73,7 @@ data Expr = LitExpr Literal
           | Sequence Expr Expr
           | Augmented BOp Expr Expr
           | Assign Expr Expr
-          | Define Noun [Pattern] Expr
+          | Define Pattern Expr
           | Function Noun [Pattern] Expr Expr
           | If Expr Expr Expr
           | Switch Expr [(Pattern, Expr)]

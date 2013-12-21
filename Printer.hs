@@ -99,7 +99,7 @@ instance Pretty Expr where
     pretty (Sequence e e') = pretty e <$> pretty e'
     pretty (Augmented op e e') = pretty e <+> pretty op <> char '=' <+> pretty e'
     pretty (Assign e e') = pretty e <+> string ":=" <+> pretty e'
-    pretty (Define n ps e) = string "def" <+> pretty n <+> paren ps <+> pretty e
+    pretty (Define p e) = string "def" <+> pretty p <+> string ":=" <+> pretty e
     pretty (Function n ps rv e) = string "def" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
     pretty (If c t e) = string "if" <+> parens (pretty c) <+> brace (pretty t) <+> string "else" <+> brace (pretty e)
     pretty (Switch c ts) = string "switch" <+> parens (pretty c) <+> (cat (map formatMatch ts))

@@ -132,14 +132,20 @@ identifier = highlight Identifier (some letter) <?> "identifier"
 defineExpr :: (Monad m, TokenParsing m) => m Expr
 defineExpr = do
     void $ symbol "def"
+    binding <- pattern
+    void $ symbol ":="
+    body <- expr
+    return $ Define binding body
+
+functionExpr :: (Monad m, TokenParsing m) => m Expr
+functionExpr = do
+    void $ symbol "def"
     name <- noun
     ps <- parens (sepBy pattern comma) <|> pure []
-    -- Don't parse an entire pattern; return values are weird.
-    mrv <- optional $ symbol ":" *> expr
+    -- Guard on the return value.
+    rv <- symbol ":" *> expr
     body <- expr
-    return $ case mrv of
-        Just rv -> Function name ps rv body
-        Nothing -> Define name ps body
+    return $ Function name ps rv body
 
 exitExpr :: (Monad m, TokenParsing m) => m Expr
 exitExpr = EjectExit <$> exit <*> expr
@@ -158,6 +164,7 @@ term = choice
     , exitExpr
     , Escape <$> (symbol "escape" *> noun) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
+    , try functionExpr
     , defineExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> identifier <*> token quasi
