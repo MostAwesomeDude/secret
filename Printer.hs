@@ -80,7 +80,7 @@ paren :: Pretty a => [a] -> Doc
 paren xs = parens . align . cat $ punctuate comma $ map pretty xs
 
 brace :: Doc -> Doc
-brace e = char '{' </> nest 2 e </> char '}'
+brace e = char '{' <$> nest 2 e <$> char '}'
 
 instance Pretty Expr where
     pretty (LitExpr l) = pretty l
