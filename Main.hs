@@ -1,17 +1,22 @@
 module Main where
 
 import System.Environment
+import Text.Parser.Token
 import Text.PrettyPrint.ANSI.Leijen
 import Text.Trifecta.Parser
 
 import Expander
+import Expression
 import Parser
-import Printer
+import Printer ()
+
+parser :: Unlined Parser Expr
+parser = expr
 
 main :: IO ()
 main = do
     [filename] <- getArgs
-    result <- parseFromFile expr filename
+    result <- parseFromFile (runUnlined parser) filename
     case result of
         Nothing -> return ()
         Just ast -> do

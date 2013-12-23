@@ -3,14 +3,11 @@ module Parser where
 import Control.Applicative
 import Control.Monad
 import qualified Data.HashSet as HS
-import Data.List
-import Data.Monoid
 import Text.Parser.Char
 import Text.Parser.Combinators
 import Text.Parser.Expression
 import Text.Parser.Token
 import Text.Parser.Token.Highlight
-import Text.Trifecta.Parser
 
 import Expression
 
@@ -198,11 +195,13 @@ term = choice
     , defineExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> ident eStyle <*> token quasi
-    , NounExpr <$> noun ]
+    , NounExpr <$> noun
+    -- Swallow newlines not consumed by anybody else.
+    , token (many (char '\n')) *> pure (LitExpr Null) ]
     <?> "primitive expression"
 
 bin :: TokenParsing m => (a -> a -> a) -> String -> Assoc -> Operator m a
-bin cons sym = Infix (pure cons <* symbol sym)
+bin cons sym = Infix (symbol sym *> pure cons)
 
 binary :: TokenParsing m => BOp -> String -> Operator m Expr
 binary op sym = bin (Binary op) sym AssocLeft
@@ -245,7 +244,8 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
         , [ bin Assign ":=" AssocRight ]
         , [ Infix (Augmented <$> augOp) AssocLeft ]
         , [ bin Sequence ";" AssocLeft ]
+        , [ bin Sequence "\n" AssocLeft ]
         ]
  
 expr :: (Monad m, TokenParsing m) => m Expr
-expr = buildExpressionParser table term <|> term
+expr = (symbol "\n" *> expr) <|> buildExpressionParser table term <|> term
