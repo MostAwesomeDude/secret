@@ -92,15 +92,18 @@ ifExpr = do
         Just f  -> If cond t f
         Nothing -> If cond t $ LitExpr Null
 
+matchExpr :: (Monad m, TokenParsing m) => m (Pattern, Expr)
+matchExpr = do
+    void $ symbol "match"
+    p <- pattern
+    clause <- braces expr
+    return (p, clause)
+
 switchExpr :: (Monad m, TokenParsing m) => m Expr
 switchExpr = do
     void $ symbol "switch"
     switch <- parens expr
-    cases <- many $ do
-        void $ symbol "match"
-        p <- pattern
-        clause <- braces expr
-        return (p, clause)
+    cases <- many matchExpr
     return $ Switch switch cases
 
 tryExpr :: (Monad m, TokenParsing m) => m Expr
@@ -150,6 +153,25 @@ functionExpr = do
 exitExpr :: (Monad m, TokenParsing m) => m Expr
 exitExpr = EjectExit <$> exit <*> expr
 
+methodExpr :: (Monad m, TokenParsing m) => m Expr
+methodExpr = do
+    void $ symbol "to"
+    name <- noun
+    ps <- parens (sepBy pattern comma) <|> pure []
+    -- Guard on the return value.
+    rv <- symbol ":" *> expr
+    body <- expr
+    return $ Function name ps rv body
+
+objExpr :: (Monad m, TokenParsing m) => m Expr
+objExpr = do
+    void $ symbol "def"
+    name <- noun
+    braces $ do
+        methods <- many methodExpr
+        match <- optional matchExpr
+        return $ Object name methods match
+
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
     [ LitExpr <$> literal
@@ -164,6 +186,7 @@ term = choice
     , exitExpr
     , Escape <$> (symbol "escape" *> noun) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
+    , try objExpr
     , try defineExpr
     , functionExpr
     , Quasi "simple" <$> token quasi

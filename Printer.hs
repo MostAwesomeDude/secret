@@ -101,6 +101,7 @@ instance Pretty Expr where
     pretty (Assign e e') = pretty e <+> string ":=" <+> pretty e'
     pretty (Define p e) = string "def" <+> pretty p <+> string ":=" <+> pretty e
     pretty (Function n ps rv e) = string "def" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
+    pretty (Method n ps rv e) = string "to" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
     pretty (If c t e) = string "if" <+> parens (pretty c) <+> brace (pretty t) <+> string "else" <+> brace (pretty e)
     pretty (Switch c ts) = string "switch" <+> parens (pretty c) <+> (cat (map formatMatch ts))
     pretty (Try b cs) = string "try" <+> brace (pretty b) <+> brace (cat (map formatCatch cs))
@@ -114,3 +115,4 @@ instance Pretty Expr where
     pretty (Call e m) = pretty e <> char '.' <> pretty m
     pretty (Send e m) = pretty e <> string "<-" <> pretty m
     pretty (EjectExit e e') = pretty e <+> pretty e'
+    pretty (Object n ms mm) = string "def" <+> pretty n <+> brace (cat (map pretty ms) <$> maybe empty pretty mm)

@@ -75,6 +75,7 @@ data Expr = LitExpr Literal
           | Assign Expr Expr
           | Define Pattern Expr
           | Function Noun [Pattern] Expr Expr
+          | Method Noun [Pattern] Expr Expr
           | If Expr Expr Expr
           | Switch Expr [(Pattern, Expr)]
           | Try Expr [(Pattern, Expr)]
@@ -88,6 +89,7 @@ data Expr = LitExpr Literal
           | Call Expr Expr
           | Send Expr Expr
           | EjectExit Exit Expr
+          | Object Noun [Expr] (Maybe (Pattern, Expr))
     deriving (Data, Eq, Show, Typeable)
 
 instance Plated Expr
