@@ -170,7 +170,7 @@ defineExpr = do
         return $ Define binding body
     funcobj = do
         n <- noun
-        try (function n) <|> object n
+        object n <|> function n
     function name = do
         ps <- parens $ sepBy pattern comma
         -- Guard on the return value.
