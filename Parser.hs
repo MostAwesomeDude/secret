@@ -14,11 +14,13 @@ import Text.Trifecta.Parser
 import Expression
 
 literal :: TokenParsing m => m Literal
-literal = choice [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
-                 , EChar <$> charLiteral
-                 , EString <$> stringLiteral
-                 , either EInteger EFloat <$> naturalOrDouble
-                 , symbol "null" *> pure Null ]
+literal = choice
+    [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
+    , EChar <$> charLiteral
+    , EString <$> stringLiteral
+    , either EInteger EFloat <$> naturalOrDouble
+    , symbol "null" *> pure Null ]
+    <?> "literal"
 
 noun :: TokenParsing m => m Noun
 noun = highlight Identifier $ Noun <$> token (some (oneOf cs))
@@ -41,11 +43,14 @@ augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 interval :: TokenParsing m => m Interval
 interval = symbol ".." *> pure Through <|> symbol "..!" *> pure Till
 
+keyword :: TokenParsing m => String -> m String
+keyword s = highlight ReservedIdentifier $ symbol s
+
 exit :: TokenParsing m => m Exit
 exit = choice
-    [ symbol "break" *> pure Break
-    , symbol "continue" *> pure Continue
-    , symbol "return" *> pure Return
+    [ keyword "break" *> pure Break
+    , keyword "continue" *> pure Continue
+    , keyword "return" *> pure Return
     ]
 
 pListAnd :: (Monad m, TokenParsing m) => m Pattern
@@ -63,8 +68,8 @@ pattern = choice
     , PList <$> brackets (sepBy pattern comma)
     , ExactMatch <$> (symbol "==" *> expr)
     , namer
-    , Final <$> noun
-    ]
+    , Final <$> noun ]
+    <?> "pattern"
 
 quasi :: (Monad m, TokenParsing m) => m String
 quasi = highlight StringLiteral $ do
@@ -132,26 +137,8 @@ forExpr = do
 identifier :: (Monad m, TokenParsing m) => m String
 identifier = highlight Identifier (some letter) <?> "identifier"
 
-defineExpr :: (Monad m, TokenParsing m) => m Expr
-defineExpr = do
-    void $ symbol "def"
-    binding <- pattern
-    void $ symbol ":="
-    body <- expr
-    return $ Define binding body
-
-functionExpr :: (Monad m, TokenParsing m) => m Expr
-functionExpr = do
-    void $ symbol "def"
-    name <- noun
-    ps <- parens (sepBy pattern comma) <|> pure []
-    -- Guard on the return value.
-    rv <- symbol ":" *> expr
-    body <- expr
-    return $ Function name ps rv body
-
 exitExpr :: (Monad m, TokenParsing m) => m Expr
-exitExpr = EjectExit <$> exit <*> expr
+exitExpr = EjectExit <$> exit <*> expr <?> "exit"
 
 methodExpr :: (Monad m, TokenParsing m) => m Expr
 methodExpr = do
@@ -163,14 +150,30 @@ methodExpr = do
     body <- expr
     return $ Function name ps rv body
 
-objExpr :: (Monad m, TokenParsing m) => m Expr
-objExpr = do
-    void $ symbol "def"
-    name <- noun
-    braces $ do
-        methods <- many methodExpr
-        match <- optional matchExpr
-        return $ Object name methods match
+defineExpr :: (Monad m, TokenParsing m) => m Expr
+defineExpr = do
+    void $ keyword "def"
+    try define <|> funcobj
+    where
+    define = do
+        binding <- pattern
+        void $ symbol ":="
+        body <- expr
+        return $ Define binding body
+    funcobj = do
+        n <- noun
+        function n <|> object n
+    function name = do
+        ps <- parens $ sepBy pattern comma
+        -- Guard on the return value.
+        rv <- symbol ":" *> expr
+        body <- expr
+        return $ Function name ps rv body
+    object name = do
+        braces $ do
+            methods <- many methodExpr
+            match <- optional matchExpr
+            return $ Object name methods match
 
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
@@ -186,9 +189,7 @@ term = choice
     , exitExpr
     , Escape <$> (symbol "escape" *> noun) <*> braces expr
     , While <$> (symbol "while" *> parens expr) <*> braces expr
-    , try objExpr
-    , try defineExpr
-    , functionExpr
+    , defineExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> identifier <*> token quasi
     , NounExpr <$> noun ]
