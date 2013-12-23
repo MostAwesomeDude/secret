@@ -20,7 +20,7 @@ eStyle = IdentifierStyle
     , _styleReserved = HS.fromList [ "break", "catch", "continue", "def"
                                    , "else", "escape", "finally", "for", "if"
                                    , "in", "match", "null", "return"
-                                   , "switch", "to", "try", "while" ]
+                                   , "switch", "to", "try", "var", "while" ]
     , _styleHighlight = Identifier
     , _styleReservedHighlight = ReservedIdentifier
     }
@@ -75,7 +75,8 @@ namer = Namer <$> noun <* colon <*> expr
 
 pattern :: (Monad m, TokenParsing m) => m Pattern
 pattern = choice
-    [ try $ pListAnd
+    [ Varying <$> (reserve eStyle "var" *> pattern)
+    , try $ pListAnd
     , PList <$> brackets (sepBy pattern comma)
     , ExactMatch <$> (symbol "==" *> expr)
     , try namer

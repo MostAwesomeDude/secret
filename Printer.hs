@@ -63,6 +63,7 @@ instance Pretty Pattern where
     pretty (PListAnd ps p) = formatList ps <+> char '+' <+> pretty p
     pretty (ExactMatch e) = string "==" <> pretty e
     pretty (Namer n e) = pretty n <+> char ':' <> pretty e
+    pretty (Varying p) = string "var" <+> pretty p
     pretty (Final n) = pretty n
 
 formatPair :: (Pretty a, Pretty b) => (a, b) -> Doc

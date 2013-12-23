@@ -55,6 +55,7 @@ data Pattern = SuchThat Pattern Expr
              | PListAnd [Pattern] Pattern
              | ExactMatch Expr
              | Namer Noun Expr
+             | Varying Pattern
              | Final Noun
     deriving (Data, Eq, Show, Typeable)
 
