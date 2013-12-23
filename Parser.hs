@@ -2,6 +2,7 @@ module Parser where
 
 import Control.Applicative
 import Control.Monad
+import qualified Data.HashSet as HS
 import Data.List
 import Data.Monoid
 import Text.Parser.Char
@@ -12,6 +13,16 @@ import Text.Parser.Token.Highlight
 import Text.Trifecta.Parser
 
 import Expression
+
+eStyle :: (Monad m, TokenParsing m) => IdentifierStyle m
+eStyle = IdentifierStyle
+    { _styleName = "E identifier"
+    , _styleStart = letter
+    , _styleLetter = letter
+    , _styleReserved = HS.fromList [ "def" ]
+    , _styleHighlight = Identifier
+    , _styleReservedHighlight = ReservedIdentifier
+    }
 
 literal :: TokenParsing m => m Literal
 literal = choice
@@ -134,9 +145,6 @@ forExpr = do
     bexpr <- braces expr
     return $ For kpattern vpattern cexpr bexpr
 
-identifier :: (Monad m, TokenParsing m) => m String
-identifier = highlight Identifier (some letter) <?> "identifier"
-
 exitExpr :: (Monad m, TokenParsing m) => m Expr
 exitExpr = EjectExit <$> exit <*> expr <?> "exit"
 
@@ -152,7 +160,7 @@ methodExpr = do
 
 defineExpr :: (Monad m, TokenParsing m) => m Expr
 defineExpr = do
-    void $ keyword "def"
+    reserve eStyle "def"
     try define <|> funcobj
     where
     define = do
@@ -191,7 +199,7 @@ term = choice
     , While <$> (symbol "while" *> parens expr) <*> braces expr
     , defineExpr
     , Quasi "simple" <$> token quasi
-    , try $ Quasi <$> identifier <*> token quasi
+    , try $ Quasi <$> ident eStyle <*> token quasi
     , NounExpr <$> noun ]
     <?> "primitive expression"
 
