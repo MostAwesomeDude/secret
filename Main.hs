@@ -9,6 +9,7 @@ import Expander
 import Expression
 import Parser
 import Printer ()
+import Simplifier
 
 parser :: Unlined Parser Expr
 parser = expr
@@ -27,5 +28,6 @@ main = do
             let expanded = expand ast
             putStrLn "Expanded:"
             print $ pretty expanded
+            let simplified = simplify expanded
             putStrLn "Simplified:"
-            print $ pretty expanded
+            print $ pretty simplified
