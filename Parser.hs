@@ -17,28 +17,29 @@ import Expression
 eStyle :: (Monad m, TokenParsing m) => IdentifierStyle m
 eStyle = IdentifierStyle
     { _styleName = "E identifier"
-    , _styleStart = letter
-    , _styleLetter = letter
-    , _styleReserved = HS.fromList [ "def" ]
+    , _styleStart = oneOf $ "_" ++ ['a'..'z'] ++ ['A'..'Z']
+    , _styleLetter = oneOf $ "_" ++ ['a'..'z'] ++ ['A'..'Z']
+    , _styleReserved = HS.fromList [ "break", "catch", "continue", "def"
+                                   , "else", "escape", "finally", "for", "if"
+                                   , "in", "match", "null", "return"
+                                   , "switch", "to", "try", "while" ]
     , _styleHighlight = Identifier
     , _styleReservedHighlight = ReservedIdentifier
     }
 
-literal :: TokenParsing m => m Literal
+literal :: (Monad m, TokenParsing m) => m Literal
 literal = choice
     [ EURI <$> (char '<' *> manyTill anyChar (char '>'))
     , EChar <$> charLiteral
     , EString <$> stringLiteral
     , either EInteger EFloat <$> naturalOrDouble
-    , symbol "null" *> pure Null ]
+    , reserve eStyle "null" *> pure Null ]
     <?> "literal"
 
-noun :: TokenParsing m => m Noun
-noun = highlight Identifier $ Noun <$> token (some (oneOf cs))
+noun :: (Monad m, TokenParsing m) => m Noun
+noun = Noun <$> ident eStyle
    <|> QLHole <$> (char '$' *> braces natural)
    <|> QPHole <$> (char '@' *> braces natural)
-   where
-    cs = "_" ++ ['a'..'z'] ++ ['A'..'Z']
 
 bops :: [(BOp, String)]
 bops = zip (enumFrom Add) l
@@ -54,14 +55,11 @@ augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 interval :: TokenParsing m => m Interval
 interval = symbol ".." *> pure Through <|> symbol "..!" *> pure Till
 
-keyword :: TokenParsing m => String -> m String
-keyword s = highlight ReservedIdentifier $ symbol s
-
-exit :: TokenParsing m => m Exit
+exit :: (Monad m, TokenParsing m) => m Exit
 exit = choice
-    [ keyword "break" *> pure Break
-    , keyword "continue" *> pure Continue
-    , keyword "return" *> pure Return
+    [ reserve eStyle "break" *> pure Break
+    , reserve eStyle "continue" *> pure Continue
+    , reserve eStyle "return" *> pure Return
     ]
 
 pListAnd :: (Monad m, TokenParsing m) => m Pattern
@@ -98,11 +96,11 @@ mapPair = do
 
 ifExpr :: (Monad m, TokenParsing m) => m Expr
 ifExpr = do
-    void $ symbol "if"
+    reserve eStyle "if"
     cond <- parens expr
     t <- braces expr
     mf <- optional $ do
-        void $ symbol "else"
+        reserve eStyle "else"
         braces expr <|> ifExpr
     return $ case mf of
         Just f  -> If cond t f
@@ -110,37 +108,37 @@ ifExpr = do
 
 matchExpr :: (Monad m, TokenParsing m) => m (Pattern, Expr)
 matchExpr = do
-    void $ symbol "match"
+    reserve eStyle "match"
     p <- pattern
     clause <- braces expr
     return (p, clause)
 
 switchExpr :: (Monad m, TokenParsing m) => m Expr
 switchExpr = do
-    void $ symbol "switch"
+    reserve eStyle "switch"
     switch <- parens expr
     cases <- many matchExpr
     return $ Switch switch cases
 
 tryExpr :: (Monad m, TokenParsing m) => m Expr
 tryExpr = do
-    void $ symbol "try"
+    reserve eStyle "try"
     action <- braces expr
     catches <- many $ do
-        void $ symbol "catch"
+        reserve eStyle "catch"
         p <- pattern
         clause <- braces expr
         return (p, clause)
-    mfinally <- optional $ symbol "finally" *> braces expr
+    mfinally <- optional $ reserve eStyle "finally" *> braces expr
     return $ case mfinally of
         Nothing      -> Try action catches
         Just finally -> TryFinally action catches finally
 
 forExpr :: (Monad m, TokenParsing m) => m Expr
 forExpr = do
-    void $ symbol "for"
+    reserve eStyle "for"
     (kpattern, vpattern) <- mapPair
-    void $ symbol "in"
+    reserve eStyle "in"
     cexpr <- expr
     bexpr <- braces expr
     return $ For kpattern vpattern cexpr bexpr
@@ -150,7 +148,7 @@ exitExpr = EjectExit <$> exit <*> expr <?> "exit"
 
 methodExpr :: (Monad m, TokenParsing m) => m Expr
 methodExpr = do
-    void $ symbol "to"
+    reserve eStyle "to"
     name <- noun
     ps <- parens (sepBy pattern comma) <|> pure []
     -- Guard on the return value.
@@ -195,8 +193,8 @@ term = choice
     , tryExpr
     , forExpr
     , exitExpr
-    , Escape <$> (symbol "escape" *> noun) <*> braces expr
-    , While <$> (symbol "while" *> parens expr) <*> braces expr
+    , Escape <$> (reserve eStyle "escape" *> noun) <*> braces expr
+    , While <$> (reserve eStyle "while" *> parens expr) <*> braces expr
     , defineExpr
     , Quasi "simple" <$> token quasi
     , try $ Quasi <$> ident eStyle <*> token quasi
