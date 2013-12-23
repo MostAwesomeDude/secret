@@ -6,8 +6,9 @@ import qualified Data.HashSet as HS
 import Text.Parser.Char
 import Text.Parser.Combinators
 import Text.Parser.Expression
-import Text.Parser.Token
+import Text.Parser.Token hiding (colon)
 import Text.Parser.Token.Highlight
+import Text.Trifecta.Parser
 
 import Expression
 
@@ -62,18 +63,22 @@ exit = choice
 pListAnd :: (Monad m, TokenParsing m) => m Pattern
 pListAnd = PListAnd <$> brackets (sepBy pattern comma) <* symbol "+" <*> pattern
 
+-- Ugly hack.
+colon :: (Monad m, TokenParsing m) => m ()
+colon = do
+    void $ char ':'
+    notFollowedBy $ char '='
+    whiteSpace
+
 namer :: (Monad m, TokenParsing m) => m Pattern
-namer = choice
-    [ try $ Namer <$> noun <* symbol ":" <*> expr
-    , flip Namer (NounExpr (Noun "settable")) <$> noun
-    ]
+namer = Namer <$> noun <* colon <*> expr
 
 pattern :: (Monad m, TokenParsing m) => m Pattern
 pattern = choice
     [ try $ pListAnd
     , PList <$> brackets (sepBy pattern comma)
     , ExactMatch <$> (symbol "==" *> expr)
-    , namer
+    , try namer
     , Final <$> noun ]
     <?> "pattern"
 
@@ -149,7 +154,7 @@ methodExpr = do
     name <- noun
     ps <- parens (sepBy pattern comma) <|> pure []
     -- Guard on the return value.
-    rv <- symbol ":" *> expr
+    rv <- colon *> expr
     body <- expr
     return $ Function name ps rv body
 
@@ -165,18 +170,17 @@ defineExpr = do
         return $ Define binding body
     funcobj = do
         n <- noun
-        function n <|> object n
+        try (function n) <|> object n
     function name = do
         ps <- parens $ sepBy pattern comma
         -- Guard on the return value.
-        rv <- symbol ":" *> expr
+        rv <- colon *> expr
         body <- expr
         return $ Function name ps rv body
-    object name = do
-        braces $ do
-            methods <- many methodExpr
-            match <- optional matchExpr
-            return $ Object name methods match
+    object name = braces $ do
+        methods <- many methodExpr
+        match <- optional matchExpr
+        return $ Object name methods match
 
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
