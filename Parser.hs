@@ -44,9 +44,6 @@ bops = zip (enumFrom Add) l
     where
     l = ["+", "&", "|", "^", "/", "//", "%%", "*", "**", "%", "<<", ">>", "-"]
 
-bop :: TokenParsing m => m BOp
-bop = choice $ map (\(op, s) -> symbol s *> pure op) bops
-
 augOp :: TokenParsing m => m BOp
 augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
 
@@ -179,7 +176,7 @@ defineExpr = do
         body <- expr
         return $ Function name ps rv body
     object name = braces $ do
-        methods <- many methodExpr
+        methods <- many $ methodExpr <|> (symbol "\n" *> pure (LitExpr Null))
         match <- optional matchExpr
         return $ Object name methods match
 
@@ -211,6 +208,15 @@ bin cons sym = Infix (symbol sym *> pure cons)
 binary :: TokenParsing m => BOp -> String -> Operator m Expr
 binary op sym = bin (Binary op) sym AssocLeft
 
+binary' :: (Monad m, TokenParsing m) => BOp -> String -> Operator m Expr
+binary' op sym = Infix p AssocLeft
+    where
+    p = try $ do
+        void $ string sym
+        notFollowedBy $ char '='
+        whiteSpace
+        return $ Binary op
+
 comparison :: TokenParsing m => COp -> String -> Operator m Expr
 comparison op sym = bin (Comparison op) sym AssocNone
 
@@ -224,14 +230,14 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
           , bin Property "::" AssocLeft
           , Postfix (flip Index <$> brackets (sepBy expr comma)) ]
         , [ pre "!" Not, pre "~" Complement, pre "-" Negate ]
-        , [ binary Power "**" ]
-        , [ binary Multiply "*"
-          , binary FloorDivide "//"
-          , binary Divide "/"
-          , binary Modulus "%%"
-          , binary Remainder "%" ]
-        , [ binary Add "+", binary Subtract "-" ]
-        , [ binary ShiftLeft "<<", binary ShiftRight ">>" ]
+        , [ binary' Power "**" ]
+        , [ binary' Multiply "*"
+          , binary' FloorDivide "//"
+          , binary' Divide "/"
+          , binary' Modulus "%%"
+          , binary' Remainder "%" ]
+        , [ binary' Add "+", binary' Subtract "-" ]
+        , [ binary' ShiftLeft "<<", binary' ShiftRight ">>" ]
         , [ comparison GTEQ ">="
           , comparison GreaterThan ">"
           , comparison Magnitude "<=>"
