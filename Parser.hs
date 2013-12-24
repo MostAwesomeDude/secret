@@ -6,7 +6,7 @@ import qualified Data.HashSet as HS
 import Text.Parser.Char
 import Text.Parser.Combinators
 import Text.Parser.Expression
-import Text.Parser.Token hiding (colon)
+import Text.Parser.Token
 import Text.Parser.Token.Highlight
 import Text.Trifecta.Parser
 
@@ -23,6 +23,22 @@ eStyle = IdentifierStyle
                                    , "switch", "to", "try", "var", "while" ]
     , _styleHighlight = Identifier
     , _styleReservedHighlight = ReservedIdentifier
+    }
+
+eOp :: (Monad m, TokenParsing m) => IdentifierStyle m
+eOp = IdentifierStyle
+    { _styleName = "E operator"
+    , _styleStart = oneOf $ "\n!%&)*+-./:;<=>^|"
+    , _styleLetter = oneOf $ "\n!%&)*+-./:;<=>^|~"
+    , _styleReserved = HS.fromList [ "\n", "!=", "!~", "%", "%%", "%%=", "%="
+                                   , "&" , "&&", "&=", ")", "*", "**", "**="
+                                   , "*=" , "+", "+=", "-", "-=", ".", "/"
+                                   , "//" , "//=", "/=", ":", "::", ":=", ";"
+                                   , "<" , "<-", "<<", "<<=", "<=", "<=>"
+                                   , "==" , "=~", ">", ">=", ">>", ">>=", "^"
+                                   , "^=" , "|", "|=", "||" ]
+    , _styleHighlight = Operator
+    , _styleReservedHighlight = ReservedOperator
     }
 
 literal :: (Monad m, TokenParsing m) => m Literal
@@ -44,11 +60,12 @@ bops = zip (enumFrom Add) l
     where
     l = ["+", "&", "|", "^", "/", "//", "%%", "*", "**", "%", "<<", ">>", "-"]
 
-augOp :: TokenParsing m => m BOp
-augOp = choice $ map (\(op, s) -> symbol (s ++ "=") *> pure op) bops
+augOp :: (Monad m, TokenParsing m) => m BOp
+augOp = choice $ map (\(op, s) -> reserve eOp (s ++ "=") *> pure op) bops
 
-interval :: TokenParsing m => m Interval
-interval = symbol ".." *> pure Through <|> symbol "..!" *> pure Till
+interval :: (Monad m, TokenParsing m) => m Interval
+interval = reserve eOp ".." *> pure Through
+       <|> reserve eOp "..!" *> pure Till
 
 exit :: (Monad m, TokenParsing m) => m Exit
 exit = choice
@@ -58,24 +75,21 @@ exit = choice
     ]
 
 pListAnd :: (Monad m, TokenParsing m) => m Pattern
-pListAnd = PListAnd <$> brackets (sepBy pattern comma) <* symbol "+" <*> pattern
-
--- Ugly hack.
-colon :: (Monad m, TokenParsing m) => m ()
-colon = do
-    void $ char ':'
-    notFollowedBy $ char '='
-    whiteSpace
+pListAnd = do
+    ps <- brackets (sepBy pattern comma)
+    reserve eStyle "+"
+    p <- pattern
+    return $ PListAnd ps p
 
 namer :: (Monad m, TokenParsing m) => m Pattern
-namer = Namer <$> noun <* colon <*> expr
+namer = Namer <$> noun <* reserve eStyle ":" <*> expr
 
 pattern :: (Monad m, TokenParsing m) => m Pattern
 pattern = choice
     [ Varying <$> (reserve eStyle "var" *> pattern)
     , try $ pListAnd
     , PList <$> brackets (sepBy pattern comma)
-    , ExactMatch <$> (symbol "==" *> expr)
+    , ExactMatch <$> (reserve eOp "==" *> expr)
     , try namer
     , Final <$> noun ]
     <?> "pattern"
@@ -89,7 +103,7 @@ quasi = highlight StringLiteral $ do
 mapPair :: (Monad m, TokenParsing m) => m (Expr, Expr)
 mapPair = do
     k <- expr
-    void $ symbol "=>"
+    reserve eOp "=>"
     v <- expr
     return (k, v)
     <?> "pair"
@@ -152,7 +166,7 @@ methodExpr = do
     name <- noun
     ps <- parens (sepBy pattern comma) <|> pure []
     -- Guard on the return value.
-    rv <- colon *> expr
+    rv <- reserve eOp ":" *> expr
     body <- expr
     return $ Function name ps rv body
 
@@ -163,7 +177,7 @@ defineExpr = do
     where
     define = do
         binding <- pattern
-        void $ symbol ":="
+        reserve eOp ":="
         body <- expr
         return $ Define binding body
     funcobj = do
@@ -172,11 +186,11 @@ defineExpr = do
     function name = do
         ps <- parens $ sepBy pattern comma
         -- Guard on the return value.
-        rv <- colon *> expr
+        rv <- reserve eOp ":" *> expr
         body <- expr
         return $ Function name ps rv body
     object name = braces $ do
-        methods <- many $ methodExpr <|> (symbol "\n" *> pure (LitExpr Null))
+        methods <- many $ methodExpr <|> (reserve eOp "\n" *> pure (LitExpr Null))
         match <- optional matchExpr
         return $ Object name methods match
 
@@ -202,26 +216,18 @@ term = choice
     , token (many (char '\n')) *> pure (LitExpr Null) ]
     <?> "primitive expression"
 
-bin :: TokenParsing m => (a -> a -> a) -> String -> Assoc -> Operator m a
-bin cons sym = Infix (symbol sym *> pure cons)
+bin :: (Monad m, TokenParsing m)
+    => (a -> a -> a) -> String -> Assoc -> Operator m a
+bin cons sym = Infix (reserve eOp sym *> pure cons)
 
-binary :: TokenParsing m => BOp -> String -> Operator m Expr
+binary :: (Monad m, TokenParsing m) => BOp -> String -> Operator m Expr
 binary op sym = bin (Binary op) sym AssocLeft
 
-binary' :: (Monad m, TokenParsing m) => BOp -> String -> Operator m Expr
-binary' op sym = Infix p AssocLeft
-    where
-    p = try $ do
-        void $ string sym
-        notFollowedBy $ char '='
-        whiteSpace
-        return $ Binary op
-
-comparison :: TokenParsing m => COp -> String -> Operator m Expr
+comparison :: (Monad m, TokenParsing m) => COp -> String -> Operator m Expr
 comparison op sym = bin (Comparison op) sym AssocNone
 
-pre :: TokenParsing m => String -> UOp -> Operator m Expr
-pre s op = Prefix (symbol s *> pure (Unary op))
+pre :: (Monad m, TokenParsing m) => String -> UOp -> Operator m Expr
+pre s op = Prefix (reserve eOp s *> pure (Unary op))
 
 table :: (Monad m, TokenParsing m) => OperatorTable m Expr
 table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
@@ -230,14 +236,14 @@ table = [ [ Postfix (flip Arguments <$> parens (sepBy expr comma)) ]
           , bin Property "::" AssocLeft
           , Postfix (flip Index <$> brackets (sepBy expr comma)) ]
         , [ pre "!" Not, pre "~" Complement, pre "-" Negate ]
-        , [ binary' Power "**" ]
-        , [ binary' Multiply "*"
-          , binary' FloorDivide "//"
-          , binary' Divide "/"
-          , binary' Modulus "%%"
-          , binary' Remainder "%" ]
-        , [ binary' Add "+", binary' Subtract "-" ]
-        , [ binary' ShiftLeft "<<", binary' ShiftRight ">>" ]
+        , [ binary Power "**" ]
+        , [ binary Multiply "*"
+          , binary FloorDivide "//"
+          , binary Divide "/"
+          , binary Modulus "%%"
+          , binary Remainder "%" ]
+        , [ binary Add "+", binary Subtract "-" ]
+        , [ binary ShiftLeft "<<", binary ShiftRight ">>" ]
         , [ comparison GTEQ ">="
           , comparison GreaterThan ">"
           , comparison Magnitude "<=>"
