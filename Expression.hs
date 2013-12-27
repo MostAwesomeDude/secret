@@ -35,7 +35,7 @@ data BOp = Add | BitAnd | BitOr | BitXor | Divide | FloorDivide | Modulus
 makeLenses ''BOp
 
 data COp = Different | Equal | GTEQ | GreaterThan | LTEQ | LessThan
-         | Magnitude | Match | NoMatch
+         | Magnitude | Matches | DoesNotMatch
     deriving (Data, Enum, Eq, Ord, Show, Typeable)
 
 makeLenses ''COp

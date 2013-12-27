@@ -196,7 +196,8 @@ defineExpr = do
 
 term :: (Monad m, TokenParsing m) => m Expr
 term = choice
-    [ LitExpr <$> literal
+    -- Yes, it's possible to incorrectly pick literals: "0..end"
+    [ try $ LitExpr <$> literal
     , parens expr
     , Scope <$> braces expr
     , try $ EMap <$> brackets (sepBy mapPair comma)
