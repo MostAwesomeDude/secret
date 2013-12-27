@@ -1,9 +1,8 @@
 module Main where
 
 import System.Environment
-import Text.Parser.Token
+import Text.Parsec.Prim
 import Text.PrettyPrint.ANSI.Leijen
-import Text.Trifecta.Parser
 
 import Expander
 import Expression
@@ -11,16 +10,18 @@ import Parser
 import Printer ()
 import Simplifier
 
-parser :: Unlined Parser Expr
+parser :: Parsec Token () Expr
 parser = expr
 
 main :: IO ()
 main = do
     [filename] <- getArgs
-    result <- parseFromFile (runUnlined parser) filename
+    s <- readFile filename
+    let tokens = alexScanTokens s
+        result = parse parser filename tokens
     case result of
-        Nothing -> return ()
-        Just ast -> do
+        Left err  -> print err
+        Right ast -> do
             putStrLn "Parsed:"
             print ast
             putStrLn "Formatted:"

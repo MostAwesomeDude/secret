@@ -22,6 +22,7 @@ tokens :-
     '.'             { \[_, c, _] -> TChar c }
     [0-9]+          { \s -> TInt $ read s }
     \"[^\"]*\"      { \s -> TString (init (tail s)) }
+    \<[^\>]*\>      { \s -> TURI (init (tail s)) }
     [a-zA-Z]+       { TIdentifier }
     break           { \_ -> Break }
     catch           { \_ -> Catch }
@@ -119,9 +120,10 @@ data Token = Newline
            | While
            -- Primitive objects and wrappers
            | TChar Char
-           | TFloat Float
-           | TInt Int
+           | TFloat Double
+           | TInt Integer
            | TString String
+           | TURI String
            | TIdentifier String
            | TUnary UOp
            | TBinary BOp
