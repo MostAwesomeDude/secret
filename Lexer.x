@@ -29,7 +29,6 @@ tokens :-
     \"[^\"]*\"      { \s -> TString (init (tail s)) }
     `[^`]*`         { \s -> TQuasi (init (tail s)) }
     \<[^\>]*\>      { \s -> TURI (init (tail s)) }
-    [a-zA-Z]+       { TIdentifier }
     break           { \_ -> TBreak }
     catch           { \_ -> TCatch }
     continue        { \_ -> TContinue }
@@ -47,6 +46,8 @@ tokens :-
     try             { \_ -> TTry }
     var             { \_ -> TVar }
     while           { \_ -> TWhile }
+    -- Identifiers must be attempted after all keywords.
+    [a-zA-Z]+       { TIdentifier }
     !               { \_ -> TUnary Not }
     \~              { \_ -> TUnary Complement }
     \-              { \_ -> TUnary Negate }
