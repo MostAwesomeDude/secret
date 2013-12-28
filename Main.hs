@@ -19,7 +19,8 @@ main = do
     [filename] <- getArgs
     s <- readFile filename
     let tokens = alexScanTokens s
-        result = parse parser filename tokens
+    print tokens
+    let result = parse parser filename tokens
     case result of
         Left err  -> print err
         Right ast -> do
