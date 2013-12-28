@@ -225,8 +225,8 @@ bin cons t = Infix (exact t *> pure cons)
 binary :: BOp -> Token -> Operator P Expr
 binary op t = bin (Binary op) t AssocLeft
 
-comparison :: COp -> Token -> Operator P Expr
-comparison op t = bin (Comparison op) t AssocNone
+comparison :: COp -> Operator P Expr
+comparison op = bin (Comparison op) (TCompare op) AssocNone
 
 pre :: Token -> UOp -> Operator P Expr
 pre t op = Prefix (exact t *> pure (Unary op))
@@ -252,18 +252,18 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
           , binary Remainder (TBinary Remainder) ]
         , [ binary Add (TBinary Add), binary Subtract (TBinary Subtract) ]
         , [ binary ShiftLeft (TBinary ShiftLeft), binary ShiftRight (TBinary ShiftRight) ]
-        , [ comparison GTEQ (TCompare GTEQ)
-          , comparison GreaterThan (TCompare GreaterThan)
-          , comparison Magnitude (TCompare Magnitude)
-          , comparison LTEQ (TCompare LTEQ)
-          , comparison LessThan (TCompare LessThan) ]
-        , [ comparison Equal (TCompare Equal)
-          , comparison Different (TCompare Different)
+        , [ comparison GTEQ
+          , comparison GreaterThan
+          , comparison Magnitude
+          , comparison LTEQ
+          , comparison LessThan ]
+        , [ comparison Equal
+          , comparison Different
           , bin (Binary BitAnd) (TBinary BitAnd) AssocNone
           , bin (Binary BitOr) (TBinary BitOr) AssocNone
           , bin (Binary BitXor) (TBinary BitXor) AssocNone
-          , comparison Matches (TCompare Matches)
-          , comparison DoesNotMatch (TCompare DoesNotMatch) ]
+          , comparison Matches
+          , comparison DoesNotMatch ]
         , [ bin And TAnd AssocLeft ]
         , [ bin Or TOr AssocLeft ]
         , [ bin Assignment Assign AssocRight ]
