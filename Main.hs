@@ -12,7 +12,7 @@ import Printer ()
 import Simplifier
 
 parser :: Parsec [Token] () Expr
-parser = expr
+parser = fullExpr
 
 main :: IO ()
 main = do

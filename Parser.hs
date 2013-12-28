@@ -222,8 +222,8 @@ term = choice
 bin :: (a -> a -> a) -> Token -> Assoc -> Operator P a
 bin cons t = Infix (exact t *> pure cons)
 
-binary :: BOp -> Token -> Operator P Expr
-binary op t = bin (Binary op) t AssocLeft
+binary :: BOp -> Operator P Expr
+binary op = bin (Binary op) (TBinary op) AssocLeft
 
 comparison :: COp -> Operator P Expr
 comparison op = bin (Comparison op) (TCompare op) AssocNone
@@ -244,14 +244,14 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
         , [ pre (TUnary Not) Not
           , pre (TUnary Complement) Complement
           , pre (TUnary Negate) Negate ]
-        , [ binary Power (TBinary Power) ]
-        , [ binary Multiply (TBinary Multiply)
-          , binary FloorDivide (TBinary FloorDivide)
-          , binary Divide (TBinary Divide)
-          , binary Modulus (TBinary Modulus)
-          , binary Remainder (TBinary Remainder) ]
-        , [ binary Add (TBinary Add), binary Subtract (TBinary Subtract) ]
-        , [ binary ShiftLeft (TBinary ShiftLeft), binary ShiftRight (TBinary ShiftRight) ]
+        , [ binary Power ]
+        , [ binary Multiply
+          , binary FloorDivide
+          , binary Divide
+          , binary Modulus
+          , binary Remainder ]
+        , [ binary Add, binary Subtract ]
+        , [ binary ShiftLeft, binary ShiftRight ]
         , [ comparison GTEQ
           , comparison GreaterThan
           , comparison Magnitude
@@ -268,8 +268,11 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
         , [ bin Or TOr AssocLeft ]
         , [ bin Assignment Assign AssocRight ]
         , [ Infix (Augmented <$> tok augmented) AssocLeft ]
-        , [ bin Sequence Newline AssocLeft ]
+        , [ bin Sequence Semicolon AssocLeft, bin Sequence Newline AssocLeft ]
         ]
  
 expr :: P Expr
-expr = optional (exact Newline) *> (buildExpressionParser table term <|> term) <* optional (exact Newline)
+expr = try (buildExpressionParser table term) <|> term
+
+fullExpr :: P Expr
+fullExpr = expr <* optional (exact Newline)

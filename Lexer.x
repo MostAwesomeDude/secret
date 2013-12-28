@@ -9,7 +9,8 @@ import Expression hiding (Expr(..), Exit(..))
 tokens :-
 
     [\ ]+           ;
-    \;\n+|\;|\n+    { \_ -> Newline }
+    \n+             { \_ -> Newline }
+    \;+             { \_ -> Semicolon }
     :               { \_ -> Colon }
     \.              { \_ -> Dot }
     \,              { \_ -> Comma }
@@ -93,6 +94,7 @@ tokens :-
 {
 data Token = Newline
            -- Primitive symbols
+           | Semicolon
            | Colon
            | Dot
            | Comma
