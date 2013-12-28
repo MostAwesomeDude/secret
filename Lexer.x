@@ -16,6 +16,8 @@ tokens :-
     :               { wrapPos $ \_ -> Colon }
     \.              { wrapPos $ \_ -> Dot }
     \,              { wrapPos $ \_ -> Comma }
+    -- The hyphen could be either unary negation or binary subtraction.
+    \-              { wrapPos $ \_ -> Hyphen }
     \{ @nl?         { wrapPos $ \_ -> OpenBrace }
     \}              { wrapPos $ \_ -> CloseBrace }
     \[              { wrapPos $ \_ -> OpenBracket }
@@ -53,7 +55,6 @@ tokens :-
     [a-zA-Z]+       { wrapPos $ TIdentifier }
     !               { wrapPos $ \_ -> TUnary Not }
     \~              { wrapPos $ \_ -> TUnary Complement }
-    \-              { wrapPos $ \_ -> TUnary Negate }
     !=              { wrapPos $ \_ -> TCompare Different }
     !\~             { wrapPos $ \_ -> TCompare DoesNotMatch }
     \%              { wrapPos $ \_ -> TBinary Remainder }
@@ -104,6 +105,7 @@ data Token = Newline
            | Colon
            | Dot
            | Comma
+           | Hyphen
            | OpenBrace
            | CloseBrace
            | OpenBracket

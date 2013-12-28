@@ -243,14 +243,17 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
           , Postfix (flip Index <$> listOf expr) ]
         , [ pre (TUnary Not) Not
           , pre (TUnary Complement) Complement
-          , pre (TUnary Negate) Negate ]
+          -- Hyphens are not automatically lexed as unary.
+          , pre Hyphen Negate ]
         , [ binary Power ]
         , [ binary Multiply
           , binary FloorDivide
           , binary Divide
           , binary Modulus
           , binary Remainder ]
-        , [ binary Add, binary Subtract ]
+        , [ binary Add
+          -- Hyphens are not automatically lexed as binary.
+          , bin (Binary Subtract) Hyphen AssocLeft ]
         , [ binary ShiftLeft, binary ShiftRight ]
         , [ comparison GTEQ
           , comparison GreaterThan
