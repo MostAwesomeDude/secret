@@ -20,10 +20,10 @@ sat :: (Token -> Bool) -> P Token
 sat f = tok (\t -> if f t then Just t else Nothing)
 
 exact :: Token -> P Token
-exact t = sat (t ==)
+exact t = sat (t ==) <?> "exactly " ++ show t
 
 assoc :: [(Token, a)] -> P a
-assoc ts = tok (\t -> search t ts)
+assoc ts = tok (\t -> search t ts) <?> "one of " ++ show (map fst ts)
     where
     search t [] = Nothing
     search t ((t', a):ts)
@@ -34,19 +34,20 @@ literal :: P Literal
 literal = tok go <?> "literal"
     where
     go (TChar c) = Just $ EChar c
-    go (TInt i) = Just $ EInteger i
     go (TFloat f) = Just $ EFloat f
+    go (TInt i) = Just $ EInteger i
+    go (TString s) = Just $ EString s
     go (TURI u) = Just $ EURI u
     go _ = Nothing
 
 identifier :: P String
-identifier = tok go
+identifier = tok go <?> "identifier"
     where
     go (TIdentifier s) = Just s
     go _ = Nothing
 
 noun :: P Noun
-noun = tok go
+noun = tok go <?> "noun"
     where
     go (TIdentifier s) = Just $ Noun s
     go _ = Nothing
@@ -271,4 +272,4 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
         ]
  
 expr :: P Expr
-expr = (exact Newline *> expr) <|> buildExpressionParser table term <|> term
+expr = optional (exact Newline) *> (buildExpressionParser table term <|> term) <* optional (exact Newline)
