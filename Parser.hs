@@ -11,10 +11,10 @@ import Text.Parser.Expression
 import Expression
 import Lexer
 
-type P = Parsec [Token] ()
+type P = Parsec [(SourcePos, Token)] ()
 
 tok :: (Token -> Maybe a) -> P a
-tok = token show (\_ -> newPos "" 0 0)
+tok f = token (show . snd) fst (f . snd)
 
 sat :: (Token -> Bool) -> P Token
 sat f = tok (\t -> if f t then Just t else Nothing)
@@ -272,7 +272,7 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
         ]
  
 expr :: P Expr
-expr = try (buildExpressionParser table term) <|> term
+expr = buildExpressionParser table term
 
 fullExpr :: P Expr
 fullExpr = expr <* optional (exact Newline)

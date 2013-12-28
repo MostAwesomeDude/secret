@@ -4,94 +4,98 @@ module Lexer where
 import Expression hiding (Expr(..), Exit(..))
 }
 
-%wrapper "basic"
+%wrapper "posn"
 
 tokens :-
 
     [\ ]+           ;
-    \n+             { \_ -> Newline }
-    \;+             { \_ -> Semicolon }
-    :               { \_ -> Colon }
-    \.              { \_ -> Dot }
-    \,              { \_ -> Comma }
-    \{              { \_ -> OpenBrace }
-    \}              { \_ -> CloseBrace }
-    \[              { \_ -> OpenBracket }
-    \]              { \_ -> CloseBracket }
-    \(              { \_ -> OpenParen }
-    \)              { \_ -> CloseParen }
-    ::              { \_ -> Property }
-    :=              { \_ -> Assign }
-    =\>             { \_ -> Pair }
-    \<\-            { \_ -> Send }
-    \|\|            { \_ -> TOr }
-    '.'             { \[_, c, _] -> TChar c }
-    [0-9]+          { \s -> TInt $ read s }
-    \"[^\"]*\"      { \s -> TString (init (tail s)) }
-    `[^`]*`         { \s -> TQuasi (init (tail s)) }
-    \<[^\>]*\>      { \s -> TURI (init (tail s)) }
-    break           { \_ -> TBreak }
-    catch           { \_ -> TCatch }
-    continue        { \_ -> TContinue }
-    def             { \_ -> TDef }
-    else            { \_ -> TElse }
-    escape          { \_ -> TEscape }
-    finally         { \_ -> TFinally }
-    for             { \_ -> TFor }
-    if              { \_ -> TIf }
-    in              { \_ -> TIn }
-    match           { \_ -> TMatch }
-    return          { \_ -> TReturn }
-    switch          { \_ -> TSwitch }
-    to              { \_ -> TTo }
-    try             { \_ -> TTry }
-    var             { \_ -> TVar }
-    while           { \_ -> TWhile }
+    \n+             { wrapPos $ \_ -> Newline }
+    \;+             { wrapPos $ \_ -> Semicolon }
+    :               { wrapPos $ \_ -> Colon }
+    \.              { wrapPos $ \_ -> Dot }
+    \,              { wrapPos $ \_ -> Comma }
+    \{              { wrapPos $ \_ -> OpenBrace }
+    \}              { wrapPos $ \_ -> CloseBrace }
+    \[              { wrapPos $ \_ -> OpenBracket }
+    \]              { wrapPos $ \_ -> CloseBracket }
+    \(              { wrapPos $ \_ -> OpenParen }
+    \)              { wrapPos $ \_ -> CloseParen }
+    ::              { wrapPos $ \_ -> Property }
+    :=              { wrapPos $ \_ -> Assign }
+    =\>             { wrapPos $ \_ -> Pair }
+    \<\-            { wrapPos $ \_ -> Send }
+    \|\|            { wrapPos $ \_ -> TOr }
+    '.'             { wrapPos $ \[_, c, _] -> TChar c }
+    [0-9]+          { wrapPos $ \s -> TInt $ read s }
+    \"[^\"]*\"      { wrapPos $ \s -> TString (init (tail s)) }
+    `[^`]*`         { wrapPos $ \s -> TQuasi (init (tail s)) }
+    \<[^\>]*\>      { wrapPos $ \s -> TURI (init (tail s)) }
+    break           { wrapPos $ \_ -> TBreak }
+    catch           { wrapPos $ \_ -> TCatch }
+    continue        { wrapPos $ \_ -> TContinue }
+    def             { wrapPos $ \_ -> TDef }
+    else            { wrapPos $ \_ -> TElse }
+    escape          { wrapPos $ \_ -> TEscape }
+    finally         { wrapPos $ \_ -> TFinally }
+    for             { wrapPos $ \_ -> TFor }
+    if              { wrapPos $ \_ -> TIf }
+    in              { wrapPos $ \_ -> TIn }
+    match           { wrapPos $ \_ -> TMatch }
+    return          { wrapPos $ \_ -> TReturn }
+    switch          { wrapPos $ \_ -> TSwitch }
+    to              { wrapPos $ \_ -> TTo }
+    try             { wrapPos $ \_ -> TTry }
+    var             { wrapPos $ \_ -> TVar }
+    while           { wrapPos $ \_ -> TWhile }
     -- Identifiers must be attempted after all keywords.
-    [a-zA-Z]+       { TIdentifier }
-    !               { \_ -> TUnary Not }
-    \~              { \_ -> TUnary Complement }
-    \-              { \_ -> TUnary Negate }
-    !=              { \_ -> TCompare Different }
-    !\~             { \_ -> TCompare DoesNotMatch }
-    \%              { \_ -> TBinary Remainder }
-    \%\%            { \_ -> TBinary Modulus }
-    \%\%=           { \_ -> TAugmented Modulus }
-    \%=             { \_ -> TAugmented Remainder }
-    &               { \_ -> TBinary BitAnd }
-    &&              { \_ -> TAnd }
-    &=              { \_ -> TAugmented BitAnd }
-    \*              { \_ -> TBinary Multiply }
-    \*\*            { \_ -> TBinary Power }
-    \*\*=           { \_ -> TAugmented Power }
-    \*=             { \_ -> TAugmented Multiply }
-    \+              { \_ -> TBinary Add }
-    \+=             { \_ -> TAugmented Add }
-    \-              { \_ -> TBinary Subtract }
-    \-=             { \_ -> TAugmented Subtract }
-    \/              { \_ -> TBinary Divide }
-    \/\/            { \_ -> TBinary FloorDivide }
-    \/\/=           { \_ -> TAugmented FloorDivide }
-    \/=             { \_ -> TAugmented Divide }
-    \<              { \_ -> TCompare LessThan }
-    \<\<            { \_ -> TBinary ShiftLeft }
-    \<\<=           { \_ -> TAugmented ShiftLeft }
-    \<=             { \_ -> TCompare LTEQ }
-    \<=\>           { \_ -> TCompare Magnitude }
-    ==              { \_ -> TCompare Equal }
-    =\~             { \_ -> TCompare Matches }
-    \>              { \_ -> TCompare GreaterThan }
-    \>=             { \_ -> TCompare GTEQ }
-    \>\>            { \_ -> TBinary ShiftRight }
-    \>\>=           { \_ -> TAugmented ShiftRight }
-    \^              { \_ -> TBinary BitXor }
-    \^=             { \_ -> TAugmented BitXor }
-    \|              { \_ -> TBinary BitOr }
-    \|=             { \_ -> TAugmented BitOr }
-    \.\.            { \_ -> TInterval Through }
-    \.\.\!          { \_ -> TInterval Till }
+    [a-zA-Z]+       { wrapPos $ TIdentifier }
+    !               { wrapPos $ \_ -> TUnary Not }
+    \~              { wrapPos $ \_ -> TUnary Complement }
+    \-              { wrapPos $ \_ -> TUnary Negate }
+    !=              { wrapPos $ \_ -> TCompare Different }
+    !\~             { wrapPos $ \_ -> TCompare DoesNotMatch }
+    \%              { wrapPos $ \_ -> TBinary Remainder }
+    \%\%            { wrapPos $ \_ -> TBinary Modulus }
+    \%\%=           { wrapPos $ \_ -> TAugmented Modulus }
+    \%=             { wrapPos $ \_ -> TAugmented Remainder }
+    &               { wrapPos $ \_ -> TBinary BitAnd }
+    &&              { wrapPos $ \_ -> TAnd }
+    &=              { wrapPos $ \_ -> TAugmented BitAnd }
+    \*              { wrapPos $ \_ -> TBinary Multiply }
+    \*\*            { wrapPos $ \_ -> TBinary Power }
+    \*\*=           { wrapPos $ \_ -> TAugmented Power }
+    \*=             { wrapPos $ \_ -> TAugmented Multiply }
+    \+              { wrapPos $ \_ -> TBinary Add }
+    \+=             { wrapPos $ \_ -> TAugmented Add }
+    \-              { wrapPos $ \_ -> TBinary Subtract }
+    \-=             { wrapPos $ \_ -> TAugmented Subtract }
+    \/              { wrapPos $ \_ -> TBinary Divide }
+    \/\/            { wrapPos $ \_ -> TBinary FloorDivide }
+    \/\/=           { wrapPos $ \_ -> TAugmented FloorDivide }
+    \/=             { wrapPos $ \_ -> TAugmented Divide }
+    \<              { wrapPos $ \_ -> TCompare LessThan }
+    \<\<            { wrapPos $ \_ -> TBinary ShiftLeft }
+    \<\<=           { wrapPos $ \_ -> TAugmented ShiftLeft }
+    \<=             { wrapPos $ \_ -> TCompare LTEQ }
+    \<=\>           { wrapPos $ \_ -> TCompare Magnitude }
+    ==              { wrapPos $ \_ -> TCompare Equal }
+    =\~             { wrapPos $ \_ -> TCompare Matches }
+    \>              { wrapPos $ \_ -> TCompare GreaterThan }
+    \>=             { wrapPos $ \_ -> TCompare GTEQ }
+    \>\>            { wrapPos $ \_ -> TBinary ShiftRight }
+    \>\>=           { wrapPos $ \_ -> TAugmented ShiftRight }
+    \^              { wrapPos $ \_ -> TBinary BitXor }
+    \^=             { wrapPos $ \_ -> TAugmented BitXor }
+    \|              { wrapPos $ \_ -> TBinary BitOr }
+    \|=             { wrapPos $ \_ -> TAugmented BitOr }
+    \.\.            { wrapPos $ \_ -> TInterval Through }
+    \.\.\!          { wrapPos $ \_ -> TInterval Till }
 
 {
+
+wrapPos :: (String -> b) -> a -> String -> (a, b)
+wrapPos f a s = (a, f s)
+
 data Token = Newline
            -- Primitive symbols
            | Semicolon

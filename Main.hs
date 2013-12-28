@@ -1,6 +1,8 @@
 module Main where
 
+import Control.Lens
 import System.Environment
+import Text.Parsec.Pos
 import Text.Parsec.Prim
 import Text.PrettyPrint.ANSI.Leijen
 
@@ -11,8 +13,11 @@ import Parser
 import Printer ()
 import Simplifier
 
-parser :: Parsec [Token] () Expr
+parser :: Parsec [(SourcePos, Token)] () Expr
 parser = fullExpr
+
+convertPos :: String -> [(AlexPosn, Token)] -> [(SourcePos, Token)]
+convertPos name = map $ _1 %~ (\(AlexPn _ l c) -> newPos name l c)
 
 main :: IO ()
 main = do
@@ -20,7 +25,7 @@ main = do
     s <- readFile filename
     let tokens = alexScanTokens s
     print tokens
-    let result = parse parser filename tokens
+    let result = parse parser filename (convertPos filename tokens)
     case result of
         Left err  -> print err
         Right ast -> do
