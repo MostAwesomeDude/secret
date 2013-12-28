@@ -6,15 +6,17 @@ import Expression hiding (Expr(..), Exit(..))
 
 %wrapper "posn"
 
+@nl = \n+
+
 tokens :-
 
     [\ ]+           ;
-    \n+             { wrapPos $ \_ -> Newline }
+    @nl             { wrapPos $ \_ -> Newline }
     \;+             { wrapPos $ \_ -> Semicolon }
     :               { wrapPos $ \_ -> Colon }
     \.              { wrapPos $ \_ -> Dot }
     \,              { wrapPos $ \_ -> Comma }
-    \{              { wrapPos $ \_ -> OpenBrace }
+    \{ @nl?         { wrapPos $ \_ -> OpenBrace }
     \}              { wrapPos $ \_ -> CloseBrace }
     \[              { wrapPos $ \_ -> OpenBracket }
     \]              { wrapPos $ \_ -> CloseBracket }
