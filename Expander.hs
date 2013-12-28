@@ -27,7 +27,8 @@ flipCompares = transform $ \expr -> case expr of
 
 elimShiftRight :: Expr -> Expr
 elimShiftRight = transform $ \expr -> case expr of
-    (Binary ShiftRight obj offset) -> Binary ShiftLeft obj $ Unary Not offset
+    (Binary ShiftRight obj offset)
+        -> Binary ShiftLeft obj $ Unary Negate offset
     e -> e
 
 elimUnary :: Expr -> Expr
