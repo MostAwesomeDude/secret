@@ -73,7 +73,7 @@ data Expr = LitExpr Literal
           | Scope Expr
           | Sequence Expr Expr
           | Augmented BOp Expr Expr
-          | Assign Expr Expr
+          | Assignment Expr Expr
           | Define Pattern Expr
           | Function Noun [Pattern] Expr Expr
           | Method Noun [Pattern] Expr Expr
@@ -86,9 +86,9 @@ data Expr = LitExpr Literal
           | For Expr Expr Expr Expr
           | Arguments Expr [Expr]
           | Index Expr [Expr]
-          | Property Expr Expr
-          | Call Expr Expr
-          | Send Expr Expr
+          | EProperty Expr Expr
+          | ECall Expr Expr
+          | ESend Expr Expr
           | EjectExit Exit Expr
           | Object Noun [Expr] (Maybe (Pattern, Expr))
     deriving (Data, Eq, Show, Typeable)

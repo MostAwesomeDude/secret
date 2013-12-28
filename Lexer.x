@@ -19,28 +19,37 @@ tokens :-
     \]              { \_ -> CloseBracket }
     \(              { \_ -> OpenParen }
     \)              { \_ -> CloseParen }
+    ::              { \_ -> Property }
+    :=              { \_ -> Assign }
+    =\>             { \_ -> Pair }
+    \<\-            { \_ -> Send }
+    \|\|            { \_ -> TOr }
     '.'             { \[_, c, _] -> TChar c }
     [0-9]+          { \s -> TInt $ read s }
     \"[^\"]*\"      { \s -> TString (init (tail s)) }
+    `[^`]*`         { \s -> TQuasi (init (tail s)) }
     \<[^\>]*\>      { \s -> TURI (init (tail s)) }
     [a-zA-Z]+       { TIdentifier }
-    break           { \_ -> Break }
-    catch           { \_ -> Catch }
-    continue        { \_ -> Continue }
-    def             { \_ -> Def }
-    else            { \_ -> Else }
-    escape          { \_ -> Escape }
-    finally         { \_ -> Finally }
-    for             { \_ -> For }
-    if              { \_ -> If }
-    in              { \_ -> In }
-    match           { \_ -> Match }
-    return          { \_ -> Return }
-    switch          { \_ -> Switch }
-    to              { \_ -> To }
-    try             { \_ -> Try }
-    var             { \_ -> Var }
-    while           { \_ -> While }
+    break           { \_ -> TBreak }
+    catch           { \_ -> TCatch }
+    continue        { \_ -> TContinue }
+    def             { \_ -> TDef }
+    else            { \_ -> TElse }
+    escape          { \_ -> TEscape }
+    finally         { \_ -> TFinally }
+    for             { \_ -> TFor }
+    if              { \_ -> TIf }
+    in              { \_ -> TIn }
+    match           { \_ -> TMatch }
+    return          { \_ -> TReturn }
+    switch          { \_ -> TSwitch }
+    to              { \_ -> TTo }
+    try             { \_ -> TTry }
+    var             { \_ -> TVar }
+    while           { \_ -> TWhile }
+    !               { \_ -> TUnary Not }
+    \~              { \_ -> TUnary Complement }
+    \-              { \_ -> TUnary Negate }
     !=              { \_ -> TCompare Different }
     !\~             { \_ -> TCompare DoesNotMatch }
     \%              { \_ -> TBinary Remainder }
@@ -62,10 +71,7 @@ tokens :-
     \/\/            { \_ -> TBinary FloorDivide }
     \/\/=           { \_ -> TAugmented FloorDivide }
     \/=             { \_ -> TAugmented Divide }
-    ::              { \_ -> Property }
-    :=              { \_ -> Assign }
     \<              { \_ -> TCompare LessThan }
-    \<\-            { \_ -> Send }
     \<\<            { \_ -> TBinary ShiftLeft }
     \<\<=           { \_ -> TAugmented ShiftLeft }
     \<=             { \_ -> TCompare LTEQ }
@@ -80,7 +86,8 @@ tokens :-
     \^=             { \_ -> TAugmented BitXor }
     \|              { \_ -> TBinary BitOr }
     \|=             { \_ -> TAugmented BitOr }
-    \|\|            { \_ -> TOr }
+    \.\.            { \_ -> TInterval Through }
+    \.\.\!          { \_ -> TInterval Till }
 
 {
 data Token = Newline
@@ -96,38 +103,41 @@ data Token = Newline
            | CloseParen
            -- Compound non-operator symbols
            | Assign
+           | Pair
            | Property
            | Send
            | TAnd
            | TOr
            -- Keywords
-           | Break
-           | Catch
-           | Continue
-           | Def
-           | Else
-           | Escape
-           | Finally
-           | For
-           | If
-           | In
-           | Match
-           | Return
-           | Switch
-           | To
-           | Try
-           | Var
-           | While
+           | TBreak
+           | TCatch
+           | TContinue
+           | TDef
+           | TElse
+           | TEscape
+           | TFinally
+           | TFor
+           | TIf
+           | TIn
+           | TMatch
+           | TReturn
+           | TSwitch
+           | TTo
+           | TTry
+           | TVar
+           | TWhile
            -- Primitive objects and wrappers
            | TChar Char
            | TFloat Double
            | TInt Integer
            | TString String
            | TURI String
+           | TQuasi String
            | TIdentifier String
            | TUnary UOp
            | TBinary BOp
            | TAugmented BOp
            | TCompare COp
+           | TInterval Interval
     deriving (Eq, Show)
 }

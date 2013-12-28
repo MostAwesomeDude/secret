@@ -6,11 +6,12 @@ import Text.PrettyPrint.ANSI.Leijen
 
 import Expander
 import Expression
+import Lexer
 import Parser
 import Printer ()
 import Simplifier
 
-parser :: Parsec Token () Expr
+parser :: Parsec [Token] () Expr
 parser = expr
 
 main :: IO ()

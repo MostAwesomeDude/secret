@@ -5,7 +5,7 @@ import Control.Lens
 import Expression
 
 makeCall :: Expr -> String -> [Expr] -> Expr
-makeCall obj meth = Arguments . Call obj . NounExpr $ Noun meth
+makeCall obj meth = Arguments . ECall obj . NounExpr $ Noun meth
 
 wrapFunctions :: Expr -> Expr
 wrapFunctions = transform $ \expr -> case expr of
@@ -14,13 +14,15 @@ wrapFunctions = transform $ \expr -> case expr of
 
 elimAug :: Expr -> Expr
 elimAug = transform $ \expr -> case expr of
-    (Augmented o target val) -> Assign target $ Binary o target val
+    (Augmented o target val) -> Assignment target $ Binary o target val
     e -> e
 
 flipCompares :: Expr -> Expr
 flipCompares = transform $ \expr -> case expr of
-    (Comparison Different obj other) -> Unary Not $ Comparison Equal obj other
-    (Comparison NoMatch   obj other) -> Unary Not $ Comparison Match obj other
+    (Comparison Different    obj other)
+        -> Unary Not $ Comparison Equal obj other
+    (Comparison DoesNotMatch obj other)
+        -> Unary Not $ Comparison Matches obj other
     e -> e
 
 elimShiftRight :: Expr -> Expr

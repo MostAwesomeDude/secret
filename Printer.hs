@@ -45,8 +45,8 @@ instance Pretty COp where
     pretty LTEQ = string "<="
     pretty LessThan = char '<'
     pretty Magnitude = string "<=>"
-    pretty Match = string "=~"
-    pretty NoMatch = string "!~"
+    pretty Matches = string "=~"
+    pretty DoesNotMatch = string "!~"
 
 instance Pretty Interval where
     pretty Through = string ".."
@@ -99,7 +99,7 @@ instance Pretty Expr where
     pretty (Scope e) = brace $ pretty e
     pretty (Sequence e e') = pretty e <$> pretty e'
     pretty (Augmented op e e') = pretty e <+> pretty op <> char '=' <+> pretty e'
-    pretty (Assign e e') = pretty e <+> string ":=" <+> pretty e'
+    pretty (Assignment e e') = pretty e <+> string ":=" <+> pretty e'
     pretty (Define p e) = string "def" <+> pretty p <+> string ":=" <+> pretty e
     pretty (Function n ps rv e) = string "def" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
     pretty (Method n ps rv e) = string "to" <+> pretty n <+> paren ps <+> char ':' <> pretty rv <+> pretty e
@@ -112,8 +112,8 @@ instance Pretty Expr where
     pretty (For k v c b) = string "for" <+> formatPair (k, v) <+> string "in" <+> pretty c <+> brace (pretty b)
     pretty (Arguments e es) = pretty e <> paren es
     pretty (Index e es) = pretty e <+> formatList es
-    pretty (Property e p) = pretty e <> string "::" <> pretty p
-    pretty (Call e m) = pretty e <> char '.' <> pretty m
-    pretty (Send e m) = pretty e <> string "<-" <> pretty m
+    pretty (EProperty e p) = pretty e <> string "::" <> pretty p
+    pretty (ECall e m) = pretty e <> char '.' <> pretty m
+    pretty (ESend e m) = pretty e <> string "<-" <> pretty m
     pretty (EjectExit e e') = pretty e <+> pretty e'
     pretty (Object n ms mm) = string "def" <+> pretty n <+> brace (cat (map pretty ms) <$> maybe empty pretty mm)
