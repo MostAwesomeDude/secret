@@ -268,11 +268,16 @@ table = [ [ Postfix (flip Arguments <$> parensOf expr) ]
         , [ bin Or TOr AssocLeft ]
         , [ bin Assignment Assign AssocRight ]
         , [ Infix (Augmented <$> tok augmented) AssocLeft ]
-        , [ bin Sequence Semicolon AssocLeft, bin Sequence Newline AssocLeft ]
+        , [ bin Sequence Semicolon AssocLeft ]
         ]
  
 expr :: P Expr
-expr = buildExpressionParser table term
+expr = do
+    first <- expr'
+    try (exact Newline *> (Sequence first <$> expr))
+        <|> many (exact Newline) *> pure first
+    where
+    expr' = buildExpressionParser table term
 
 fullExpr :: P Expr
 fullExpr = expr <* optional (exact Newline)
