@@ -8,7 +8,21 @@ data Inst a = Dup a
             | Rot a
             | Pop a
             | Swap a
+            | GetSlot Int a
+            | PutSlot Int a
     deriving (Eq, Functor, Show)
+
+data Slot = Slot | NoSlot
+    deriving (Eq, Show)
+
+data Object = SlotObj Slot
+    deriving (Eq, Show)
+
+data Environment a = Env
+                   { slots :: [Slot]
+                   , stack :: [a]
+                   }
+    deriving (Eq, Show)
 
 dup :: Free Inst ()
 dup = liftF $ Dup ()
@@ -16,13 +30,18 @@ dup = liftF $ Dup ()
 pop :: Free Inst ()
 pop = liftF $ Pop ()
 
-eval :: (Num a, Show a) => Free Inst () -> [a]
-eval = help [42]
+swap :: Free Inst ()
+swap = liftF $ Swap ()
+
+eval :: Free Inst () -> Environment Object -> Environment Object
+eval inst env = go env inst
     where
-    help as (Free action) = go as action
-    help as _ = as
-    go (a:as) (Dup cont) = help (a:a:as) cont
-    go (a:b:c:as) (Rot cont) = help (b:c:a:as) cont
-    go (a:as) (Pop cont) = help as cont
-    go (a:b:as) (Swap cont) = help (b:a:as) cont
-    go stack inst = error $ "Stack error: " ++ show inst ++ " Stack: " ++ show stack
+    go env (Free action) = go' env action
+    go env _ = env
+    go' env@(Env {stack = (a:as)}) (Dup cont) = go (env {stack = (a:a:as) }) cont
+    go' env@(Env {stack = (a:b:c:as)}) (Rot cont) = go (env {stack = (b:c:a:as) }) cont
+    go' env@(Env {stack = (a:as)}) (Pop cont) = go (env {stack = as }) cont
+    go' env@(Env {stack = (a:b:as)}) (Swap cont) = go (env {stack = (b:a:as) }) cont
+    go' (Env ss st) (GetSlot i cont) = let s = ss !! i in
+        go (Env ss (SlotObj s:st)) cont
+    go' env inst = error $ "Stack error: " ++ show inst ++ " Stack: " ++ show env
