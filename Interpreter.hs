@@ -35,6 +35,12 @@ data Environment a = Env
 
 makeLenses ''Environment
 
+call :: Object -> String -> Int -> [Object] -> Object
+call (IntObj i) verb arity args = intCall i verb arity args
+
+intCall :: Integer -> String -> Int -> [Object] -> Object
+intCall i "mul" 1 [IntObj j] = IntObj $ i * j
+
 dup :: Free Inst ()
 dup = liftF $ Dup ()
 
@@ -68,6 +74,17 @@ eval inst env = flip execState env $ iterM go inst
         obj:st <- use stack
         let (args, st') = splitAt arity st
         stack .= st'
-        -- XXX perform the actual call
-        stack %= (StrObj "Result goes here":)
+        stack %= (call obj verb arity args:)
         ma
+
+test :: Free Inst ()
+test = do
+    liftF $ Literal 0 ()
+    liftF $ Literal 1 ()
+    liftF $ Call "mul" 1 ()
+
+main :: IO ()
+main = print env'
+    where
+    env = Env [IntObj 6, IntObj 7] [] []
+    env' = eval test env
