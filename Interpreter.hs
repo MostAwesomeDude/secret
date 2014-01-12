@@ -44,4 +44,6 @@ eval inst env = go env inst
     go' env@(Env {stack = (a:b:as)}) (Swap cont) = go (env {stack = (b:a:as) }) cont
     go' (Env ss st) (GetSlot i cont) = let s = ss !! i in
         go (Env ss (SlotObj s:st)) cont
+    go' (Env ss (SlotObj s:st)) (PutSlot i cont) = let ss' = take i ss ++ (s:drop (i+1) ss) in
+        go (Env ss' st) cont
     go' env inst = error $ "Stack error: " ++ show inst ++ " Stack: " ++ show env
