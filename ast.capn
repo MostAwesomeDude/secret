@@ -1,0 +1,148 @@
+struct BindingPattern {
+  target @0 :Node;
+  source @1 :Node;
+}
+
+struct FinalPattern {
+  target @0 :Node;
+  source @1 :Node;
+}
+
+struct IgnorePattern {
+  source @0 :Node;
+}
+
+struct ListPattern {
+  patterns @0 :List(Pattern);
+  ejector @1 :Node;
+}
+
+struct VarPattern {
+  target @0 :Node;
+  source @1 :Node;
+}
+
+struct ViaPattern {
+  expression @0 :Node;
+  via @1 :Pattern;
+}
+
+struct Assign {
+  target @0 :Node;
+  source @1 :Node;
+}
+
+struct Catch {
+  pattern @0 :Pattern;
+  handler @2 :Node;
+}
+
+struct Def {
+  pattern @0 :Pattern;
+  guard @1 :Node;
+  source @2 :Node;
+}
+
+struct Escape {
+  pattern @0 :Pattern;
+  expression @1 :Node;
+  handler @2 :Catch;
+}
+
+struct Finally {
+  expression @0 :Node;
+}
+
+struct If {
+  condition @0 :Node;
+  consequent @1 :Node;
+  alternative @2 :Node;
+}
+
+struct Matcher {
+  pattern @0 :Pattern;
+  expression @1 :Node;
+}
+
+struct Method {
+  description @0 :Text;
+  verb @1 :Text;
+  parameters @2 :List(Pattern);
+  guard @3 :Node;
+  expression @4 :Node;
+}
+
+struct Object {
+  description @0 :Text;
+  binding @1 :Pattern;
+  script @2 :Script;
+}
+
+struct Script {
+  description @0 :Text;
+  guard @1 :Node;
+  interfaces @2 :List(Node);
+  methods @3 :List(Method);
+  matchers @4 :List(Matcher);
+}
+
+struct Try {
+  attempt @0 :Node;
+  pattern @1 :Pattern;
+  recover @2 :Node;
+}
+
+struct BindingExpr {
+  target @0 :Node;
+}
+
+struct LiteralExpr {
+  union {
+    bool @0 :Bool;
+    float @1 :Float64;
+    int @2 :Int64;
+    text @3 :Text;
+  }
+}
+
+struct MethodCallExpr {
+  receiver @0 :Node;
+  verb @1 :Text;
+  args @2 :List(Node);
+}
+
+struct NounExpr {
+  name @0 :Text;
+}
+
+struct Pattern {
+  union {
+    binding @0 :BindingPattern;
+    final @1 :FinalPattern;
+    ignore @2 :IgnorePattern;
+    list @3 :ListPattern;
+    var @4 :VarPattern;
+    via @5 :ViaPattern;
+  }
+}
+
+struct Node {
+  union {
+    assign @0 :Assign;
+    catch @1 :Catch;
+    escape @2 :Escape;
+    finally @3 :Finally;
+    condition @4 :If;
+    matcher @5 :Matcher;
+    method @6 :Method;
+    object @7 :Object;
+    pattern @8 :Pattern;
+    script @9 :Script;
+    try @10 :Try;
+    binding @11 :BindingExpr;
+    literal @12 :LiteralExpr;
+    call @13 :MethodCallExpr;
+    noun @14 :NounExpr;
+    sequence @15 :List(Node);
+  }
+}
