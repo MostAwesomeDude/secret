@@ -5,10 +5,22 @@ module COLONEL
                      | Int
                      | String
 
+    syntax Object ::= Literal
+
     /*@
-    Expressions can be bracketed in parentheses for grouping.
+    Notes on syntax:
+    * Expressions can be bracketed in parentheses for grouping.
+    * Bare identifiers are expressions.
+    * Literals are also expressions.
     */
-    syntax Expr ::= "(" Expr ")"  [bracket]
+    syntax Expr ::= "(" Expr ")"                        [bracket]
+                  | Literal
+                  | Id
+                  | "if" "(" Expr ")" Expr "else" Expr  [strict(1)]
+                  | Id ":=" Expr                        [right, strict(2)]
+                  | "def" Id ":=" Expr                  [right, strict(2)]
+                  | "var" Id ":=" Expr                  [right, strict(2)]
+                  > Expr ";" Expr                       [left]
 
     configuration <T color="yellow">
         <k color="green"> $PGM:Expr </k>
@@ -19,58 +31,44 @@ module COLONEL
     /*@
     Sequences of expressions are evaluated left-to-right.
     */
-    syntax Expr ::= Expr ";" Expr [left]
-
-    rule First:Expr; Second:Expr => First ~> Second
+    rule [sequence]: First:Expr; Second:Expr => First ~> Second [structural]
 
     /*@
     If-expressions use an expression for a conditional, but require evaluation
     of the expression to a boolean.
     */
-    syntax Expr ::= "if" "(" Expr ")" Expr "else" Expr [strict(1)]
-
-    rule if (true)  E else _ => E
-    rule if (false) _ else E => E
+    rule [if-true]: if (true)  E else _ => E
+    rule [if-false]: if (false) _ else E => E
 
     /*@
     Assignments are right-associative and return the assigned value.
     */
-    syntax Expr ::= Id ":=" Expr [right, strict(2)]
-
-    rule <k> L:Id := R => R ...</k> <variable>... L |-> (_ => R) ...</variable>
+    rule [assign]: <k> L:Id := R => R ...</k>
+                   <variable>... L |-> (_ => R) ...</variable>
 
     /*@
     Final assignments may not be overwritten.
     */
-    syntax Expr ::= "def" Id ":=" Expr [right, strict(2)]
-
-    rule <k> def L:Id := R => R ...</k> <final>... . => (L |-> R) ...</final>
+    rule [assign-def]: <k> def L:Id := R => R ...</k>
+                       <final>... . => (L |-> R) ...</final>
 
     /*@
     Varying assignments may change over time.
     */
-    syntax Expr ::= "var" Id ":=" Expr [right, strict(2)]
-
-    rule <k> var L:Id := R => R ...</k>
-         <variable>... . => (L |-> R) ...</variable>
+    rule [assign-var]: <k> var L:Id := R => R ...</k>
+                       <variable>... . => (L |-> R) ...</variable>
 
     /*@
     Lone identifiers may be expressions.
     */
-    syntax Expr ::= Id
-
-    rule <k> K:Id => V ...</k> <final>... K |-> V ...</final>
-    rule <k> K:Id => V ...</k> <variable>... K |-> V ...</variable>
-
-    /*@
-    Literals are also expressions.
-    */
-    syntax Expr ::= Literal
+    rule [lookup-def]: <k> K:Id => V ...</k> <final>... K |-> V ...</final>
+    rule [lookup-var]: <k> K:Id => V ...</k>
+                       <variable>... K |-> V ...</variable>
 
     /*@
     Literals as expressions have no side effects; eliminate them.
     */
-    rule L:Literal ~> E:Expr => E
+    rule L:Literal => .
 
     syntax KResult ::= Literal
 endmodule
