@@ -44,7 +44,7 @@ module COLONEL
     */
     syntax Expr ::= "def" Id ":=" Expr [right, strict(2)]
 
-    rule <k> def L:Id := R => R ...</k> <final>... . => L |-> R ...</final>
+    rule <k> def L:Id := R => R ...</k> <final>... . => (L |-> R) ...</final>
 
     /*@
     Varying assignments may change over time.
@@ -52,7 +52,7 @@ module COLONEL
     syntax Expr ::= "var" Id ":=" Expr [right, strict(2)]
 
     rule <k> var L:Id := R => R ...</k>
-         <variable>... . => L |-> R ...</variable>
+         <variable>... . => (L |-> R) ...</variable>
 
     /*@
     Lone identifiers may be expressions.
