@@ -1,3 +1,5 @@
+@0xc010431e00000001;
+
 struct BindingPattern {
   target @0 :Node;
   source @1 :Node;
@@ -34,7 +36,7 @@ struct Assign {
 
 struct Catch {
   pattern @0 :Pattern;
-  handler @2 :Node;
+  handler @1 :Node;
 }
 
 struct Def {
