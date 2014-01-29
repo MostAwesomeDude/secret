@@ -1,1 +1,5 @@
 *.pyc
+*.hi
+*.o
+.k
+*-kompiled
