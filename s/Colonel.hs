@@ -49,7 +49,7 @@ data Object a = ScriptObj (Script a) (Frame a)
               | StrObj String
     deriving (Eq, Functor, Show)
 
-data Frame a = Frame { _slots :: M.Map Name (Object a) }
+data Frame a = Frame { _slots :: M.Map Name a }
     deriving (Eq, Functor, Show)
 
 litToObj :: Literal -> Object a
@@ -73,3 +73,9 @@ eval frame (Free (Call obj verb args)) = do
     case (obj', verb, args') of
         (IntObj i, "mul", [IntObj i']) -> Right . IntObj $ i * i'
         _                              -> Left "Invalid verb/arity"
+eval (Frame slots) (Free (Noun name)) = case M.lookup name slots of
+    Just obj -> Right obj
+    Nothing  -> Left "Name not in scope"
+eval frame (Free (Sequence exprs)) = do
+    exprs' <- mapM (eval frame) exprs
+    return . last $ exprs'
