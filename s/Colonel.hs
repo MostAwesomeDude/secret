@@ -1,8 +1,8 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Colonel where
 
+import Control.Lens hiding (Context)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.State
@@ -30,6 +30,7 @@ data Object = ScriptObj Script Frame
             | FloatObj Double
             | IntObj Integer
             | StrObj String
+            | NullObj
     deriving (Eq, Show)
 
 data Expr = Assign Expr Expr
@@ -49,7 +50,12 @@ data Expr = Assign Expr Expr
           | Try Expr Pattern Expr
     deriving (Eq, Show)
 
+makeLenses ''Frame
+
 type Context a = EitherT String (State Frame) a
+
+null :: Expr
+null = ObjExpr NullObj
 
 throw :: String -> Context a
 throw = left
@@ -82,7 +88,12 @@ eval (Noun name) = do
 eval (Sequence exprs) = do
     exprs' <- mapM eval exprs
     return . last $ exprs'
--- eval (Free (Def patt target expr)) = do
+eval (Def patt target expr) = do
+    rvalue <- eval expr
+    case patt of
+        Final (Noun name) _ -> slots . ix name .= rvalue
+        Var (Noun name) _ -> slots . ix name .= rvalue
+    return rvalue
 
 runContext :: Context Object -> Either String Object
 runContext c = evalState (runEitherT c) (Frame M.empty)
