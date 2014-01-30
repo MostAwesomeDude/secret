@@ -4,6 +4,9 @@
 module Colonel where
 
 import Control.Monad.Free
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Either
+import Control.Monad.Trans.State
 import qualified Data.Map as M
 
 type Name = String
@@ -52,30 +55,40 @@ data Object a = ScriptObj (Script a) (Frame a)
 data Frame a = Frame { _slots :: M.Map Name a }
     deriving (Eq, Functor, Show)
 
+type Context a = EitherT String (State (Frame a)) a
+
+throw :: String -> Context a
+throw = left
+
 litToObj :: Literal -> Object a
 litToObj (LBool b) = BoolObj b
 litToObj (LFloat d) = FloatObj d
 litToObj (LInt i) = IntObj i
 litToObj (LString s) = StrObj s
 
-eval :: Frame (Object a) -> Free Expr (Object a) -> Either String (Object a)
-eval _ (Pure obj) = Right obj
-eval _ (Free (LiteralExpr l)) = return . litToObj $ l
-eval frame (Free (If cond cons alt)) = do
-    cond' <- eval frame cond
+eval :: Free Expr (Object a) -> Context (Object a)
+eval (Pure obj) = return obj
+eval (Free (LiteralExpr l)) = return . litToObj $ l
+eval (Free (If cond cons alt)) = do
+    cond' <- eval cond
     case cond' of
-        BoolObj True  -> eval frame cons
-        BoolObj False -> eval frame alt
-        _             -> Left "Non-boolean in conditional"
-eval frame (Free (Call obj verb args)) = do
-    obj' <- eval frame obj
-    args' <- mapM (eval frame) args
+        BoolObj True  -> eval cons
+        BoolObj False -> eval alt
+        _             -> throw "Non-boolean in conditional"
+eval (Free (Call obj verb args)) = do
+    obj' <- eval obj
+    args' <- mapM eval args
     case (obj', verb, args') of
-        (IntObj i, "mul", [IntObj i']) -> Right . IntObj $ i * i'
-        _                              -> Left "Invalid verb/arity"
-eval (Frame slots) (Free (Noun name)) = case M.lookup name slots of
-    Just obj -> Right obj
-    Nothing  -> Left "Name not in scope"
-eval frame (Free (Sequence exprs)) = do
-    exprs' <- mapM (eval frame) exprs
+        (IntObj i, "mul", [IntObj i']) -> return . IntObj $ i * i'
+        _                              -> throw "Invalid verb/arity"
+eval (Free (Noun name)) = do
+    slots <- lift $ gets _slots
+    case M.lookup name slots of
+        Just obj -> return obj
+        Nothing  -> throw "Name not in scope"
+eval (Free (Sequence exprs)) = do
+    exprs' <- mapM eval exprs
     return . last $ exprs'
+
+runContext :: Context (Object a) -> Either String (Object a)
+runContext c = evalState (runEitherT c) (Frame M.empty)
