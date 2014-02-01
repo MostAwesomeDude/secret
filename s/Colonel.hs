@@ -3,6 +3,7 @@
 module Colonel where
 
 import Control.Lens hiding (Context)
+import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.State
@@ -22,10 +23,11 @@ data Pattern = Binding Expr Expr
 data Script = Script Verb Expr [Expr] [Expr] [Expr] -- should be Method and Matcher
     deriving (Eq, Show)
 
-data Frame = Frame { _slots :: M.Map Name Object }
+data Frame = Frame { _finals, _vars :: M.Map Name Object }
     deriving (Eq, Show)
 
 data Object = ScriptObj Script Frame
+            | ListObj [Object]
             | BoolObj Bool
             | FloatObj Double
             | IntObj Integer
@@ -81,8 +83,9 @@ eval (Call obj verb args) = do
         (IntObj i, "mul", [IntObj i']) -> return . IntObj $ i * i'
         _                              -> throw "Invalid verb/arity"
 eval (Noun name) = do
-    slots <- lift $ gets _slots
-    case M.lookup name slots of
+    final <- use $ finals . at name
+    var <- use $ vars . at name
+    case final of
         Just obj -> return obj
         Nothing  -> throw "Name not in scope"
 eval (Sequence exprs) = do
@@ -91,9 +94,23 @@ eval (Sequence exprs) = do
 eval (Def patt target expr) = do
     rvalue <- eval expr
     case patt of
-        Final (Noun name) _ -> slots . ix name .= rvalue
-        Var (Noun name) _ -> slots . ix name .= rvalue
+        Final (Noun name) _ -> finals . ix name .= rvalue
+        Ignore inner -> void (eval inner)
+        List [] ejector -> case rvalue of
+            ListObj [] -> return ()
+            _ -> throw "Bad list pattern match" -- hm, need to respect the ejector here
+        List (p:ps) ejector -> case rvalue of
+            ListObj (o:os) -> do
+                -- Ugh. I clearly know far too much about the types here; why
+                -- am I needlessly repacking them?
+                void $ eval (Def p target (ObjExpr o))
+                void $ eval (Def (List ps ejector) target (ObjExpr (ListObj os)))
+            _ -> throw "Bad list pattern match" -- here too
+        Var (Noun name) _ -> vars . ix name .= rvalue
+        Via trans patt' -> do
+            rvalue' <- eval (Call trans "run" [ObjExpr rvalue])
+            void $ eval (Def patt' target (ObjExpr rvalue'))
     return rvalue
 
 runContext :: Context Object -> Either String Object
-runContext c = evalState (runEitherT c) (Frame M.empty)
+runContext c = evalState (runEitherT c) (Frame M.empty M.empty)
